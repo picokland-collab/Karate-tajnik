@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="hr">
 <head>
 <meta charset="UTF-8">
@@ -25,464 +24,516 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     font-family: 'DM Sans', sans-serif;
-    background: var(--black);
-    color: var(--text);
+    background: #0D0D0D;
+    color: #EDEDED;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
   }
+  * { color: inherit; }
+  main, .content, .section { background: #0D0D0D !important; }
+  table { background: transparent; }
+  td, th { color: #EDEDED !important; background: transparent !important; }
+  tr:hover td { background: rgba(255,255,255,0.05) !important; }
+  input, select, textarea { background: #1C1C1C !important; color: #EDEDED !important; border-color: #2E2E2E !important; }
+  .card { background: #1C1C1C !important; border-color: #2E2E2E !important; color: #EDEDED !important; }
+  .modal { background: #1C1C1C !important; color: #EDEDED !important; }
+  .modal-header, .modal-footer { border-color: #2E2E2E !important; }
+  .page-header { background: #0D0D0D !important; border-color: #2E2E2E !important; }
+  .page-header h2 { color: #EDEDED !important; }
+  .page-header p { color: #AAAAAA !important; }
+  .stat-card { background: #1C1C1C !important; color: #EDEDED !important; }
+  .stat-card .lbl { color: #AAAAAA !important; }
+  nav { background: #141414 !important; }
+  nav button { color: #AAAAAA !important; }
+  nav button.active, nav button:hover { color: #EDEDED !important; background: #1C1C1C !important; }
+  .search-bar input, .search-bar select { background: #1C1C1C !important; color: #EDEDED !important; }
+  label { color: #AAAAAA !important; }
+  strong { color: #EDEDED !important; }
+  span { color: inherit; }
 
-/* HEADER */
-header {
-background: var(–dark);
-border-bottom: 2px solid var(–red);
-padding: 0 24px;
-display: flex;
-align-items: center;
-justify-content: space-between;
-height: 64px;
-position: sticky;
-top: 0;
-z-index: 100;
-}
-.logo {
-display: flex;
-align-items: center;
-gap: 14px;
-}
-.logo-icon {
-width: 42px;
-height: 42px;
-background: var(–red);
-border-radius: 8px;
-display: flex;
-align-items: center;
-justify-content: center;
-font-family: ‘Bebas Neue’, sans-serif;
-font-size: 18px;
-color: white;
-letter-spacing: 1px;
-}
-.logo-text h1 {
-font-family: ‘Bebas Neue’, sans-serif;
-font-size: 20px;
-letter-spacing: 2px;
-color: var(–text);
-line-height: 1;
-}
-.logo-text span {
-font-size: 11px;
-color: var(–muted);
-letter-spacing: 1px;
-text-transform: uppercase;
-}
-.header-ai {
-display: flex;
-align-items: center;
-gap: 8px;
-font-size: 12px;
-color: var(–gold);
-background: rgba(240,165,0,0.1);
-border: 1px solid rgba(240,165,0,0.3);
-padding: 6px 12px;
-border-radius: 20px;
-}
-.header-ai::before { content: ‘●’; animation: pulse 2s infinite; }
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  /* HEADER */
+  header {
+    background: var(--dark);
+    border-bottom: 2px solid var(--red);
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .logo-icon {
+    width: 42px;
+    height: 42px;
+    background: var(--red);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    color: white;
+    letter-spacing: 1px;
+  }
+  .logo-text h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    letter-spacing: 2px;
+    color: var(--text);
+    line-height: 1;
+  }
+  .logo-text span {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .header-ai {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--gold);
+    background: rgba(240,165,0,0.1);
+    border: 1px solid rgba(240,165,0,0.3);
+    padding: 6px 12px;
+    border-radius: 20px;
+  }
+  .header-ai::before { content: '●'; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
-/* LAYOUT */
-.app {
-display: flex;
-flex: 1;
-}
+  /* LAYOUT */
+  .app {
+    display: flex;
+    flex: 1;
+  }
 
-/* SIDEBAR */
-nav {
-width: 220px;
-background: var(–dark);
-border-right: 1px solid var(–border);
-padding: 20px 0;
-flex-shrink: 0;
-color: var(–text);
-}
-nav .section-label {
-font-size: 10px;
-letter-spacing: 2px;
-text-transform: uppercase;
-color: var(–muted);
-padding: 12px 20px 6px;
-}
-nav button {
-display: flex;
-align-items: center;
-gap: 10px;
-width: 100%;
-padding: 10px 20px;
-background: none;
-border: none;
-color: #aaa;
-font-family: ‘DM Sans’, sans-serif;
-font-size: 14px;
-cursor: pointer;
-text-align: left;
-transition: all 0.15s;
-border-left: 3px solid transparent;
-}
-nav button:hover { background: var(–surface); color: var(–text); }
-nav button.active {
-background: var(–surface);
-color: var(–text);
-border-left-color: var(–red);
-}
-nav button .icon { font-size: 16px; width: 20px; }
+  /* SIDEBAR */
+  nav {
+    width: 220px;
+    background: var(--dark);
+    border-right: 1px solid var(--border);
+    padding: 20px 0;
+    flex-shrink: 0;
+    color: var(--text);
+  }
+  nav .section-label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 12px 20px 6px;
+  }
+  nav button {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 20px;
+    background: none;
+    border: none;
+    color: #aaa;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.15s;
+    border-left: 3px solid transparent;
+  }
+  nav button:hover { background: var(--surface); color: var(--text); }
+  nav button.active {
+    background: var(--surface);
+    color: var(--text);
+    border-left-color: var(--red);
+  }
+  nav button .icon { font-size: 16px; width: 20px; }
 
-/* MAIN */
-main {
-flex: 1;
-overflow: hidden;
-display: flex;
-flex-direction: column;
-}
+  /* MAIN */
+  main {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
 
-/* SECTIONS */
-.section {
-display: none;
-flex: 1;
-flex-direction: column;
-overflow: hidden;
-}
-.section.active {
-display: flex;
-}
+  /* SECTIONS */
+  .section {
+    display: none;
+    flex: 1;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .section.active {
+    display: flex;
+  }
 
-/* PAGE HEADER */
-.page-header {
-padding: 24px 28px 16px;
-border-bottom: 1px solid var(–border);
-display: flex;
-align-items: center;
-justify-content: space-between;
-flex-shrink: 0;
-}
-.page-header h2 {
-font-family: ‘Bebas Neue’, sans-serif;
-font-size: 28px;
-letter-spacing: 2px;
-color: var(–text);
-}
-.page-header p { font-size: 13px; color: var(–muted); margin-top: 2px; }
+  /* PAGE HEADER */
+  .page-header {
+    padding: 24px 28px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .page-header h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 2px;
+    color: var(--text);
+  }
+  .page-header p { font-size: 13px; color: var(--muted); margin-top: 2px; }
 
-/* SCROLLABLE CONTENT */
-.content {
-flex: 1;
-overflow-y: auto;
-padding: 24px 28px;
-}
-.content::-webkit-scrollbar { width: 6px; }
-.content::-webkit-scrollbar-track { background: transparent; }
-.content::-webkit-scrollbar-thumb { background: var(–border); border-radius: 3px; }
+  /* SCROLLABLE CONTENT */
+  .content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px 28px;
+  }
+  .content::-webkit-scrollbar { width: 6px; }
+  .content::-webkit-scrollbar-track { background: transparent; }
+  .content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
-/* BUTTONS */
-.btn {
-padding: 9px 18px;
-border-radius: 6px;
-border: none;
-font-family: ‘DM Sans’, sans-serif;
-font-size: 13px;
-font-weight: 500;
-cursor: pointer;
-transition: all 0.15s;
-display: inline-flex;
-align-items: center;
-gap: 6px;
-}
-.btn-primary { background: var(–red); color: white; }
-.btn-primary:hover { background: var(–red-dark); }
-.btn-secondary { background: var(–surface2); color: var(–text); border: 1px solid var(–border); }
-.btn-secondary:hover { background: var(–border); }
-.btn-gold { background: var(–gold); color: var(–black); font-weight: 700; }
-.btn-gold:hover { background: #d4920a; }
-.btn-sm { padding: 5px 12px; font-size: 12px; }
+  /* BUTTONS */
+  .btn {
+    padding: 9px 18px;
+    border-radius: 6px;
+    border: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn-primary { background: var(--red); color: white; }
+  .btn-primary:hover { background: var(--red-dark); }
+  .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+  .btn-secondary:hover { background: var(--border); }
+  .btn-gold { background: var(--gold); color: var(--black); font-weight: 700; }
+  .btn-gold:hover { background: #d4920a; }
+  .btn-sm { padding: 5px 12px; font-size: 12px; }
 
-/* FORMS */
-.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-.form-group { display: flex; flex-direction: column; gap: 5px; }
-.form-group.full { grid-column: 1/-1; }
-label { font-size: 12px; color: var(–muted); letter-spacing: 0.5px; text-transform: uppercase; }
-input, select, textarea {
-background: var(–surface);
-border: 1px solid var(–border);
-border-radius: 6px;
-padding: 9px 12px;
-color: var(–text);
-font-family: ‘DM Sans’, sans-serif;
-font-size: 14px;
-outline: none;
-transition: border-color 0.15s;
-}
-input:focus, select:focus, textarea:focus { border-color: var(–red); }
-textarea { resize: vertical; min-height: 90px; }
-select option { background: var(–surface); }
+  /* FORMS */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-group.full { grid-column: 1/-1; }
+  label { font-size: 12px; color: var(--muted); letter-spacing: 0.5px; text-transform: uppercase; }
+  input, select, textarea {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 9px 12px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--red); }
+  textarea { resize: vertical; min-height: 90px; }
+  select option { background: var(--surface); }
 
-/* CARDS */
-.card {
-background: var(–surface);
-border: 1px solid var(–border);
-border-radius: 10px;
-padding: 18px 20px;
-margin-bottom: 14px;
-}
-.card-row {
-display: flex;
-align-items: center;
-justify-content: space-between;
-gap: 12px;
-}
-.card-actions { display: flex; gap: 8px; flex-shrink: 0; }
+  /* CARDS */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+    margin-bottom: 14px;
+  }
+  .card-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .card-actions { display: flex; gap: 8px; flex-shrink: 0; }
 
-/* STATS ROW */
-.stats-row {
-display: grid;
-grid-template-columns: repeat(4, 1fr);
-gap: 14px;
-margin-bottom: 24px;
-}
-.stat-card {
-background: var(–surface);
-border: 1px solid var(–border);
-border-radius: 10px;
-padding: 16px 18px;
-color: var(–text);
-}
-.stat-card .val {
-font-family: ‘Bebas Neue’, sans-serif;
-font-size: 36px;
-color: var(–red);
-line-height: 1;
-}
-.stat-card .lbl {
-font-size: 11px;
-color: var(–muted);
-text-transform: uppercase;
-letter-spacing: 1px;
-margin-top: 4px;
-}
-.stat-card[onclick] { transition: transform 0.15s, box-shadow 0.15s; }
-.stat-card[onclick]:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(200,16,46,0.2); border-color: var(–red); }
-.stat-card[onclick]:active { transform: translateY(0); }
+  /* STATS ROW */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+    color: var(--text);
+  }
+  .stat-card .val {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 36px;
+    color: var(--red);
+    line-height: 1;
+  }
+  .stat-card .lbl {
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 4px;
+  }
+  .stat-card[onclick] { transition: transform 0.15s, box-shadow 0.15s; }
+  .stat-card[onclick]:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(200,16,46,0.2); border-color: var(--red); }
+  .stat-card[onclick]:active { transform: translateY(0); }
 
-/* TABLE */
-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-th {
-text-align: left;
-padding: 10px 12px;
-font-size: 11px;
-letter-spacing: 1px;
-text-transform: uppercase;
-color: var(–muted);
-border-bottom: 1px solid var(–border);
-font-weight: 500;
-}
-td {
-padding: 11px 12px;
-border-bottom: 1px solid var(–border);
-vertical-align: middle;
-color: var(–text);
-}
-tr:hover td { background: rgba(255,255,255,0.02); }
-.badge {
-display: inline-block;
-padding: 3px 8px;
-border-radius: 4px;
-font-size: 11px;
-font-weight: 500;
-}
-.badge-green { background: rgba(46,204,113,0.15); color: var(–success); }
-.badge-red { background: rgba(200,16,46,0.15); color: #ff5a70; }
-.badge-gold { background: rgba(240,165,0,0.15); color: var(–gold); }
-.badge-gray { background: rgba(136,136,136,0.15); color: var(–muted); }
+  /* TABLE */
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th {
+    text-align: left;
+    padding: 10px 12px;
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    font-weight: 500;
+  }
+  td {
+    padding: 11px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+    color: #EDEDED;
+  }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+  .badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .badge-green { background: rgba(46,204,113,0.15); color: var(--success); }
+  .badge-red { background: rgba(200,16,46,0.15); color: #ff5a70; }
+  .badge-gold { background: rgba(240,165,0,0.15); color: var(--gold); }
+  .badge-gray { background: rgba(136,136,136,0.15); color: var(--muted); }
 
-/* MODAL */
-.modal-overlay {
-display: none;
-position: fixed; inset: 0;
-background: rgba(0,0,0,0.8);
-z-index: 200;
-align-items: center;
-justify-content: center;
-padding: 20px;
-}
-.modal-overlay.open { display: flex; }
-.modal {
-background: var(–surface);
-border: 1px solid var(–border);
-border-radius: 12px;
-width: 100%;
-max-width: 600px;
-max-height: 90vh;
-overflow-y: auto;
-animation: slideUp 0.2s ease;
-}
-@keyframes slideUp { from{transform:translateY(20px);opacity:0} to{transform:none;opacity:1} }
-.modal-header {
-padding: 20px 24px 16px;
-border-bottom: 1px solid var(–border);
-display: flex;
-align-items: center;
-justify-content: space-between;
-}
-.modal-header h3 {
-font-family: ‘Bebas Neue’, sans-serif;
-font-size: 22px;
-letter-spacing: 1px;
-}
-.modal-close {
-background: none; border: none; color: var(–muted);
-font-size: 20px; cursor: pointer; padding: 4px;
-}
-.modal-close:hover { color: var(–text); }
-.modal-body { padding: 20px 24px; }
-.modal-footer { padding: 16px 24px; border-top: 1px solid var(–border); display: flex; gap: 10px; justify-content: flex-end; }
+  /* MODAL */
+  .modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.8);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: #1C1C1C;
+    border: 1px solid #2E2E2E;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: slideUp 0.2s ease;
+    color: #EDEDED;
+  }
+  .modal div, .modal span, .modal p, .modal label {
+    color: inherit;
+  }
+  @keyframes slideUp { from{transform:translateY(20px);opacity:0} to{transform:none;opacity:1} }
+  .modal-header {
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .modal-header h3 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 1px;
+  }
+  .modal-close {
+    background: none; border: none; color: var(--muted);
+    font-size: 20px; cursor: pointer; padding: 4px;
+  }
+  .modal-close:hover { color: var(--text); }
+  .modal-body { padding: 20px 24px; }
+  .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: flex-end; }
 
-/* AI CHAT */
-.ai-panel {
-display: flex;
-flex-direction: column;
-height: 100%;
-}
-.ai-messages {
-flex: 1;
-overflow-y: auto;
-padding: 20px 24px;
-display: flex;
-flex-direction: column;
-gap: 16px;
-}
-.ai-messages::-webkit-scrollbar { width: 4px; }
-.ai-messages::-webkit-scrollbar-thumb { background: var(–border); border-radius:2px; }
-.msg {
-display: flex;
-gap: 12px;
-max-width: 85%;
-}
-.msg.user { align-self: flex-end; flex-direction: row-reverse; }
-.msg-avatar {
-width: 32px;
-height: 32px;
-border-radius: 50%;
-flex-shrink: 0;
-display: flex;
-align-items: center;
-justify-content: center;
-font-size: 14px;
-}
-.msg.assistant .msg-avatar { background: var(–red); }
-.msg.user .msg-avatar { background: var(–surface2); border: 1px solid var(–border); }
-.msg-bubble {
-padding: 12px 16px;
-border-radius: 10px;
-font-size: 14px;
-line-height: 1.6;
-}
-.msg.assistant .msg-bubble { background: var(–surface2); border: 1px solid var(–border); }
-.msg.user .msg-bubble { background: var(–red); color: white; }
-.ai-input-area {
-padding: 16px 24px;
-border-top: 1px solid var(–border);
-display: flex;
-gap: 10px;
-align-items: flex-end;
-}
-.ai-input-area textarea {
-flex: 1;
-min-height: 42px;
-max-height: 120px;
-resize: none;
-}
-.loading-dots span {
-display: inline-block;
-width: 6px; height: 6px;
-background: var(–muted);
-border-radius: 50%;
-margin: 0 2px;
-animation: bounce 1.2s infinite;
-}
-.loading-dots span:nth-child(2) { animation-delay: 0.2s; }
-.loading-dots span:nth-child(3) { animation-delay: 0.4s; }
-@keyframes bounce { 0%,80%,100%{transform:none} 40%{transform:translateY(-6px)} }
+  /* AI CHAT */
+  .ai-panel {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+  .ai-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .ai-messages::-webkit-scrollbar { width: 4px; }
+  .ai-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius:2px; }
+  .msg {
+    display: flex;
+    gap: 12px;
+    max-width: 85%;
+  }
+  .msg.user { align-self: flex-end; flex-direction: row-reverse; }
+  .msg-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+  }
+  .msg.assistant .msg-avatar { background: var(--red); }
+  .msg.user .msg-avatar { background: var(--surface2); border: 1px solid var(--border); }
+  .msg-bubble {
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .msg.assistant .msg-bubble { background: var(--surface2); border: 1px solid var(--border); }
+  .msg.user .msg-bubble { background: var(--red); color: white; }
+  .ai-input-area {
+    padding: 16px 24px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+  }
+  .ai-input-area textarea {
+    flex: 1;
+    min-height: 42px;
+    max-height: 120px;
+    resize: none;
+  }
+  .loading-dots span {
+    display: inline-block;
+    width: 6px; height: 6px;
+    background: var(--muted);
+    border-radius: 50%;
+    margin: 0 2px;
+    animation: bounce 1.2s infinite;
+  }
+  .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes bounce { 0%,80%,100%{transform:none} 40%{transform:translateY(-6px)} }
 
-/* SEARCH */
-.search-bar {
-display: flex;
-gap: 10px;
-margin-bottom: 18px;
-align-items: center;
-}
-.search-bar input { flex: 1; }
+  /* SEARCH */
+  .search-bar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 18px;
+    align-items: center;
+  }
+  .search-bar input { flex: 1; }
+  
+  /* DIVIDER */
+  .divider { border: none; border-top: 1px solid var(--border); margin: 18px 0; }
+  
+  /* TOAST */
+  #toast {
+    position: fixed;
+    bottom: 24px; right: 24px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--success);
+    padding: 12px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    z-index: 999;
+    transform: translateY(80px);
+    opacity: 0;
+    transition: all 0.3s;
+    max-width: 300px;
+  }
+  #toast.show { transform: none; opacity: 1; }
 
-/* DIVIDER */
-.divider { border: none; border-top: 1px solid var(–border); margin: 18px 0; }
+  /* Responsive tweaks */
+  @media (max-width: 768px) {
+    nav { width: 56px; }
+    nav .section-label, nav button span:not(.icon) { display: none; }
+    .stats-row { grid-template-columns: 1fr 1fr; }
+    .form-grid { grid-template-columns: 1fr; }
+  }
 
-/* TOAST */
-#toast {
-position: fixed;
-bottom: 24px; right: 24px;
-background: var(–surface2);
-border: 1px solid var(–border);
-border-left: 3px solid var(–success);
-padding: 12px 18px;
-border-radius: 8px;
-font-size: 13px;
-z-index: 999;
-transform: translateY(80px);
-opacity: 0;
-transition: all 0.3s;
-max-width: 300px;
-}
-#toast.show { transform: none; opacity: 1; }
+  .empty-state {
+    text-align: center;
+    padding: 48px 20px;
+    color: var(--muted);
+  }
+  .empty-state .icon { font-size: 40px; margin-bottom: 12px; }
+  .empty-state p { font-size: 14px; }
 
-/* Responsive tweaks */
-@media (max-width: 768px) {
-nav { width: 56px; }
-nav .section-label, nav button span:not(.icon) { display: none; }
-.stats-row { grid-template-columns: 1fr 1fr; }
-.form-grid { grid-template-columns: 1fr; }
-}
+  pre {
+    background: var(--dark);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    font-size: 13px;
+    white-space: pre-wrap;
+    line-height: 1.6;
+    color: var(--text);
+    background: var(--surface2);
+    font-family: 'DM Mono', 'Courier New', monospace;
+    margin-top: 10px;
+  }
+  .doc-output-actions { display: flex; gap: 8px; margin-top: 12px; }
 
-.empty-state {
-text-align: center;
-padding: 48px 20px;
-color: var(–muted);
-}
-.empty-state .icon { font-size: 40px; margin-bottom: 12px; }
-.empty-state p { font-size: 14px; }
+  #btnMic.listening {
+    background: rgba(200,16,46,0.2) !important;
+    color: #C8102E !important;
+    border-color: #C8102E !important;
+    animation: micPulse 1s infinite;
+  }
+  @keyframes micPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(200,16,46,0.4); }
+    50% { box-shadow: 0 0 0 8px rgba(200,16,46,0); }
+  }
 
-pre {
-background: var(–dark);
-border: 1px solid var(–border);
-border-radius: 8px;
-padding: 16px;
-font-size: 13px;
-white-space: pre-wrap;
-line-height: 1.6;
-color: var(–text);
-background: var(–surface2);
-font-family: ‘DM Mono’, ‘Courier New’, monospace;
-margin-top: 10px;
-}
-.doc-output-actions { display: flex; gap: 8px; margin-top: 12px; }
+  /* SCROLL TO TOP */
+  #scrollTopBtn {
+    position: fixed;
+    bottom: 24px;
+    right: 20px;
+    width: 48px;
+    height: 48px;
+    background: var(--red);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    font-size: 22px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 500;
+    box-shadow: 0 4px 16px rgba(200,16,46,0.5);
+  }
 </style>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.0.4/tesseract.min.js"></script>
-
 </head>
 <body>
 
-```
-<div style="margin-top:10px">
-</div>
-```
 
+    <div style="margin-top:10px">
+    </div>
   </div>
 </div>
 
@@ -494,10 +545,7 @@ margin-top: 10px;
       <span>Digitalni Tajnik</span>
     </div>
   </div>
-  <div style="display:flex;align-items:center;gap:10px">
-    <button onclick="toggleTheme()" id="themeBtn" style="background:none;border:1px solid var(--border);border-radius:20px;padding:5px 10px;cursor:pointer;font-size:16px;color:var(--text)" title="Promijeni temu">☀️</button>
-    <div class="header-ai">AI Tajnik aktivan</div>
-  </div>
+  <div class="header-ai">AI Tajnik aktivan</div>
 </header>
 
 <div class="app">
@@ -505,245 +553,643 @@ margin-top: 10px;
     <div class="section-label">Upravljanje</div>
     <button class="active" onclick="showSection('dashboard')"><span class="icon">📊</span><span>Pregled</span></button>
     <button onclick="showSection('clanovi')"><span class="icon">👥</span><span>Članovi</span></button>
+    <button onclick="showSection('emailovi')"><span class="icon">📧</span><span>Email adrese</span></button>
     <button onclick="showSection('komunikacija')"><span class="icon">✉️</span><span>Komunikacija</span></button>
     <div class="section-label">Dokumenti</div>
     <button onclick="showSection('odluke')"><span class="icon">📜</span><span>Odluke</span></button>
     <button onclick="showSection('izvjestaji')"><span class="icon">🏆</span><span>Izvještaji</span></button>
     <div class="section-label">Financije</div>
     <button onclick="showSection('uplatnice')"><span class="icon">💳</span><span>Uplatnice</span></button>
+    <div class="section-label">Putovanja</div>
+    <button onclick="showSection('putni')"><span class="icon">🚗</span><span>Putni nalozi</span></button>
+    <div class="section-label">Trener</div>
+    <button onclick="showSection('dnevnik')"><span class="icon">📋</span><span>Dnevnik rada</span></button>
+    <button onclick="showSection('kalendar')"><span class="icon">📅</span><span>Kalendar</span></button>
+    <div class="section-label">Zdravlje</div>
+    <button onclick="showSection('lijecnicki')"><span class="icon">🏥</span><span>Liječnički</span></button>
+    <div class="section-label">Poruke</div>
+    <button onclick="showSection('obavijesti2')"><span class="icon">📢</span><span>Obavijesti</span></button>
     <div class="section-label">AI Asistent</div>
     <button onclick="showSection('ai')"><span class="icon">🤖</span><span>Tajnik AI</span></button>
   </nav>
 
   <main>
 
-```
-<!-- DASHBOARD -->
-<div id="dashboard" class="section active">
-  <div class="page-header">
-    <div>
-      <h2>Pregled kluba</h2>
-      <p>KK Đurđevac — sezona 2025/2026</p>
-    </div>
-    <button class="btn btn-gold" onclick="showSection('ai')">🤖 Pitaj AI tajnika</button>
-  </div>
-  <div class="content">
-    <div class="stats-row" id="statsRow">
-      <div class="stat-card" onclick="showSection('clanovi')" style="cursor:pointer" title="Svi članovi">
-        <div class="val" id="statUkupno">0</div><div class="lbl">Ukupno članova</div>
+    <!-- DASHBOARD -->
+    <div id="dashboard" class="section active">
+      <div class="page-header">
+        <div>
+          <h2>Pregled kluba</h2>
+          <p>KK Đurđevac — sezona 2025/2026</p>
+        </div>
+        <button class="btn btn-gold" onclick="showSection('ai')">🤖 Pitaj AI tajnika</button>
       </div>
-      <div class="stat-card" onclick="filterIGo('aktivan')" style="cursor:pointer" title="Aktivni članovi">
-        <div class="val" id="statAktivni">0</div><div class="lbl">Aktivni</div>
-      </div>
-      <div class="stat-card" onclick="filterNeplaceni()" style="cursor:pointer" title="Neplaćena članarina">
-        <div class="val" id="statNeplaceno">0</div><div class="lbl">Neplaćena članarina</div>
-      </div>
-      <div class="stat-card" onclick="showSection('izvjestaji')" style="cursor:pointer" title="Natjecanja">
-        <div class="val" id="statNatjecanja">0</div><div class="lbl">Natjecanja</div>
-      </div>
-    </div>
+      <div class="content">
+        <div class="stats-row" id="statsRow">
+          <div class="stat-card" onclick="showSection('clanovi')" style="cursor:pointer" title="Svi članovi">
+            <div class="val" id="statUkupno">0</div><div class="lbl">Ukupno članova</div>
+          </div>
+          <div class="stat-card" onclick="filterIGo('aktivan')" style="cursor:pointer" title="Aktivni članovi">
+            <div class="val" id="statAktivni">0</div><div class="lbl">Aktivni</div>
+          </div>
+          <div class="stat-card" onclick="filterNeplaceni()" style="cursor:pointer" title="Neplaćena članarina">
+            <div class="val" id="statNeplaceno">0</div><div class="lbl">Neplaćena članarina</div>
+          </div>
+          <div class="stat-card" onclick="showSection('izvjestaji')" style="cursor:pointer" title="Natjecanja">
+            <div class="val" id="statNatjecanja">0</div><div class="lbl">Natjecanja</div>
+          </div>
+        </div>
 
-    <h3 style="font-family:'Bebas Neue',sans-serif;letter-spacing:1px;font-size:18px;margin-bottom:12px;color:var(--muted)">NEDAVNE AKTIVNOSTI</h3>
-    <div id="recentActivity">
-      <div class="empty-state"><div class="icon">📋</div><p>Još nema aktivnosti. Dodajte prve članove!</p></div>
-    </div>
+        <h3 style="font-family:'Bebas Neue',sans-serif;letter-spacing:1px;font-size:18px;margin-bottom:12px;color:var(--muted)">NEDAVNE AKTIVNOSTI</h3>
+        <div id="recentActivity">
+          <div class="empty-state"><div class="icon">📋</div><p>Još nema aktivnosti. Dodajte prve članove!</p></div>
+        </div>
 
-    <hr class="divider">
-    <h3 style="font-family:'Bebas Neue',sans-serif;letter-spacing:1px;font-size:18px;margin-bottom:12px;color:var(--muted)">BRZE RADNJE</h3>
-    <div style="display:flex;gap:10px;flex-wrap:wrap;">
-      <button class="btn btn-primary" onclick="openModal('modalDodajClana')">+ Novi član</button>
-      <button class="btn btn-secondary" onclick="openModal('modalOdluka')">📜 Nova odluka</button>
-      <button class="btn btn-secondary" onclick="openModal('modalIzvjestaj')">🏆 Novi izvještaj</button>
-      <button class="btn btn-secondary" onclick="openModal('modalKomunikacija')">✉️ Pošalji obavijest</button>
-    </div>
-  </div>
-</div>
-
-<!-- ČLANOVI -->
-<div id="clanovi" class="section">
-  <div class="page-header">
-    <div>
-      <h2>Evidencija članova</h2>
-      <p>Registar svih članova kluba</p>
-    </div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button class="btn btn-secondary" onclick="importHksClanovi()" title="Uvezi iz HKS popisa">📥 Uvezi HKS</button>
-      <button class="btn btn-secondary" onclick="openModal('modalBulkAzuriranje')">📷 Ažuriraj skenom</button>
-      <button class="btn btn-primary" onclick="openModal('modalDodajClana')">+ Dodaj člana</button>
-    </div>
-  </div>
-  <div class="content">
-    <div class="search-bar">
-      <input type="text" id="searchClan" placeholder="Pretraži po imenu, OIB-u..." oninput="renderClanovi()">
-      <select id="filterStatus" onchange="renderClanovi()">
-        <option value="">Svi statusi</option>
-        <option value="aktivan">Aktivni</option>
-        <option value="neaktivan">Neaktivni</option>
-      </select>
-      <select id="filterKategorija" onchange="renderClanovi()">
-        <option value="">Sve kategorije</option>
-        <option value="kadet">Kadet (do 14)</option>
-        <option value="junior">Junior (14-18)</option>
-        <option value="senior">Senior (18+)</option>
-      </select>
-    </div>
-    <div id="tableClanovi">
-      <div class="empty-state"><div class="icon">👥</div><p>Nema članova. Dodajte prvog člana!</p></div>
-    </div>
-  </div>
-</div>
-
-<!-- KOMUNIKACIJA -->
-<div id="komunikacija" class="section">
-  <div class="page-header">
-    <div>
-      <h2>Komunikacija</h2>
-      <p>Obavijesti za roditelje i trenere</p>
-    </div>
-    <button class="btn btn-primary" onclick="openModal('modalKomunikacija')">+ Nova obavijest</button>
-  </div>
-  <div class="content">
-    <div id="listaKomunikacija">
-      <div class="empty-state"><div class="icon">✉️</div><p>Nema poslanih obavijesti.</p></div>
-    </div>
-  </div>
-</div>
-
-<!-- ODLUKE -->
-<div id="odluke" class="section">
-  <div class="page-header">
-    <div>
-      <h2>Odluke i akti</h2>
-      <p>Dokumenti upravljačkih tijela</p>
-    </div>
-    <button class="btn btn-primary" onclick="openModal('modalOdluka')">+ Nova odluka</button>
-  </div>
-  <div class="content">
-    <div id="listaOdluka">
-      <div class="empty-state"><div class="icon">📜</div><p>Nema zapisanih odluka.</p></div>
-    </div>
-  </div>
-</div>
-
-<!-- IZVJEŠTAJI -->
-<div id="izvjestaji" class="section">
-  <div class="page-header">
-    <div>
-      <h2>Izvještaji s natjecanja</h2>
-      <p>Rezultati i sportski nastupi</p>
-    </div>
-    <button class="btn btn-primary" onclick="openModal('modalIzvjestaj')">+ Novi izvještaj</button>
-  </div>
-  <div class="content">
-    <div id="listaIzvjestaja">
-      <div class="empty-state"><div class="icon">🏆</div><p>Nema unesenih izvještaja.</p></div>
-    </div>
-  </div>
-</div>
-
-<!-- AI TAJNIK -->
-<div id="ai" class="section">
-  <div class="page-header">
-    <div>
-      <h2>AI Tajnik</h2>
-      <p>Vaš digitalni tajnik – piše odluke, obavijesti, izvještaje i savjetuje o statutu</p>
-    </div>
-    <button class="btn btn-secondary btn-sm" onclick="clearChat()">Novo razgovor</button>
-  </div>
-  <div class="ai-panel">
-    <div class="ai-messages" id="aiMessages">
-      <div class="msg assistant">
-        <div class="msg-avatar">🥋</div>
-        <div class="msg-bubble">
-          Dobar dan! Ja sam digitalni tajnik <strong>KK Đurđevac</strong>. Mogu vam pomoći s:<br><br>
-          📜 <strong>Pisanjem odluka</strong> – skupštinske, upravnog odbora<br>
-          ✉️ <strong>Obavijestima roditeljima/trenerima</strong> – pozivi, obavijesti o treninzima, promjene<br>
-          🏆 <strong>Izvještajima s natjecanja</strong> – za web, Facebook, portale<br>
-          👥 <strong>Pitanjima o statutu</strong> – prava, obveze, procedure<br>
-          📋 <strong>Administrativnim poslovima</strong> – zahtjevi, dopisi, izjave<br><br>
-          Što trebate danas?
+        <hr class="divider">
+        <h3 style="font-family:'Bebas Neue',sans-serif;letter-spacing:1px;font-size:18px;margin-bottom:12px;color:var(--muted)">BRZE RADNJE</h3>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn btn-primary" onclick="openModal('modalDodajClana')">+ Novi član</button>
+          <button class="btn btn-secondary" onclick="openModal('modalOdluka')">📜 Nova odluka</button>
+          <button class="btn btn-secondary" onclick="openModal('modalIzvjestaj')">🏆 Novi izvještaj</button>
+          <button class="btn btn-secondary" onclick="openModal('modalKomunikacija')">✉️ Pošalji obavijest</button>
         </div>
       </div>
     </div>
-    <div class="ai-input-area">
-      <textarea id="aiInput" placeholder="Npr: Napiši poziv za roditeljski sastanak u petak u 18h..." rows="1"
-        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAI()}"
-        oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'"></textarea>
-      <button class="btn btn-primary" onclick="sendAI()" id="btnSendAI">Pošalji</button>
-    </div>
-  </div>
-</div>
 
-
-<!-- UPLATNICE -->
-<div id="uplatnice" class="section">
-  <div class="page-header">
-    <div>
-      <h2>Uplatnice — Članarina</h2>
-      <p>Generiraj uplatnice i pošalji mailom roditeljima</p>
-    </div>
-  </div>
-  <div class="content">
-
-    <!-- Postavke -->
-    <div class="card" style="margin-bottom:20px">
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;margin-bottom:14px;color:var(--muted)">POSTAVKE UPLATNICE</div>
-      <div class="form-grid">
-        <div class="form-group">
-          <label>Mjesec plaćanja</label>
-          <select id="upMjesec">
-            <option value="siječanj">Siječanj</option>
-            <option value="veljača">Veljača</option>
-            <option value="ožujak">Ožujak</option>
-            <option value="travanj">Travanj</option>
-            <option value="svibanj">Svibanj</option>
-            <option value="lipanj">Lipanj</option>
-            <option value="srpanj">Srpanj</option>
-            <option value="kolovoz">Kolovoz</option>
-            <option value="rujan">Rujan</option>
-            <option value="listopad">Listopad</option>
-            <option value="studeni">Studeni</option>
-            <option value="prosinac">Prosinac</option>
+    <!-- ČLANOVI -->
+    <div id="clanovi" class="section">
+      <div class="page-header">
+        <div>
+          <h2>Evidencija članova</h2>
+          <p>Registar svih članova kluba</p>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-secondary" onclick="importHksClanovi()" title="Uvezi iz HKS popisa">📥 Uvezi HKS</button>
+          <button class="btn btn-secondary" onclick="openModal('modalBulkAzuriranje')">📷 Ažuriraj skenom</button>
+          <button class="btn btn-primary" onclick="openModal('modalDodajClana')">+ Dodaj člana</button>
+        </div>
+      </div>
+      <div class="content">
+        <div class="search-bar">
+          <input type="text" id="searchClan" placeholder="Pretraži po imenu, OIB-u..." oninput="renderClanovi()">
+          <select id="filterStatus" onchange="renderClanovi()">
+            <option value="">Svi statusi</option>
+            <option value="aktivan">Aktivni</option>
+            <option value="neaktivan">Neaktivni</option>
+          </select>
+          <select id="filterKategorija" onchange="renderClanovi()">
+            <option value="">Sve kategorije</option>
+            <option value="kadet">Kadet (do 14)</option>
+            <option value="junior">Junior (14-18)</option>
+            <option value="senior">Senior (18+)</option>
           </select>
         </div>
-        <div class="form-group">
-          <label>Godina</label>
-          <input type="number" id="upGodina" value="2026" min="2024" max="2030">
+        <div id="tableClanovi">
+          <div class="empty-state"><div class="icon">👥</div><p>Nema članova. Dodajte prvog člana!</p></div>
         </div>
-        <div class="form-group">
-          <label>Rok plaćanja</label>
-          <input type="date" id="upRok">
-        </div>
-        <div class="form-group">
-          <label>Filtriraj po kategoriji</label>
-          <select id="upFilter">
-            <option value="">Svi aktivni članovi</option>
-            <option value="kadet">Samo kadeti</option>
-            <option value="junior">Samo juniori</option>
-            <option value="senior">Samo seniori</option>
-          </select>
-        </div>
-      </div>
-      <div style="margin-top:14px;padding:12px;background:var(--surface2);border-radius:8px;font-size:13px;line-height:1.8;border-left:3px solid var(--gold)">
-        💡 <strong>Pravilo naplate:</strong> 1 dijete = <strong>25 €</strong> &nbsp;|&nbsp; 2 djece istog prezimena = <strong>40 €</strong> (25+15) &nbsp;|&nbsp; 3+ djece = <strong>40 €</strong> (treće gratis) &nbsp;|&nbsp; Novi član = prvi mjesec <strong>besplatno</strong>
-      </div>
-      <div style="margin-top:12px">
-        <button class="btn btn-primary" onclick="generirajUplatnice()">💳 Generiraj uplatnice</button>
       </div>
     </div>
 
-    <!-- Lista uplatnica -->
-    <div id="listaUplatnica"></div>
+    <!-- KOMUNIKACIJA -->
+    <div id="komunikacija" class="section">
+      <div class="page-header">
+        <div>
+          <h2>Komunikacija</h2>
+          <p>Obavijesti za roditelje i trenere</p>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('modalKomunikacija')">+ Nova obavijest</button>
+      </div>
+      <div class="content">
+        <div id="listaKomunikacija">
+          <div class="empty-state"><div class="icon">✉️</div><p>Nema poslanih obavijesti.</p></div>
+        </div>
+      </div>
+    </div>
 
-  </div>
-</div>
-```
+    <!-- ODLUKE -->
+    <div id="odluke" class="section">
+      <div class="page-header">
+        <div>
+          <h2>Odluke i akti</h2>
+          <p>Dokumenti upravljačkih tijela</p>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('modalOdluka')">+ Nova odluka</button>
+      </div>
+      <div class="content">
+        <div id="listaOdluka">
+          <div class="empty-state"><div class="icon">📜</div><p>Nema zapisanih odluka.</p></div>
+        </div>
+      </div>
+    </div>
 
+    <!-- IZVJEŠTAJI -->
+    <div id="izvjestaji" class="section">
+      <div class="page-header">
+        <div>
+          <h2>Izvještaji s natjecanja</h2>
+          <p>Rezultati i sportski nastupi</p>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('modalIzvjestaj')">+ Novi izvještaj</button>
+      </div>
+      <div class="content">
+        <div id="listaIzvjestaja">
+          <div class="empty-state"><div class="icon">🏆</div><p>Nema unesenih izvještaja.</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI TAJNIK -->
+    <div id="ai" class="section">
+      <div class="page-header">
+        <div>
+          <h2>AI Tajnik</h2>
+          <p>Vaš digitalni tajnik – piše odluke, obavijesti, izvještaje i savjetuje o statutu</p>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="clearChat()">Novo razgovor</button>
+      </div>
+      <div class="ai-panel">
+        <div class="ai-messages" id="aiMessages">
+          <div class="msg assistant">
+            <div class="msg-avatar">🥋</div>
+            <div class="msg-bubble">
+              Dobar dan! Ja sam digitalni tajnik <strong>KK Đurđevac</strong>. Mogu vam pomoći s:<br><br>
+              📜 <strong>Pisanjem odluka</strong> – skupštinske, upravnog odbora<br>
+              ✉️ <strong>Obavijestima roditeljima/trenerima</strong> – pozivi, obavijesti o treninzima, promjene<br>
+              🏆 <strong>Izvještajima s natjecanja</strong> – za web, Facebook, portale<br>
+              👥 <strong>Pitanjima o statutu</strong> – prava, obveze, procedure<br>
+              📋 <strong>Administrativnim poslovima</strong> – zahtjevi, dopisi, izjave<br><br>
+              Što trebate danas?
+            </div>
+          </div>
+        </div>
+        <div class="ai-input-area">
+          <textarea id="aiInput" placeholder="Npr: Napiši poziv za roditeljski sastanak u petak u 18h..." rows="1"
+            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAI()}"
+            oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'"></textarea>
+          <button id="btnMic" onclick="toggleMic()" title="Govorna naredba" style="
+            width:42px;height:42px;border-radius:50%;border:none;cursor:pointer;
+            background:#1C1C1C;color:#aaa;font-size:18px;flex-shrink:0;
+            display:flex;align-items:center;justify-content:center;
+            transition:all 0.2s;border:1px solid #2E2E2E">🎙️</button>
+          <button class="btn btn-primary" onclick="sendAI()" id="btnSendAI">Pošalji</button>
+        </div>
+        <div id="micStatus" style="display:none;text-align:center;padding:6px;font-size:12px;color:var(--gold);animation:pulse 1.5s infinite">
+          🎙️ Slušam... govorite svoju naredbu
+        </div>
+      </div>
+    </div>
+
+
+    <!-- UPLATNICE -->
+    <div id="uplatnice" class="section">
+      <div class="page-header">
+        <div>
+          <h2>Uplatnice — Članarina</h2>
+          <p>Generiraj uplatnice i pošalji mailom roditeljima</p>
+        </div>
+      </div>
+      <div class="content">
+
+        <!-- Postavke -->
+        <div class="card" style="margin-bottom:20px">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;margin-bottom:14px;color:var(--muted)">POSTAVKE UPLATNICE</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Mjesec plaćanja</label>
+              <select id="upMjesec">
+                <option value="siječanj">Siječanj</option>
+                <option value="veljača">Veljača</option>
+                <option value="ožujak">Ožujak</option>
+                <option value="travanj">Travanj</option>
+                <option value="svibanj">Svibanj</option>
+                <option value="lipanj">Lipanj</option>
+                <option value="srpanj">Srpanj</option>
+                <option value="kolovoz">Kolovoz</option>
+                <option value="rujan">Rujan</option>
+                <option value="listopad">Listopad</option>
+                <option value="studeni">Studeni</option>
+                <option value="prosinac">Prosinac</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Godina</label>
+              <input type="number" id="upGodina" value="2026" min="2024" max="2030">
+            </div>
+            <div class="form-group">
+              <label>Rok plaćanja</label>
+              <input type="date" id="upRok">
+            </div>
+            <div class="form-group">
+              <label>Filtriraj po kategoriji</label>
+              <select id="upFilter">
+                <option value="">Svi aktivni članovi</option>
+                <option value="kadet">Samo kadeti</option>
+                <option value="junior">Samo juniori</option>
+                <option value="senior">Samo seniori</option>
+              </select>
+            </div>
+          </div>
+          <div style="margin-top:14px;padding:12px;background:var(--surface2);border-radius:8px;font-size:13px;line-height:1.8;border-left:3px solid var(--gold)">
+            💡 <strong>Pravilo naplate:</strong> 1 dijete = <strong>25 €</strong> &nbsp;|&nbsp; 2 djece istog prezimena = <strong>40 €</strong> (25+15) &nbsp;|&nbsp; 3+ djece = <strong>40 €</strong> (treće gratis) &nbsp;|&nbsp; Novi član = prvi mjesec <strong>besplatno</strong>
+          </div>
+          <div style="margin-top:12px">
+            <button class="btn btn-primary" onclick="generirajUplatnice()">💳 Generiraj uplatnice</button>
+          </div>
+        </div>
+
+        <!-- Lista uplatnica -->
+        <div id="listaUplatnica"></div>
+
+      </div>
+    </div>
+
+
+    <!-- PUTNI NALOZI -->
+    <div id="putni" class="section">
+      <div class="page-header">
+        <div>
+          <h2>Putni nalozi</h2>
+          <p>Evidencija putnih naloga i troškova</p>
+        </div>
+        <button class="btn btn-primary" onclick="noviPutniNalog()">+ Novi nalog</button>
+      </div>
+
+      <!-- PUTNI FORMA -->
+      <div id="putniForma" style="display:none">
+        <div class="content" style="padding-bottom:0">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+            <button class="btn btn-secondary btn-sm" onclick="zatvoriPutniFormu()">← Natrag</button>
+            <h3 style="font-family:'Bebas Neue',sans-serif;letter-spacing:1px;font-size:20px">Novi putni nalog</h3>
+          </div>
+
+          <!-- Osobni podaci -->
+          <div class="card" style="margin-bottom:12px">
+            <div style="font-family:'Bebas Neue',sans-serif;letter-spacing:1px;margin-bottom:12px;color:#aaa;font-size:14px">👤 OSOBNI PODACI</div>
+            <div class="form-grid">
+              <div class="form-group full">
+                <label>Ime i prezime *</label>
+                <select id="pn-ime-sel" onchange="pnOdaberiClana()">
+                  <option value="">— Odaberite člana ili unesite —</option>
+                </select>
+              </div>
+              <div class="form-group full">
+                <label>Ili unesite ručno</label>
+                <input type="text" id="pn-ime" placeholder="Ime i prezime">
+              </div>
+              <div class="form-group">
+                <label>Uloga</label>
+                <select id="pn-uloga" onchange="pnCombo('uloga')">
+                  <option>Predsjednik</option><option>Tajnik</option><option>Trener</option>
+                  <option>Pomoćni trener</option><option>Sportaš</option><option>Sudac</option>
+                  <option>Delegat</option><option>Voditelj ekipe</option><option>Volonter</option>
+                  <option value="__custom__">✏️ Unesite sami...</option>
+                </select>
+                <input type="text" id="pn-uloga-custom" placeholder="Unesite ulogu..." style="display:none;margin-top:6px">
+              </div>
+              <div class="form-group">
+                <label>Svrha putovanja *</label>
+                <select id="pn-svrha" onchange="pnCombo('svrha')">
+                  <option>Natjecanje</option><option>Turnir</option><option>Trening</option>
+                  <option>Seminar / edukacija</option><option>Sastanak</option>
+                  <option>Skupština</option><option>Administracija</option>
+                  <option value="__custom__">✏️ Unesite sami...</option>
+                </select>
+                <input type="text" id="pn-svrha-custom" placeholder="Unesite svrhu..." style="display:none;margin-top:6px">
+              </div>
+            </div>
+          </div>
+
+          <!-- Putovanje -->
+          <div class="card" style="margin-bottom:12px">
+            <div style="font-family:'Bebas Neue',sans-serif;letter-spacing:1px;margin-bottom:12px;color:#aaa;font-size:14px">📍 PUTOVANJE</div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Polazište *</label>
+                <input type="text" id="pn-polaziste" placeholder="Grad polaska" value="Đurđevac">
+              </div>
+              <div class="form-group">
+                <label>Odredište *</label>
+                <input type="text" id="pn-odrediste" placeholder="Grad odredišta">
+              </div>
+              <div class="form-group">
+                <label>Polazak *</label>
+                <input type="datetime-local" id="pn-polazak" onchange="pnCalc()">
+              </div>
+              <div class="form-group">
+                <label>Povratak *</label>
+                <input type="datetime-local" id="pn-povratak" onchange="pnCalc()">
+              </div>
+            </div>
+          </div>
+
+          <!-- Vozilo -->
+          <div class="card" style="margin-bottom:12px">
+            <div style="font-family:'Bebas Neue',sans-serif;letter-spacing:1px;margin-bottom:12px;color:#aaa;font-size:14px">🚗 VOZILO I KM</div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Vrsta vozila</label>
+                <select id="pn-vozilo" onchange="pnCombo('vozilo')">
+                  <option>Privatno</option><option>Službeno</option><option>Klupsko</option>
+                  <option>Autobus</option><option>Vlak</option><option>Avion</option>
+                  <option value="__custom__">✏️ Unesite sami...</option>
+                </select>
+                <input type="text" id="pn-vozilo-custom" placeholder="Unesite vrstu prijevoza..." style="display:none;margin-top:6px">
+              </div>
+              <div class="form-group">
+                <label>Marka vozila</label>
+                <select id="pn-marka" onchange="pnCombo('marka')">
+                  <option value="">— Odaberite —</option>
+                  <option>Volkswagen</option><option>Toyota</option><option>Opel</option>
+                  <option>Ford</option><option>Renault</option><option>Škoda</option>
+                  <option>BMW</option><option>Mercedes</option><option>Peugeot</option>
+                  <option>Fiat</option><option>Audi</option><option>Seat</option>
+                  <option>Honda</option><option>Hyundai</option><option>Kia</option>
+                  <option>Dacia</option><option>Citroën</option><option>Nissan</option>
+                  <option value="__custom__">✏️ Unesite sami...</option>
+                </select>
+                <input type="text" id="pn-marka-custom" placeholder="Unesite marku..." style="display:none;margin-top:6px">
+              </div>
+              <div class="form-group">
+                <label>Registracija</label>
+                <input type="text" id="pn-reg" placeholder="ZG-1234-AB">
+              </div>
+              <div class="form-group">
+                <label>Početni km</label>
+                <input type="number" id="pn-km-s" value="0" min="0" oninput="pnCalc()">
+              </div>
+              <div class="form-group">
+                <label>Završni km</label>
+                <input type="number" id="pn-km-e" value="0" min="0" oninput="pnCalc()">
+              </div>
+            </div>
+          </div>
+
+          <!-- Troškovi -->
+          <div class="card" style="margin-bottom:12px">
+            <div style="font-family:'Bebas Neue',sans-serif;letter-spacing:1px;margin-bottom:12px;color:#aaa;font-size:14px">💶 TROŠKOVI</div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Ostali troškovi (€)</label>
+                <input type="number" id="pn-troskovi" value="0" min="0" step="0.01" oninput="pnCalc()">
+              </div>
+              <div class="form-group">
+                <label>Predujam (€)</label>
+                <input type="number" id="pn-predujam" value="0" min="0" step="0.01" oninput="pnCalc()">
+              </div>
+            </div>
+
+            <!-- Računi -->
+            <div style="margin-top:12px">
+              <label style="font-size:12px;color:#aaa;text-transform:uppercase;letter-spacing:0.5px">📸 Računi i dokumenti</label>
+              <div style="display:flex;gap:8px;margin:8px 0;flex-wrap:wrap">
+                <label class="btn btn-secondary btn-sm" style="cursor:pointer">
+                  📷 Kamera
+                  <input type="file" accept="image/*" capture="environment" style="display:none" onchange="pnDodajRacun(this)">
+                </label>
+                <label class="btn btn-secondary btn-sm" style="cursor:pointer">
+                  🖼 Galerija
+                  <input type="file" accept="image/*" multiple style="display:none" onchange="pnDodajRacun(this)">
+                </label>
+              </div>
+              <div id="pn-racuni-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px"></div>
+            </div>
+
+            <div style="margin-top:12px">
+              <label>Napomena *</label>
+              <textarea id="pn-napomena" placeholder="Opišite detalje putovanja (sastanak, rezultat natjecanja...)"></textarea>
+            </div>
+
+            <!-- UKUPNO -->
+            <div style="background:#1a0000;border:2px solid #C8102E;border-radius:10px;padding:16px;margin-top:14px;text-align:center">
+              <div style="font-size:11px;color:#aaa;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Ukupno za isplatu</div>
+              <div id="pn-ukupno-display" style="font-size:32px;font-weight:700;color:#C8102E">€ 0,00</div>
+              <div id="pn-breakdown" style="font-size:12px;color:#888;margin-top:6px"></div>
+            </div>
+          </div>
+
+          <div style="padding-bottom:20px;display:flex;gap:10px">
+            <button class="btn btn-secondary" onclick="zatvoriPutniFormu()">Odustani</button>
+            <button class="btn btn-primary" style="flex:1" onclick="spremiPutniNalog()">💾 Spremi nalog</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- LISTA NALOGA -->
+      <div id="putniLista" class="content">
+        <!-- Stats -->
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px">
+          <div class="stat-card"><div class="val" id="pn-st-ukupno" style="font-size:28px">0</div><div class="lbl">Ukupno</div></div>
+          <div class="stat-card"><div class="val" id="pn-st-cekanje" style="font-size:28px;color:var(--warn)">0</div><div class="lbl">Na čekanju</div></div>
+          <div class="stat-card"><div class="val" id="pn-st-odobreno" style="font-size:28px;color:var(--success)">0</div><div class="lbl">Odobreno</div></div>
+        </div>
+        <div id="pn-lista-html">
+          <div class="empty-state"><div class="icon">🚗</div><p>Nema putnih naloga. Dodajte prvi!</p></div>
+        </div>
+      </div>
+
+      <!-- DETALJI NALOGA -->
+      <div id="putniDetalji" style="display:none" class="content">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+          <button class="btn btn-secondary btn-sm" onclick="zatvoriPutniDetalje()">← Natrag</button>
+          <h3 style="font-family:'Bebas Neue',sans-serif;letter-spacing:1px;font-size:20px">Putni nalog</h3>
+        </div>
+        <div id="pn-detalji-body"></div>
+        <div style="display:flex;gap:10px;margin-top:16px;padding-bottom:20px">
+          <button class="btn btn-sm" style="background:rgba(200,16,46,0.15);color:#ff5a70;border:1px solid rgba(200,16,46,0.2)" onclick="obrisiPutniNalog()">🗑 Obriši</button>
+          <button class="btn btn-primary" style="flex:1" id="pn-odobri-btn" onclick="odobriPutniNalog()">✓ Odobri nalog</button>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- MODUL 2: DNEVNIK RADA -->
+    <div id="dnevnik" class="section">
+      <div class="page-header">
+        <div><h2>Dnevnik rada</h2><p>Prozivka i plan treninga</p></div>
+        <button class="btn btn-primary" onclick="noviTrening()">+ Novi trening</button>
+      </div>
+      <div class="content">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px">
+          <div class="stat-card" style="cursor:pointer" onclick="showSection('dnevnik')">
+            <div class="val" id="dn-st-treninga" style="font-size:28px">0</div><div class="lbl">Treninga ukupno</div>
+          </div>
+          <div class="stat-card">
+            <div class="val" id="dn-st-danas" style="font-size:28px;color:var(--gold)">0</div><div class="lbl">Prisutnih danas</div>
+          </div>
+        </div>
+
+        <!-- PROZIVKA -->
+        <div id="dn-prozivka-panel" style="display:none">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+            <button class="btn btn-secondary btn-sm" onclick="zatvoriProzivku()">← Natrag</button>
+            <h3 style="font-family:'Bebas Neue',sans-serif;letter-spacing:1px;font-size:20px" id="dn-trening-naslov">Trening</h3>
+          </div>
+          <div style="margin-bottom:12px;font-size:13px;color:#aaa">Tapnite člana za označavanje prisutnosti:</div>
+          <div id="dn-prozivka-lista" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"></div>
+          <div style="margin-top:14px;display:flex;gap:8px">
+            <button class="btn btn-secondary" style="flex:1" onclick="zatvoriProzivku()">Odustani</button>
+            <button class="btn btn-primary" style="flex:1" onclick="spremiProzivku()">💾 Spremi prozivku</button>
+          </div>
+        </div>
+
+        <!-- LISTA TRENINGA -->
+        <div id="dn-lista-panel">
+          <div style="font-family:'Bebas Neue',sans-serif;letter-spacing:1px;font-size:15px;margin-bottom:10px;color:#aaa">NEDAVNI TRENINZI</div>
+          <div id="dn-lista-html">
+            <div class="empty-state"><div class="icon">📋</div><p>Nema unesenih treninga.</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODUL 3: KALENDAR -->
+    <div id="kalendar" class="section">
+      <div class="page-header">
+        <div><h2>Kalendar</h2><p>Treninzi, utakmice i događaji</p></div>
+        <button class="btn btn-primary" onclick="noviDogadaj()">+ Novi događaj</button>
+      </div>
+      <div class="content">
+        <!-- Mini kalendar -->
+        <div class="card" style="margin-bottom:16px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+            <button class="btn btn-secondary btn-sm" onclick="kalMjesec(-1)">←</button>
+            <div id="kal-naslov" style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px"></div>
+            <button class="btn btn-secondary btn-sm" onclick="kalMjesec(1)">→</button>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center;margin-bottom:6px">
+            <div style="font-size:10px;color:#aaa;padding:4px">Pon</div>
+            <div style="font-size:10px;color:#aaa;padding:4px">Uto</div>
+            <div style="font-size:10px;color:#aaa;padding:4px">Sri</div>
+            <div style="font-size:10px;color:#aaa;padding:4px">Čet</div>
+            <div style="font-size:10px;color:#aaa;padding:4px">Pet</div>
+            <div style="font-size:10px;color:#aaa;padding:4px;color:var(--gold)">Sub</div>
+            <div style="font-size:10px;color:#aaa;padding:4px;color:#ff5a70">Ned</div>
+          </div>
+          <div id="kal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px"></div>
+        </div>
+
+        <!-- Događaji odabranog dana -->
+        <div id="kal-dan-dogadaji" style="margin-bottom:14px;display:none">
+          <div style="font-family:'Bebas Neue',sans-serif;letter-spacing:1px;font-size:15px;margin-bottom:8px;color:#aaa" id="kal-dan-naslov"></div>
+          <div id="kal-dan-lista"></div>
+        </div>
+
+        <!-- Forma novi događaj -->
+        <div id="kal-forma" style="display:none">
+          <div class="card">
+            <div style="font-family:'Bebas Neue',sans-serif;letter-spacing:1px;margin-bottom:12px;font-size:15px;color:#aaa">NOVI DOGAĐAJ</div>
+            <div class="form-grid">
+              <div class="form-group full">
+                <label>Naziv događaja *</label>
+                <input type="text" id="kal-naziv" placeholder="npr. Trening A grupe, Kup Đurđevca...">
+              </div>
+              <div class="form-group">
+                <label>Vrsta</label>
+                <select id="kal-vrsta">
+                  <option value="trening">🥋 Trening</option>
+                  <option value="natjecanje">🏆 Natjecanje</option>
+                  <option value="sastanak">👥 Sastanak</option>
+                  <option value="ostalo">📌 Ostalo</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Datum *</label>
+                <input type="date" id="kal-datum">
+              </div>
+              <div class="form-group">
+                <label>Početak</label>
+                <input type="time" id="kal-pocetak" value="18:00">
+              </div>
+              <div class="form-group">
+                <label>Kraj</label>
+                <input type="time" id="kal-kraj" value="19:30">
+              </div>
+              <div class="form-group full">
+                <label>Lokacija</label>
+                <input type="text" id="kal-lokacija" placeholder="Dvorana, adresa...">
+              </div>
+              <div class="form-group full">
+                <label>Napomena</label>
+                <textarea id="kal-napomena" style="min-height:60px" placeholder="Dodatne informacije..."></textarea>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:12px">
+              <button class="btn btn-secondary" onclick="zatvoriKalFormu()">Odustani</button>
+              <button class="btn btn-primary" style="flex:1" onclick="spremiDogadaj()">💾 Spremi</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Lista svih događaja -->
+        <div id="kal-svi-dogadaji">
+          <div style="font-family:'Bebas Neue',sans-serif;letter-spacing:1px;font-size:15px;margin-bottom:10px;color:#aaa">NADOLAZEĆI DOGAĐAJI</div>
+          <div id="kal-lista-html">
+            <div class="empty-state"><div class="icon">📅</div><p>Nema planiranih događaja.</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODUL 4: LIJEČNIČKI PREGLEDI -->
+    <div id="lijecnicki" class="section">
+      <div class="page-header">
+        <div><h2>Liječnički pregledi</h2><p>Praćenje valjanosti pregleda</p></div>
+        <button class="btn btn-primary" onclick="openModal('modalLijecnicki')">+ Unesi pregled</button>
+      </div>
+      <div class="content">
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px">
+          <div class="stat-card"><div class="val" id="lj-st-ok" style="font-size:24px;color:var(--success)">0</div><div class="lbl">Valjani</div></div>
+          <div class="stat-card"><div class="val" id="lj-st-warn" style="font-size:24px;color:var(--warn)">0</div><div class="lbl">Uskoro ističu</div></div>
+          <div class="stat-card"><div class="val" id="lj-st-exp" style="font-size:24px;color:var(--red)">0</div><div class="lbl">Istekli</div></div>
+        </div>
+
+        <!-- Upozorenja -->
+        <div id="lj-upozorenja"></div>
+
+        <!-- Lista -->
+        <div id="lj-lista-html">
+          <div class="empty-state"><div class="icon">🏥</div><p>Nema unesenih pregleda. Dodajte preglede za članove.</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODUL 5: OBAVIJESTI HUB -->
+    <div id="obavijesti2" class="section">
+      <div class="page-header">
+        <div><h2>Obavijesti</h2><p>Službene poruke roditeljima i trenerima</p></div>
+        <button class="btn btn-primary" onclick="openModal('modalNovaObavijest2')">+ Nova obavijest</button>
+      </div>
+      <div class="content">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px">
+          <div class="stat-card"><div class="val" id="ob2-st-ukupno" style="font-size:28px">0</div><div class="lbl">Ukupno</div></div>
+          <div class="stat-card"><div class="val" id="ob2-st-hitno" style="font-size:28px;color:var(--red)">0</div><div class="lbl">Hitne</div></div>
+        </div>
+        <div id="ob2-lista-html">
+          <div class="empty-state"><div class="icon">📢</div><p>Nema obavijesti.</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BRZI UNOS EMAIL ADRESA -->
+    <div id="emailovi" class="section">
+      <div class="page-header">
+        <div><h2>Email adrese</h2><p>Brzi unos za slanje uplatnica</p></div>
+        <button class="btn btn-primary" onclick="spremiEmailove()">💾 Spremi sve</button>
+      </div>
+      <div class="content">
+        <div style="background:rgba(240,165,0,0.1);border:1px solid var(--gold);border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:13px;color:var(--gold)">
+          💡 Unesite email adrese roditelja. Koristit će se za slanje uplatnica. Jedan email po članu.
+        </div>
+        <div id="email-lista-forma"></div>
+        <div style="margin-top:16px;padding-bottom:20px">
+          <button class="btn btn-primary" style="width:100%" onclick="spremiEmailove()">💾 Spremi sve email adrese</button>
+        </div>
+      </div>
+    </div>
   </main>
 </div>
 
 <!-- MODAL: DODAJ ČLANA -->
-
 <div class="modal-overlay" id="modalDodajClana">
   <div class="modal">
     <div class="modal-header">
@@ -752,108 +1198,104 @@ margin-top: 10px;
     </div>
     <div class="modal-body">
 
-```
-  <!-- KAMERA SKENIRANJE -->
-  <div style="background:var(--surface2);border:1px dashed var(--border);border-radius:10px;padding:14px;margin-bottom:16px">
-    <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">📷 Skeniraj dokumentom (osobna, zdravstvena, potvrda...)</div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-      <label class="btn btn-secondary" style="cursor:pointer;margin:0">
-        📷 Kamera
-        <input type="file" id="scanKamera" accept="image/*" capture="environment" style="display:none" onchange="skenirajDokument(this,'novi')">
-      </label>
-      <label class="btn btn-secondary" style="cursor:pointer;margin:0">
-        🖼 Galerija
-        <input type="file" id="scanGalerija" accept="image/*" style="display:none" onchange="skenirajDokument(this,'novi')">
-      </label>
-      <span id="scanStatus" style="font-size:12px;color:var(--muted)">Slika dokumenta za automatsko popunjavanje</span>
-    </div>
-    <div id="scanPreview" style="display:none;margin-top:10px">
-      <img id="scanImg" style="max-width:100%;max-height:160px;border-radius:6px;object-fit:contain">
-    </div>
-  </div>
+      <!-- KAMERA SKENIRANJE -->
+      <div style="background:var(--surface2);border:1px dashed var(--border);border-radius:10px;padding:14px;margin-bottom:16px">
+        <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">📷 Skeniraj dokumentom (osobna, zdravstvena, potvrda...)</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <label class="btn btn-secondary" style="cursor:pointer;margin:0">
+            📷 Kamera
+            <input type="file" id="scanKamera" accept="image/*" capture="environment" style="display:none" onchange="skenirajDokument(this,'novi')">
+          </label>
+          <label class="btn btn-secondary" style="cursor:pointer;margin:0">
+            🖼 Galerija
+            <input type="file" id="scanGalerija" accept="image/*" style="display:none" onchange="skenirajDokument(this,'novi')">
+          </label>
+          <span id="scanStatus" style="font-size:12px;color:var(--muted)">Slika dokumenta za automatsko popunjavanje</span>
+        </div>
+        <div id="scanPreview" style="display:none;margin-top:10px">
+          <img id="scanImg" style="max-width:100%;max-height:160px;border-radius:6px;object-fit:contain">
+        </div>
+      </div>
 
-  <div class="form-grid">
-    <div class="form-group">
-      <label>Ime</label>
-      <input type="text" id="cIme" placeholder="npr. Ivan">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Ime</label>
+          <input type="text" id="cIme" placeholder="npr. Ivan">
+        </div>
+        <div class="form-group">
+          <label>Prezime</label>
+          <input type="text" id="cPrezime" placeholder="npr. Horvat">
+        </div>
+        <div class="form-group">
+          <label>Datum rođenja</label>
+          <input type="date" id="cDatRod">
+        </div>
+        <div class="form-group">
+          <label>OIB</label>
+          <input type="text" id="cOIB" placeholder="11-znamenkasti OIB" maxlength="11">
+        </div>
+        <div class="form-group full">
+          <label>Adresa</label>
+          <input type="text" id="cAdresa" placeholder="Ulica i broj, grad">
+        </div>
+        <div class="form-group">
+          <label>Ime oca/majke</label>
+          <input type="text" id="cRoditelji" placeholder="Roditelji / staratelji">
+        </div>
+        <div class="form-group">
+          <label>Mobitel</label>
+          <input type="text" id="cMobitel" placeholder="+385 9x xxx xxxx">
+        </div>
+        <div class="form-group">
+          <label>E-mail</label>
+          <input type="email" id="cEmail" placeholder="email@primjer.hr">
+        </div>
+        <div class="form-group">
+          <label>Pojasni stupanj</label>
+          <select id="cPojas">
+            <option>Bijeli pojas</option>
+            <option>Žuti pojas</option>
+            <option>Narančasti pojas</option>
+            <option>Zeleni pojas</option>
+            <option>Plavi pojas</option>
+            <option>Smeđi pojas</option>
+            <option>Crni pojas 1. dan</option>
+            <option>Crni pojas 2. dan</option>
+            <option>Crni pojas 3. dan</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Status</label>
+          <select id="cStatus">
+            <option value="aktivan">Aktivan</option>
+            <option value="neaktivan">Neaktivan</option>
+          </select>
+        </div>
+        <div class="form-group full">
+          <label>Napomena o bolestima / posebnostima</label>
+          <textarea id="cBolest" placeholder="Alergije, kronične bolesti, posebne napomene..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>Datum učlanjenja</label>
+          <input type="date" id="cDatUclan">
+        </div>
+        <div class="form-group">
+          <label>Izjava potpisana</label>
+          <select id="cIzjava">
+            <option value="da">Da ✓</option>
+            <option value="ne">Ne ✗</option>
+          </select>
+        </div>
+      </div>
     </div>
-    <div class="form-group">
-      <label>Prezime</label>
-      <input type="text" id="cPrezime" placeholder="npr. Horvat">
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modalDodajClana')">Odustani</button>
+      <button class="btn btn-primary" onclick="dodajClana()">Spremi člana</button>
     </div>
-    <div class="form-group">
-      <label>Datum rođenja</label>
-      <input type="date" id="cDatRod">
-    </div>
-    <div class="form-group">
-      <label>OIB</label>
-      <input type="text" id="cOIB" placeholder="11-znamenkasti OIB" maxlength="11">
-    </div>
-    <div class="form-group full">
-      <label>Adresa</label>
-      <input type="text" id="cAdresa" placeholder="Ulica i broj, grad">
-    </div>
-    <div class="form-group">
-      <label>Ime oca/majke</label>
-      <input type="text" id="cRoditelji" placeholder="Roditelji / staratelji">
-    </div>
-    <div class="form-group">
-      <label>Mobitel</label>
-      <input type="text" id="cMobitel" placeholder="+385 9x xxx xxxx">
-    </div>
-    <div class="form-group">
-      <label>E-mail</label>
-      <input type="email" id="cEmail" placeholder="email@primjer.hr">
-    </div>
-    <div class="form-group">
-      <label>Pojasni stupanj</label>
-      <select id="cPojas">
-        <option>Bijeli pojas</option>
-        <option>Žuti pojas</option>
-        <option>Narančasti pojas</option>
-        <option>Zeleni pojas</option>
-        <option>Plavi pojas</option>
-        <option>Smeđi pojas</option>
-        <option>Crni pojas 1. dan</option>
-        <option>Crni pojas 2. dan</option>
-        <option>Crni pojas 3. dan</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label>Status</label>
-      <select id="cStatus">
-        <option value="aktivan">Aktivan</option>
-        <option value="neaktivan">Neaktivan</option>
-      </select>
-    </div>
-    <div class="form-group full">
-      <label>Napomena o bolestima / posebnostima</label>
-      <textarea id="cBolest" placeholder="Alergije, kronične bolesti, posebne napomene..."></textarea>
-    </div>
-    <div class="form-group">
-      <label>Datum učlanjenja</label>
-      <input type="date" id="cDatUclan">
-    </div>
-    <div class="form-group">
-      <label>Izjava potpisana</label>
-      <select id="cIzjava">
-        <option value="da">Da ✓</option>
-        <option value="ne">Ne ✗</option>
-      </select>
-    </div>
-  </div>
-</div>
-<div class="modal-footer">
-  <button class="btn btn-secondary" onclick="closeModal('modalDodajClana')">Odustani</button>
-  <button class="btn btn-primary" onclick="dodajClana()">Spremi člana</button>
-</div>
-```
-
   </div>
 </div>
 
 <!-- MODAL: ODLUKA -->
-
 <div class="modal-overlay" id="modalOdluka">
   <div class="modal">
     <div class="modal-header">
@@ -904,7 +1346,6 @@ margin-top: 10px;
 </div>
 
 <!-- MODAL: IZVJEŠTAJ -->
-
 <div class="modal-overlay" id="modalIzvjestaj">
   <div class="modal">
     <div class="modal-header">
@@ -961,7 +1402,6 @@ margin-top: 10px;
 </div>
 
 <!-- MODAL: KOMUNIKACIJA -->
-
 <div class="modal-overlay" id="modalKomunikacija">
   <div class="modal">
     <div class="modal-header">
@@ -1017,7 +1457,6 @@ margin-top: 10px;
 </div>
 
 <!-- MODAL: UREDI ČLANA -->
-
 <div class="modal-overlay" id="modalDetaljiClana">
   <div class="modal" style="max-width:640px">
     <div class="modal-header">
@@ -1026,128 +1465,147 @@ margin-top: 10px;
     </div>
     <div class="modal-body">
 
-```
-  <!-- SKENIRANJE PRISTUPNICE -->
-  <div style="background:var(--surface2);border:1px dashed var(--border);border-radius:10px;padding:12px;margin-bottom:16px">
-    <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">📄 Skeniraj pristupnicu / osobnu iskaznicu</div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-      <label class="btn btn-secondary btn-sm" style="cursor:pointer;margin:0">
-        📷 Kamera
-        <input type="file" id="editScanKamera" accept="image/*" capture="environment" style="display:none" onchange="skenirajPristupnicu(this)">
-      </label>
-      <label class="btn btn-secondary btn-sm" style="cursor:pointer;margin:0">
-        🖼 Galerija
-        <input type="file" id="editScanGalerija" accept="image/*" style="display:none" onchange="skenirajPristupnicu(this)">
-      </label>
-      <span id="editScanStatus" style="font-size:12px;color:var(--muted)">Slika automatski ispunjava polja</span>
-    </div>
-    <div id="editScanPreview" style="display:none;margin-top:8px">
-      <img id="editScanImg" style="max-width:100%;max-height:140px;border-radius:6px;object-fit:contain">
-    </div>
-  </div>
+      <!-- FOTOGRAFIJA ČLANA -->
+      <div style="margin-bottom:16px;display:flex;align-items:center;gap:14px">
+        <div id="editFotoPreview" style="width:72px;height:72px;border-radius:50%;background:#2E2E2E;border:3px solid #C8102E;display:flex;align-items:center;justify-content:center;font-size:24px;color:#888;flex-shrink:0;overflow:hidden">
+          <span id="editFotoInitials">?</span>
+          <img id="editFotoImg" style="display:none;width:100%;height:100%;object-fit:cover">
+        </div>
+        <div>
+          <div style="font-size:12px;color:#aaa;margin-bottom:6px">Fotografija člana</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <label class="btn btn-secondary btn-sm" style="cursor:pointer;margin:0">
+              📷 Kamera
+              <input type="file" accept="image/*" capture="environment" style="display:none" onchange="ucitajFoto(this)">
+            </label>
+            <label class="btn btn-secondary btn-sm" style="cursor:pointer;margin:0">
+              🖼 Galerija
+              <input type="file" accept="image/*" style="display:none" onchange="ucitajFoto(this)">
+            </label>
+            <button class="btn btn-sm" style="background:rgba(200,16,46,0.15);color:#ff5a70;border:1px solid rgba(200,16,46,0.2)" onclick="obrišiFoto()">✕</button>
+          </div>
+        </div>
+      </div>
 
-  <!-- FORMA -->
-  <div class="form-grid">
-    <div class="form-group">
-      <label>Ime</label>
-      <input type="text" id="eIme">
-    </div>
-    <div class="form-group">
-      <label>Prezime</label>
-      <input type="text" id="ePrezime">
-    </div>
-    <div class="form-group">
-      <label>Datum rođenja</label>
-      <input type="date" id="eDatRod">
-    </div>
-    <div class="form-group">
-      <label>OIB</label>
-      <input type="text" id="eOIB" maxlength="11">
-    </div>
-    <div class="form-group full">
-      <label>Adresa</label>
-      <input type="text" id="eAdresa">
-    </div>
-    <div class="form-group">
-      <label>Ime oca/majke</label>
-      <input type="text" id="eRoditelji">
-    </div>
-    <div class="form-group">
-      <label>Mobitel</label>
-      <input type="text" id="eMobitel">
-    </div>
-    <div class="form-group">
-      <label>E-mail</label>
-      <input type="email" id="eEmail">
-    </div>
-    <div class="form-group">
-      <label>Pojasni stupanj</label>
-      <select id="ePojas">
-        <option>Bijeli pojas</option>
-        <option>Žuti pojas</option>
-        <option>Narančasti pojas</option>
-        <option>Zeleni pojas</option>
-        <option>Plavi pojas</option>
-        <option>Smeđi pojas</option>
-        <option>Crni pojas 1. dan</option>
-        <option>Crni pojas 2. dan</option>
-        <option>Crni pojas 3. dan</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label>KYU oznaka</label>
-      <select id="eKyu">
-        <option value="">—</option>
-        <option>9. KYU</option><option>8. KYU</option><option>7. KYU</option>
-        <option>6. KYU</option><option>5. KYU</option><option>4. KYU</option>
-        <option>3. KYU</option><option>2. KYU</option><option>1. KYU</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label>Status</label>
-      <select id="eStatus">
-        <option value="aktivan">Aktivan</option>
-        <option value="neaktivan">Neaktivan</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label>Članarina plaćena</label>
-      <select id="eClanarina">
-        <option value="da">✓ Plaćena</option>
-        <option value="ne">✗ Nije plaćena</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label>Datum učlanjenja</label>
-      <input type="date" id="eDatUclan">
-    </div>
-    <div class="form-group">
-      <label>Izjava potpisana</label>
-      <select id="eIzjava">
-        <option value="da">Da ✓</option>
-        <option value="ne">Ne ✗</option>
-      </select>
-    </div>
-    <div class="form-group full">
-      <label>Napomena o bolestima</label>
-      <textarea id="eBolest" style="min-height:60px"></textarea>
-    </div>
-  </div>
-</div>
-<div class="modal-footer" style="justify-content:space-between">
-  <button class="btn btn-gold btn-sm" onclick="generirajIzjavu()" id="btnIzjava">🤖 Generiraj izjavu</button>
-  <div style="display:flex;gap:8px">
-    <button class="btn btn-secondary" onclick="closeModal('modalDetaljiClana')">Odustani</button>
-    <button class="btn btn-primary" onclick="spremiUrednogClana()">💾 Spremi promjene</button>
-  </div>
-</div>
-```
+      <!-- SKENIRANJE PRISTUPNICE -->
+      <div style="background:var(--surface2);border:1px dashed var(--border);border-radius:10px;padding:12px;margin-bottom:16px">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">📄 Skeniraj pristupnicu / osobnu iskaznicu</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <label class="btn btn-secondary btn-sm" style="cursor:pointer;margin:0">
+            📷 Kamera
+            <input type="file" id="editScanKamera" accept="image/*" capture="environment" style="display:none" onchange="skenirajPristupnicu(this)">
+          </label>
+          <label class="btn btn-secondary btn-sm" style="cursor:pointer;margin:0">
+            🖼 Galerija
+            <input type="file" id="editScanGalerija" accept="image/*" style="display:none" onchange="skenirajPristupnicu(this)">
+          </label>
+          <span id="editScanStatus" style="font-size:12px;color:var(--muted)">Slika automatski ispunjava polja</span>
+        </div>
+        <div id="editScanPreview" style="display:none;margin-top:8px">
+          <img id="editScanImg" style="max-width:100%;max-height:140px;border-radius:6px;object-fit:contain">
+        </div>
+      </div>
 
+      <!-- FORMA -->
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Ime</label>
+          <input type="text" id="eIme">
+        </div>
+        <div class="form-group">
+          <label>Prezime</label>
+          <input type="text" id="ePrezime">
+        </div>
+        <div class="form-group">
+          <label>Datum rođenja</label>
+          <input type="date" id="eDatRod">
+        </div>
+        <div class="form-group">
+          <label>OIB</label>
+          <input type="text" id="eOIB" maxlength="11">
+        </div>
+        <div class="form-group full">
+          <label>Adresa</label>
+          <input type="text" id="eAdresa">
+        </div>
+        <div class="form-group">
+          <label>Ime oca/majke</label>
+          <input type="text" id="eRoditelji">
+        </div>
+        <div class="form-group">
+          <label>Mobitel</label>
+          <input type="text" id="eMobitel">
+        </div>
+        <div class="form-group">
+          <label>E-mail</label>
+          <input type="email" id="eEmail">
+        </div>
+        <div class="form-group">
+          <label>Pojasni stupanj</label>
+          <select id="ePojas">
+            <option>Bijeli pojas</option>
+            <option>Žuti pojas</option>
+            <option>Narančasti pojas</option>
+            <option>Zeleni pojas</option>
+            <option>Plavi pojas</option>
+            <option>Smeđi pojas</option>
+            <option>Crni pojas 1. dan</option>
+            <option>Crni pojas 2. dan</option>
+            <option>Crni pojas 3. dan</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>KYU oznaka</label>
+          <select id="eKyu">
+            <option value="">—</option>
+            <option>9. KYU</option><option>8. KYU</option><option>7. KYU</option>
+            <option>6. KYU</option><option>5. KYU</option><option>4. KYU</option>
+            <option>3. KYU</option><option>2. KYU</option><option>1. KYU</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Status</label>
+          <select id="eStatus">
+            <option value="aktivan">Aktivan</option>
+            <option value="neaktivan">Neaktivan</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Članarina plaćena</label>
+          <select id="eClanarina">
+            <option value="da">✓ Plaćena</option>
+            <option value="ne">✗ Nije plaćena</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Datum učlanjenja</label>
+          <input type="date" id="eDatUclan">
+        </div>
+        <div class="form-group">
+          <label>Izjava potpisana</label>
+          <select id="eIzjava">
+            <option value="da">Da ✓</option>
+            <option value="ne">Ne ✗</option>
+          </select>
+        </div>
+        <div class="form-group full">
+          <label>Napomena o bolestima</label>
+          <textarea id="eBolest" style="min-height:60px"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer" style="justify-content:space-between">
+      <button class="btn btn-gold btn-sm" onclick="generirajIzjavu()" id="btnIzjava">🤖 Generiraj izjavu</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-secondary" onclick="closeModal('modalDetaljiClana')">Odustani</button>
+        <button class="btn btn-primary" onclick="spremiUrednogClana()">💾 Spremi promjene</button>
+      </div>
+    </div>
   </div>
 </div>
+
 
 <!-- MODAL: UPLATNICA PREVIEW -->
-
 <div class="modal-overlay" id="modalUplatnica">
   <div class="modal" style="max-width:520px">
     <div class="modal-header">
@@ -1155,6 +1613,7 @@ margin-top: 10px;
       <button class="modal-close" onclick="closeModal('modalUplatnica')">✕</button>
     </div>
     <div class="modal-body" id="uplatnicaBody"></div>
+
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('modalUplatnica')">Zatvori</button>
       <button class="btn btn-primary" onclick="posaljiMailAktivni()" id="btnUplatnicaMail" style="display:none">📧 Pošalji mail</button>
@@ -1162,8 +1621,8 @@ margin-top: 10px;
   </div>
 </div>
 
-<!-- MODAL: BULK AŽURIRANJE SKENOM -->
 
+<!-- MODAL: BULK AŽURIRANJE SKENOM -->
 <div class="modal-overlay" id="modalBulkAzuriranje">
   <div class="modal" style="max-width:560px">
     <div class="modal-header">
@@ -1172,42 +1631,121 @@ margin-top: 10px;
     </div>
     <div class="modal-body">
       <p style="font-size:13px;color:var(--muted);margin-bottom:14px">Slikajte osobnu iskaznicu, zdravstvenu iskaznicu ili bilo koji dokument člana. AI će automatski prepoznati podatke i ponuditi ažuriranje kartice.</p>
+      
+      <div style="background:var(--surface2);border:1px dashed var(--border);border-radius:10px;padding:16px;margin-bottom:14px">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
+          <label class="btn btn-primary" style="cursor:pointer;margin:0">
+            📷 Slikaj kamerom
+            <input type="file" id="bulkKamera" accept="image/*" capture="environment" style="display:none" onchange="skenirajDokument(this,'bulk')">
+          </label>
+          <label class="btn btn-secondary" style="cursor:pointer;margin:0">
+            🖼 Iz galerije
+            <input type="file" id="bulkGalerija" accept="image/*" style="display:none" onchange="skenirajDokument(this,'bulk')">
+          </label>
+        </div>
+        <div id="bulkScanPreview" style="display:none">
+          <img id="bulkScanImg" style="max-width:100%;max-height:180px;border-radius:6px;object-fit:contain;margin-bottom:10px">
+        </div>
+        <div id="bulkScanStatus" style="font-size:13px;color:var(--muted)">Odaberite sliku dokumenta...</div>
+      </div>
 
-```
-  <div style="background:var(--surface2);border:1px dashed var(--border);border-radius:10px;padding:16px;margin-bottom:14px">
-    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
-      <label class="btn btn-primary" style="cursor:pointer;margin:0">
-        📷 Slikaj kamerom
-        <input type="file" id="bulkKamera" accept="image/*" capture="environment" style="display:none" onchange="skenirajDokument(this,'bulk')">
-      </label>
-      <label class="btn btn-secondary" style="cursor:pointer;margin:0">
-        🖼 Iz galerije
-        <input type="file" id="bulkGalerija" accept="image/*" style="display:none" onchange="skenirajDokument(this,'bulk')">
-      </label>
-    </div>
-    <div id="bulkScanPreview" style="display:none">
-      <img id="bulkScanImg" style="max-width:100%;max-height:180px;border-radius:6px;object-fit:contain;margin-bottom:10px">
-    </div>
-    <div id="bulkScanStatus" style="font-size:13px;color:var(--muted)">Odaberite sliku dokumenta...</div>
-  </div>
-
-  <div id="bulkRezultat" style="display:none">
-    <div style="font-family:'Bebas Neue',sans-serif;letter-spacing:1px;font-size:15px;margin-bottom:10px;color:var(--muted)">PRONAĐENI PODACI</div>
-    <div id="bulkNadeniPodaci" style="background:var(--surface2);border-radius:8px;padding:14px;font-size:13px;line-height:2"></div>
-    <div style="margin-top:12px">
-      <div class="form-group">
-        <label>Primijeni na člana</label>
-        <select id="bulkClanSelect" style="width:100%"></select>
+      <div id="bulkRezultat" style="display:none">
+        <div style="font-family:'Bebas Neue',sans-serif;letter-spacing:1px;font-size:15px;margin-bottom:10px;color:var(--muted)">PRONAĐENI PODACI</div>
+        <div id="bulkNadeniPodaci" style="background:var(--surface2);border-radius:8px;padding:14px;font-size:13px;line-height:2"></div>
+        <div style="margin-top:12px">
+          <div class="form-group">
+            <label>Primijeni na člana</label>
+            <select id="bulkClanSelect" style="width:100%"></select>
+          </div>
+        </div>
       </div>
     </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modalBulkAzuriranje')">Zatvori</button>
+      <button class="btn btn-primary" id="btnBulkApply" style="display:none" onclick="primijeniSken()">✓ Ažuriraj člana</button>
+    </div>
   </div>
 </div>
-<div class="modal-footer">
-  <button class="btn btn-secondary" onclick="closeModal('modalBulkAzuriranje')">Zatvori</button>
-  <button class="btn btn-primary" id="btnBulkApply" style="display:none" onclick="primijeniSken()">✓ Ažuriraj člana</button>
-</div>
-```
 
+<button id="scrollTopBtn" onclick="scrollToTop()" title="Na vrh">↑</button>
+
+<!-- MODAL: LIJEČNIČKI PREGLED -->
+<div class="modal-overlay" id="modalLijecnicki">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Liječnički pregled</h3>
+      <button class="modal-close" onclick="closeModal('modalLijecnicki')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group full">
+          <label>Član *</label>
+          <select id="lj-clan-sel">
+            <option value="">— Odaberite člana —</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Datum pregleda *</label>
+          <input type="date" id="lj-datum">
+        </div>
+        <div class="form-group">
+          <label>Vrijedi do *</label>
+          <input type="date" id="lj-vrijedi">
+        </div>
+        <div class="form-group full">
+          <label>Napomena</label>
+          <input type="text" id="lj-napomena" placeholder="Ordinacija, liječnik, napomena...">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modalLijecnicki')">Odustani</button>
+      <button class="btn btn-primary" onclick="spremiLijecnicki()">Spremi</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: NOVA OBAVIJEST 2 -->
+<div class="modal-overlay" id="modalNovaObavijest2">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Nova obavijest</h3>
+      <button class="modal-close" onclick="closeModal('modalNovaObavijest2')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group full">
+          <label>Naslov *</label>
+          <input type="text" id="ob2-naslov" placeholder="Naslov obavijesti">
+        </div>
+        <div class="form-group">
+          <label>Vrsta</label>
+          <select id="ob2-vrsta">
+            <option value="info">ℹ️ Informacija</option>
+            <option value="hitno">🔴 Hitno</option>
+            <option value="trening">🥋 Trening</option>
+            <option value="natjecanje">🏆 Natjecanje</option>
+            <option value="placanje">💶 Plaćanje</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Prima</label>
+          <select id="ob2-prima">
+            <option value="svi">Svi</option>
+            <option value="roditelji">Roditelji</option>
+            <option value="treneri">Treneri</option>
+          </select>
+        </div>
+        <div class="form-group full">
+          <label>Tekst obavijesti *</label>
+          <textarea id="ob2-tekst" placeholder="Tekst obavijesti..." style="min-height:100px"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modalNovaObavijest2')">Odustani</button>
+      <button class="btn btn-primary" onclick="spremiObavijest2()">Objavi</button>
+    </div>
   </div>
 </div>
 
@@ -1276,6 +1814,44 @@ function anthropicHeaders() {
   return { 'Content-Type': 'application/json', 'anthropic-dangerous-direct-browser-access': 'true' };
 }
 
+
+
+// ========== FOTOGRAFIJA ČLANA ==========
+let _editFotoData = null;
+
+function ucitajFoto(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    _editFotoData = e.target.result;
+    document.getElementById('editFotoImg').src = e.target.result;
+    document.getElementById('editFotoImg').style.display = 'block';
+    document.getElementById('editFotoInitials').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+function obrišiFoto() {
+  _editFotoData = null;
+  document.getElementById('editFotoImg').style.display = 'none';
+  document.getElementById('editFotoImg').src = '';
+  document.getElementById('editFotoInitials').style.display = '';
+  // Mark for deletion
+  _editFotoData = 'DELETE';
+}
+
+// ========== SCROLL TO TOP ==========
+function scrollToTop() {
+  // Try all possible scrollable containers
+  const active = document.querySelector('.section.active .content');
+  if (active) { active.scrollTop = 0; }
+  document.querySelector('main') && (document.querySelector('main').scrollTop = 0);
+  window.scrollTo(0, 0);
+  document.body.scrollTop = 0;
+  document.documentElement.scrollTop = 0;
+}
+
 // ========== STATE ==========
 let state = {
   clanovi: [],
@@ -1333,6 +1909,12 @@ function showSection(id) {
   if (id === 'izvjestaji') renderIzvjestaji();
   if (id === 'komunikacija') renderKomunikacija();
   if (id === 'uplatnice') initUplatnice();
+  if (id === 'emailovi') { renderEmailForma(); }
+  if (id === 'dnevnik') { dnRenderLista(); }
+  if (id === 'kalendar') { renderKalendar(); }
+  if (id === 'lijecnicki') { ljRenderLista(); const s=document.getElementById('lj-clan-sel'); if(s){ s.innerHTML='<option value="">— Odaberite člana —</option>'+state.clanovi.filter(c=>c.status==='aktivan').map(c=>`<option value="${c.id}">${c.ime} ${c.prezime}</option>`).join(''); } }
+  if (id === 'obavijesti2') { ob2RenderLista(); }
+  if (id === 'putni') { pnRenderLista(); document.getElementById('putniForma').style.display='none'; document.getElementById('putniDetalji').style.display='none'; document.getElementById('putniLista').style.display='block'; }
 }
 
 // ========== MODALS ==========
@@ -1347,6 +1929,12 @@ function openModal(id) {
 }
 function closeModal(id) {
   document.getElementById(id).classList.remove('open');
+  if (id === 'modalUplatnica') {
+    const qrDiv = document.getElementById('qrCodeDiv');
+    const qrContainer = document.getElementById('qrCodeContainer');
+    if (qrDiv) qrDiv.innerHTML = '';
+    if (qrContainer) qrContainer.style.display = 'none';
+  }
 }
 document.querySelectorAll('.modal-overlay').forEach(m => {
   m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
@@ -1453,7 +2041,18 @@ function renderClanovi() {
     <tbody>
     ${lista.map(c => `
       <tr>
-        <td><span style="font-size:14px;font-weight:600;color:var(--text)">${c.ime} ${c.prezime}</span><br><span style="font-size:11px;color:var(--muted)">${c.sifra || c.oib || '—'}</span></td>
+        <td>
+          <div style="display:flex;align-items:center;gap:10px">
+            ${c.foto 
+              ? `<img src="${c.foto}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid #C8102E;flex-shrink:0">` 
+              : `<div style="width:36px;height:36px;border-radius:50%;background:#2E2E2E;display:flex;align-items:center;justify-content:center;font-size:14px;color:#888;flex-shrink:0;border:2px solid #2E2E2E">${c.ime.charAt(0)}${c.prezime.charAt(0)}</div>`
+            }
+            <div>
+              <div style="font-size:14px;font-weight:600;color:#EDEDED">${c.ime} ${c.prezime}</div>
+              <div style="font-size:11px;color:#AAAAAA">${c.sifra || c.oib || '—'}</div>
+            </div>
+          </div>
+        </td>
         <td><span class="badge badge-gray" style="color:var(--text)">${c.kategorija}</span></td>
         <td style="font-size:13px;color:var(--text)">${c.pojas}</td>
         <td><span class="badge ${c.status === 'aktivan' ? 'badge-green' : 'badge-red'}">${c.status}</span></td>
@@ -1515,6 +2114,20 @@ function prikaziClana(id) {
   document.getElementById('editScanStatus').textContent = 'Slika automatski ispunjava polja';
   document.getElementById('editScanStatus').style.color = '';
   document.getElementById('editScanPreview').style.display = 'none';
+  // Load photo
+  _editFotoData = null;
+  const fotoImg = document.getElementById('editFotoImg');
+  const fotoInit = document.getElementById('editFotoInitials');
+  if (c.foto) {
+    fotoImg.src = c.foto;
+    fotoImg.style.display = 'block';
+    fotoInit.style.display = 'none';
+  } else {
+    fotoImg.style.display = 'none';
+    fotoImg.src = '';
+    fotoInit.style.display = '';
+    fotoInit.textContent = c.ime.charAt(0) + c.prezime.charAt(0);
+  }
   openModal('modalDetaljiClana');
 }
 
@@ -1542,6 +2155,13 @@ function spremiUrednogClana() {
     const god = new Date().getFullYear() - new Date(c.datRod).getFullYear();
     c.kategorija = god < 14 ? 'kadet' : god < 18 ? 'junior' : 'senior';
   }
+  // Save photo
+  if (_editFotoData === 'DELETE') {
+    c.foto = null;
+  } else if (_editFotoData) {
+    c.foto = _editFotoData;
+  }
+  _editFotoData = null;
   save();
   closeModal('modalDetaljiClana');
   renderClanovi();
@@ -1862,8 +2482,169 @@ function obrisiObavijest(id) {
   save(); renderKomunikacija();
 }
 
+
+// ========== GLASOVNA NAREDBA (Web Speech API) ==========
+let micRecognition = null;
+let micActive = false;
+
+function toggleMic() {
+  if (micActive) {
+    stopMic();
+  } else {
+    startMic();
+  }
+}
+
+function startMic() {
+  // Check browser support
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    toast('Vaš preglednik ne podržava glasovni unos. Koristite Chrome ili Edge.', 'err');
+    return;
+  }
+
+  micRecognition = new SpeechRecognition();
+  micRecognition.lang = 'hr-HR';
+  micRecognition.continuous = false;
+  micRecognition.interimResults = true;
+  micRecognition.maxAlternatives = 1;
+
+  micRecognition.onstart = () => {
+    micActive = true;
+    const btn = document.getElementById('btnMic');
+    btn.classList.add('listening');
+    btn.textContent = '🔴';
+    document.getElementById('micStatus').style.display = 'block';
+  };
+
+  micRecognition.onresult = (event) => {
+    let transcript = '';
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+      transcript += event.results[i][0].transcript;
+    }
+    document.getElementById('aiInput').value = transcript;
+    document.getElementById('aiInput').style.height = 'auto';
+    document.getElementById('aiInput').style.height = Math.min(document.getElementById('aiInput').scrollHeight, 120) + 'px';
+    
+    // Auto-send if final result
+    if (event.results[event.results.length - 1].isFinal) {
+      stopMic();
+      setTimeout(() => sendAI(), 500);
+    }
+  };
+
+  micRecognition.onerror = (event) => {
+    stopMic();
+    if (event.error === 'not-allowed') {
+      toast('Mikrofon je blokiran. Dozvolite pristup mikrofonu u pregledniku.', 'err');
+    } else if (event.error === 'no-speech') {
+      toast('Nije prepoznat govor. Pokušajte ponovo.', 'err');
+    } else {
+      toast('Greška mikrofona: ' + event.error, 'err');
+    }
+  };
+
+  micRecognition.onend = () => {
+    stopMic();
+  };
+
+  micRecognition.start();
+}
+
+function stopMic() {
+  micActive = false;
+  const btn = document.getElementById('btnMic');
+  if (btn) {
+    btn.classList.remove('listening');
+    btn.textContent = '🎙️';
+  }
+  const status = document.getElementById('micStatus');
+  if (status) status.style.display = 'none';
+  if (micRecognition) {
+    try { micRecognition.stop(); } catch(e) {}
+    micRecognition = null;
+  }
+}
+
 // ========== AI CHAT ==========
 const SYSTEM_PROMPT = `Ti si digitalni tajnik Karate kluba Đurđevac (KK Đurđevac). Odgovaraš isključivo na hrvatskom jeziku.
+
+PODACI O KLUBU:
+- Naziv: Karate klub "Đurđevac" / KK Đurđevac
+- Adresa: Ulica Andrije Hebranga 12, 48350 Đurđevac
+- OIB: 98308789784 | MB: 01076485
+- IBAN: HR8823600001102289908 (Zagrebačka banka)
+- Predsjednik: Ivan Juričić (mandat: 30.03.2025–30.03.2029)
+- Tajnica: Jasminka Sinjeri Prevedan (mandat: 30.03.2025–30.03.2029)
+- Likvidator: Slavko Aušperger
+- Tel: 098/805-555, 098/9078-738
+- E-mail: karate.djurdjevac@gmail.com
+- Facebook: facebook.com/KarateKlubDurdevac
+- Registriran: 03.04.1998. (osnovan 31.03.1995.)
+- Registarski broj: 06000441
+
+STATUT KK ĐURĐEVAC (donesen 30.03.2025.):
+
+OSNOVE: Klub je osnovan temeljem Zakona o udrugama (NN 74/14, 70/17, 98/19, 151/22) i Zakona o sportu (NN 141/22). Neprofitna je pravna osoba, upisana u Registar neprofitnih organizacija.
+
+CILJEVI I DJELATNOSTI (čl. 7-8): Promicanje, razvitak i unapređenje karate sporta. Djelatnosti: organiziranje treninga, poduka djece i mladeži, sudjelovanje na natjecanjima, suradnja s HKS-om i HOO-om, skrb o zdravlju sportaša, edukacija o anti-dopingu, sprječavanje nasilja u sportu.
+
+ČLANSTVO (čl. 10-16):
+- Član može postati svaki državljanin RH i stranac sukladno propisima HKS-a
+- Odluku o prijemu donosi Izvršni odbor
+- Popis članova vodi tajnik elektronički (ime, OIB, datum rođenja, datum pristupanja, adresa, telefon)
+- Prava članova: pravo glasa, pravo biranja i biti biran, sudjelovanje u aktivnostima
+- Obveze članova: plaćanje članarine, bavljenje sportom, čuvanje ugleda kluba
+- Članstvo prestaje: dobrovoljnim istupom, neplaćanjem članarine, isključenjem
+- Isključenje: odlučuje Izvršni odbor, žalba Skupštini u roku 15 dana
+
+TIJELA KLUBA (čl. 18-35):
+1. SKUPŠTINA - najviše tijelo, sačinjavaju svi punoljetni članovi
+   - Redovita (jednom godišnje), izborna (svake 4 godine), izvanredna
+   - Kvorum: natpolovična većina, odluke većinom glasova
+   - Nadležnost: usvaja Statut, program rada, financijski plan, bira predsjednika i tajnika
+   - Saziva predsjednik ili na zahtjev 1/3 članova
+   - Može zasjedati elektronički u hitnim slučajevima
+
+2. PREDSJEDNIK (čl. 26) - bira Skupština na 4 godine
+   - Zastupa i predstavlja Klub
+   - Rukovodi Izvršnim odborom i Skupštinom
+   - Skrbi o izvršenju odluka
+
+3. TAJNIK (čl. 27) - bira Skupština na 4 godine
+   - Zastupa Klub zajedno s predsjednikom
+   - Vodi popis članova
+   - Organizira i koordinira rad Kluba
+   - Zaključuje pravne poslove
+
+4. IZVRŠNI ODBOR (čl. 28-32) - 5 članova, mandat 4 godine
+   - Izvršno i operativno tijelo
+   - Utvrđuje prijedlog programa i financijskog plana
+   - Upravlja imovinom Kluba
+   - Sjednice najmanje jednom u 3 mjeseca
+   - Odluke većinom glasova svih članova
+
+5. STEGOVNA KOMISIJA (čl. 33-34) - 3 člana, mandat 4 godine
+   - Provodi stegovni postupak
+   - Mjere: opomena ili isključenje
+   - Žalba Skupštini u roku 15 dana
+
+IMOVINA (čl. 37-39): Članarine, dobrovoljni prilozi, dotacije iz proračuna, sponzorstva, prihodi od sportskih djelatnosti. Imovina se može koristiti isključivo za ciljeve Kluba.
+
+PRESTANAK RADA (čl. 40-41): Odlukom Skupštine dvotrećinskom većinom. Imovina pripada udruzi sličnih ciljeva.
+
+ČLANARINA: Plaća se mjesečno, iznos određuje Izvršni odbor. Za 1 dijete: 25€, za 2 djece istog prezimena: 40€ (25+15), za 3+ djece: 40€ (treće gratis). Novi član - prvi mjesec besplatno. Rok plaćanja: do 20. u mjesecu.
+
+Možeš pomoći s:
+1. Pisanjem formalnih odluka (Upravni odbor/Izvršni odbor, Skupština)
+2. Obavijestima za roditelje i trenere
+3. Izvještajima s natjecanja za portale i Facebook
+4. Pitanjima o pravilima, statutu i procedurama
+5. Administrativnim dopisima, zahtjevima, izjavama
+6. Putnim nalozima i financijskim dokumentima
+7. Godišnjim izvještajima i planovima
+
+Uvijek si profesionalan, koncizan i koristan. Kad pišeš formalne dokumente, koristi standardni format s datumom, brojem, pravnom osnovom i potpisima.
 
 PODACI O KLUBU:
 - Naziv: Karate klub Đurđevac (KK Đurđevac)
@@ -2133,426 +2914,1078 @@ function prikaziOCRModal(tekst, prefiks) {
   panel.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:2px solid var(--gold);padding:16px;z-index:9999;max-height:50vh;overflow-y:auto';
   panel.innerHTML = '<div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">📄 Pročitani tekst s dokumenta — provjerite polja gore</div>'
     + '<pre style="font-size:11px;white-space:pre-wrap;color:var(--text);line-height:1.5;max-height:200px;overflow-y:auto;background:var(--surface2);padding:10px;border-radius:6px">' + tekst.substring(0,800) + '</pre>'
-
-```
-+ '<button class="btn btn-secondary btn-sm" style="margin-top:8px" onclick="zatvoriOCRPanel()">Zatvori</button>';
-```
-
-document.body.appendChild(panel);
+    + '<button class="btn btn-secondary btn-sm" style="margin-top:8px" onclick="zatvoriOCRPanel()">Zatvori</button>';
+  document.body.appendChild(panel);
 }
 
 async function skenirajPristupnicu(input) {
-const file = input.files[0];
-if (!file) return;
-const statusEl = document.getElementById(‘editScanStatus’);
-const previewEl = document.getElementById(‘editScanPreview’);
-const imgEl = document.getElementById(‘editScanImg’);
+  const file = input.files[0];
+  if (!file) return;
+  const statusEl = document.getElementById('editScanStatus');
+  const previewEl = document.getElementById('editScanPreview');
+  const imgEl = document.getElementById('editScanImg');
 
-const reader = new FileReader();
-reader.onload = async (e) => {
-imgEl.src = e.target.result;
-previewEl.style.display = ‘block’;
-statusEl.textContent = ‘⏳ Učitavam OCR engine…’;
-statusEl.style.color = ‘var(–gold)’;
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    imgEl.src = e.target.result;
+    previewEl.style.display = 'block';
+    statusEl.textContent = '⏳ Učitavam OCR engine...';
+    statusEl.style.color = 'var(--gold)';
 
-```
-try {
-  const result = await Tesseract.recognize(e.target.result, 'hrv+eng', {
-    logger: m => {
-      if (m.status === 'recognizing text') {
-        statusEl.textContent = '⏳ Čitam dokument... ' + Math.round(m.progress * 100) + '%';
-      }
+    try {
+      const result = await Tesseract.recognize(e.target.result, 'hrv+eng', {
+        logger: m => {
+          if (m.status === 'recognizing text') {
+            statusEl.textContent = '⏳ Čitam dokument... ' + Math.round(m.progress * 100) + '%';
+          }
+        }
+      });
+
+      const tekst = result.data.text;
+      const p = parsirajOCRTekst(tekst, 'e');
+      popuniFormuIzOCR(p, 'e');
+
+      const nadeno = Object.entries(p).filter(([k,v])=>v).map(([k])=>({ime:'Ime',prezime:'Prezime',datRod:'Datum',oib:'OIB',adresa:'Adresa',roditelji:'Roditelji',mobitel:'Mobitel',email:'Email',bolest:'Bolest'}[k]||k)).join(', ');
+      statusEl.textContent = nadeno ? '✓ Prepoznato: ' + nadeno + ' — provjerite i dopunite' : '⚠ Nije prepoznato — pogledajte pročitani tekst';
+      statusEl.style.color = nadeno ? 'var(--success)' : 'var(--warn)';
+      prikaziOCRModal(tekst, 'e');
+    } catch(err) {
+      statusEl.textContent = '⚠ OCR greška: ' + err.message;
+      statusEl.style.color = 'var(--warn)';
     }
-  });
-
-  const tekst = result.data.text;
-  const p = parsirajOCRTekst(tekst, 'e');
-  popuniFormuIzOCR(p, 'e');
-
-  const nadeno = Object.entries(p).filter(([k,v])=>v).map(([k])=>({ime:'Ime',prezime:'Prezime',datRod:'Datum',oib:'OIB',adresa:'Adresa',roditelji:'Roditelji',mobitel:'Mobitel',email:'Email',bolest:'Bolest'}[k]||k)).join(', ');
-  statusEl.textContent = nadeno ? '✓ Prepoznato: ' + nadeno + ' — provjerite i dopunite' : '⚠ Nije prepoznato — pogledajte pročitani tekst';
-  statusEl.style.color = nadeno ? 'var(--success)' : 'var(--warn)';
-  prikaziOCRModal(tekst, 'e');
-} catch(err) {
-  statusEl.textContent = '⚠ OCR greška: ' + err.message;
-  statusEl.style.color = 'var(--warn)';
-}
-```
-
-};
-reader.readAsDataURL(file);
+  };
+  reader.readAsDataURL(file);
 }
 
 async function skenirajDokument(input, mode) {
-const file = input.files[0];
-if (!file) return;
+  const file = input.files[0];
+  if (!file) return;
 
-const reader = new FileReader();
-reader.onload = async (e) => {
-if (mode === ‘novi’) {
-document.getElementById(‘scanImg’).src = e.target.result;
-document.getElementById(‘scanPreview’).style.display = ‘block’;
-document.getElementById(‘scanStatus’).textContent = ‘⏳ Učitavam OCR…’;
-document.getElementById(‘scanStatus’).style.color = ‘var(–gold)’;
-} else {
-document.getElementById(‘bulkScanImg’).src = e.target.result;
-document.getElementById(‘bulkScanPreview’).style.display = ‘block’;
-document.getElementById(‘bulkScanStatus’).textContent = ‘⏳ Učitavam OCR…’;
-document.getElementById(‘bulkScanStatus’).style.color = ‘var(–gold)’;
-}
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    if (mode === 'novi') {
+      document.getElementById('scanImg').src = e.target.result;
+      document.getElementById('scanPreview').style.display = 'block';
+      document.getElementById('scanStatus').textContent = '⏳ Učitavam OCR...';
+      document.getElementById('scanStatus').style.color = 'var(--gold)';
+    } else {
+      document.getElementById('bulkScanImg').src = e.target.result;
+      document.getElementById('bulkScanPreview').style.display = 'block';
+      document.getElementById('bulkScanStatus').textContent = '⏳ Učitavam OCR...';
+      document.getElementById('bulkScanStatus').style.color = 'var(--gold)';
+    }
 
-```
-try {
-  const statusEl = document.getElementById(mode === 'novi' ? 'scanStatus' : 'bulkScanStatus');
-  const result = await Tesseract.recognize(e.target.result, 'hrv+eng', {
-    logger: m => {
-      if (m.status === 'recognizing text') {
-        statusEl.textContent = '⏳ Čitam... ' + Math.round(m.progress * 100) + '%';
+    try {
+      const statusEl = document.getElementById(mode === 'novi' ? 'scanStatus' : 'bulkScanStatus');
+      const result = await Tesseract.recognize(e.target.result, 'hrv+eng', {
+        logger: m => {
+          if (m.status === 'recognizing text') {
+            statusEl.textContent = '⏳ Čitam... ' + Math.round(m.progress * 100) + '%';
+          }
+        }
+      });
+
+      const tekst = result.data.text;
+      const podaci = parsirajOCRTekst(tekst, mode === 'novi' ? 'c' : '');
+
+      if (mode === 'novi') {
+        if (podaci.ime) document.getElementById('cIme').value = podaci.ime;
+        if (podaci.prezime) document.getElementById('cPrezime').value = podaci.prezime;
+        if (podaci.datRod) document.getElementById('cDatRod').value = podaci.datRod;
+        if (podaci.oib) document.getElementById('cOIB').value = podaci.oib;
+        if (podaci.adresa) document.getElementById('cAdresa').value = podaci.adresa;
+        if (podaci.mobitel) document.getElementById('cMobitel').value = podaci.mobitel;
+        if (podaci.email) document.getElementById('cEmail').value = podaci.email;
+        const nadeno = Object.entries(podaci).filter(([k,v])=>v).map(([k])=>k).join(', ');
+        statusEl.textContent = nadeno ? '✓ Pronađeno: ' + nadeno + ' — provjerite' : '⚠ Nisu prepoznati podaci';
+        statusEl.style.color = nadeno ? 'var(--success)' : 'var(--warn)';
+        prikaziOCRModal(tekst, 'c');
+      } else {
+        // Bulk mode
+        _zadnjiSkenPodaci = podaci;
+        const nadeno = Object.entries(podaci).filter(([k,v]) => v);
+        if (nadeno.length === 0) {
+          document.getElementById('bulkScanStatus').textContent = '⚠ Nisu prepoznati podaci.';
+          return;
+        }
+
+        const labels = {ime:'Ime',prezime:'Prezime',datRod:'Datum rođenja',oib:'OIB',adresa:'Adresa',mobitel:'Mobitel',email:'E-mail'};
+        document.getElementById('bulkNadeniPodaci').innerHTML = nadeno
+          .map(([k,v]) => '<div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">' + (labels[k]||k) + ':</span><strong style="color:var(--text)">' + v + '</strong></div>')
+          .join('');
+
+        // Populate clan select — try to find matching member by name
+        const select = document.getElementById('bulkClanSelect');
+        select.innerHTML = state.clanovi.map(c => 
+          '<option value="' + c.id + '"' + 
+          ((podaci.prezime && c.prezime.toLowerCase().includes(podaci.prezime.toLowerCase())) || 
+           (podaci.ime && c.ime.toLowerCase().includes(podaci.ime.toLowerCase())) ? ' selected' : '') +
+          '>' + c.ime + ' ' + c.prezime + '</option>'
+        ).join('');
+
+        document.getElementById('bulkRezultat').style.display = 'block';
+        document.getElementById('btnBulkApply').style.display = '';
+        document.getElementById('bulkScanStatus').textContent = '✓ Podaci prepoznati — odaberite člana i pritisnite Ažuriraj';
+        document.getElementById('bulkScanStatus').style.color = 'var(--success)';
       }
+
+    } catch(e) {
+      const errMsg = '⚠ Greška pri čitanju dokumenta. Pokušajte ponovo.';
+      if (mode === 'novi') document.getElementById('scanStatus').textContent = errMsg;
+      else document.getElementById('bulkScanStatus').textContent = errMsg;
     }
-  });
-
-  const tekst = result.data.text;
-  const podaci = parsirajOCRTekst(tekst, mode === 'novi' ? 'c' : '');
-
-  if (mode === 'novi') {
-    if (podaci.ime) document.getElementById('cIme').value = podaci.ime;
-    if (podaci.prezime) document.getElementById('cPrezime').value = podaci.prezime;
-    if (podaci.datRod) document.getElementById('cDatRod').value = podaci.datRod;
-    if (podaci.oib) document.getElementById('cOIB').value = podaci.oib;
-    if (podaci.adresa) document.getElementById('cAdresa').value = podaci.adresa;
-    if (podaci.mobitel) document.getElementById('cMobitel').value = podaci.mobitel;
-    if (podaci.email) document.getElementById('cEmail').value = podaci.email;
-    const nadeno = Object.entries(podaci).filter(([k,v])=>v).map(([k])=>k).join(', ');
-    statusEl.textContent = nadeno ? '✓ Pronađeno: ' + nadeno + ' — provjerite' : '⚠ Nisu prepoznati podaci';
-    statusEl.style.color = nadeno ? 'var(--success)' : 'var(--warn)';
-    prikaziOCRModal(tekst, 'c');
-  } else {
-    // Bulk mode
-    _zadnjiSkenPodaci = podaci;
-    const nadeno = Object.entries(podaci).filter(([k,v]) => v);
-    if (nadeno.length === 0) {
-      document.getElementById('bulkScanStatus').textContent = '⚠ Nisu prepoznati podaci.';
-      return;
-    }
-
-    const labels = {ime:'Ime',prezime:'Prezime',datRod:'Datum rođenja',oib:'OIB',adresa:'Adresa',mobitel:'Mobitel',email:'E-mail'};
-    document.getElementById('bulkNadeniPodaci').innerHTML = nadeno
-      .map(([k,v]) => '<div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">' + (labels[k]||k) + ':</span><strong style="color:var(--text)">' + v + '</strong></div>')
-      .join('');
-
-    // Populate clan select — try to find matching member by name
-    const select = document.getElementById('bulkClanSelect');
-    select.innerHTML = state.clanovi.map(c => 
-      '<option value="' + c.id + '"' + 
-      ((podaci.prezime && c.prezime.toLowerCase().includes(podaci.prezime.toLowerCase())) || 
-       (podaci.ime && c.ime.toLowerCase().includes(podaci.ime.toLowerCase())) ? ' selected' : '') +
-      '>' + c.ime + ' ' + c.prezime + '</option>'
-    ).join('');
-
-    document.getElementById('bulkRezultat').style.display = 'block';
-    document.getElementById('btnBulkApply').style.display = '';
-    document.getElementById('bulkScanStatus').textContent = '✓ Podaci prepoznati — odaberite člana i pritisnite Ažuriraj';
-    document.getElementById('bulkScanStatus').style.color = 'var(--success)';
-  }
-
-} catch(e) {
-  const errMsg = '⚠ Greška pri čitanju dokumenta. Pokušajte ponovo.';
-  if (mode === 'novi') document.getElementById('scanStatus').textContent = errMsg;
-  else document.getElementById('bulkScanStatus').textContent = errMsg;
-}
-```
-
-};
-reader.readAsDataURL(file);
+  };
+  reader.readAsDataURL(file);
 }
 
 function primijeniSken() {
-const podaci = _zadnjiSkenPodaci;
-if (!podaci) return;
-const id = parseFloat(document.getElementById(‘bulkClanSelect’).value);
-const clan = state.clanovi.find(c => c.id === id);
-if (!clan) return;
+  const podaci = _zadnjiSkenPodaci;
+  if (!podaci) return;
+  const id = parseFloat(document.getElementById('bulkClanSelect').value);
+  const clan = state.clanovi.find(c => c.id === id);
+  if (!clan) return;
 
-if (podaci.ime && podaci.ime.trim()) clan.ime = podaci.ime.trim();
-if (podaci.prezime && podaci.prezime.trim()) clan.prezime = podaci.prezime.trim();
-if (podaci.datRod && podaci.datRod.trim()) clan.datRod = podaci.datRod.trim();
-if (podaci.oib && podaci.oib.trim()) clan.oib = podaci.oib.trim();
-if (podaci.adresa && podaci.adresa.trim()) clan.adresa = podaci.adresa.trim();
-if (podaci.mobitel && podaci.mobitel.trim()) clan.mobitel = podaci.mobitel.trim();
-if (podaci.email && podaci.email.trim()) clan.email = podaci.email.trim();
+  if (podaci.ime && podaci.ime.trim()) clan.ime = podaci.ime.trim();
+  if (podaci.prezime && podaci.prezime.trim()) clan.prezime = podaci.prezime.trim();
+  if (podaci.datRod && podaci.datRod.trim()) clan.datRod = podaci.datRod.trim();
+  if (podaci.oib && podaci.oib.trim()) clan.oib = podaci.oib.trim();
+  if (podaci.adresa && podaci.adresa.trim()) clan.adresa = podaci.adresa.trim();
+  if (podaci.mobitel && podaci.mobitel.trim()) clan.mobitel = podaci.mobitel.trim();
+  if (podaci.email && podaci.email.trim()) clan.email = podaci.email.trim();
 
-save();
-closeModal(‘modalBulkAzuriranje’);
-renderClanovi();
-logActivity(‘📷’, ’Ažuriran skenem: ’ + clan.ime + ’ ’ + clan.prezime);
-toast(‘Podaci za ’ + clan.ime + ’ ’ + clan.prezime + ’ ažurirani!’);
-
-// Reset
-_zadnjiSkenPodaci = null;
-document.getElementById(‘bulkRezultat’).style.display = ‘none’;
-document.getElementById(‘btnBulkApply’).style.display = ‘none’;
-document.getElementById(‘bulkScanPreview’).style.display = ‘none’;
-document.getElementById(‘bulkScanStatus’).textContent = ‘Odaberite sliku dokumenta…’;
-document.getElementById(‘bulkScanStatus’).style.color = ‘’;
+  save();
+  closeModal('modalBulkAzuriranje');
+  renderClanovi();
+  logActivity('📷', 'Ažuriran skenem: ' + clan.ime + ' ' + clan.prezime);
+  toast('Podaci za ' + clan.ime + ' ' + clan.prezime + ' ažurirani!');
+  
+  // Reset
+  _zadnjiSkenPodaci = null;
+  document.getElementById('bulkRezultat').style.display = 'none';
+  document.getElementById('btnBulkApply').style.display = 'none';
+  document.getElementById('bulkScanPreview').style.display = 'none';
+  document.getElementById('bulkScanStatus').textContent = 'Odaberite sliku dokumenta...';
+  document.getElementById('bulkScanStatus').style.color = '';
 }
+
+
+
+
+
+// ========== BRZI UNOS EMAILOVA ==========
+function renderEmailForma() {
+  const el = document.getElementById('email-lista-forma');
+  if (!el) return;
+  const aktivni = state.clanovi.filter(c => c.status === 'aktivan').sort((a,b) => a.prezime.localeCompare(b.prezime));
+  el.innerHTML = aktivni.map(c => `
+    <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #2E2E2E">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:14px;font-weight:600;color:#EDEDED">${c.ime} ${c.prezime}</div>
+        <div style="font-size:11px;color:#666">${c.kategorija} · ${c.pojas}</div>
+      </div>
+      <input type="email" 
+        id="email-${c.id}" 
+        value="${c.email || ''}" 
+        placeholder="email@primjer.hr"
+        style="flex:1;font-size:13px;padding:8px 10px;background:#1C1C1C;border:1px solid #333;border-radius:6px;color:#EDEDED;outline:none"
+        onfocus="this.style.borderColor='#C8102E'"
+        onblur="this.style.borderColor='#333'"
+      >
+    </div>`).join('');
+}
+
+function spremiEmailove() {
+  const aktivni = state.clanovi.filter(c => c.status === 'aktivan');
+  let promjena = 0;
+  aktivni.forEach(c => {
+    const el = document.getElementById('email-' + c.id);
+    if (el) {
+      const noviEmail = el.value.trim();
+      if (noviEmail !== (c.email || '')) {
+        c.email = noviEmail;
+        promjena++;
+      }
+    }
+  });
+  save();
+  toast('Spremljeno ' + promjena + ' email adresa!');
+  logActivity('📧', 'Ažurirane email adrese: ' + promjena + ' članova');
+}
+
+// ========== MODUL 2: DNEVNIK RADA ==========
+let dnTreninzi = [];
+let dnPrisutni = {};
+let dnAktivniTrening = null;
+try { dnTreninzi = JSON.parse(localStorage.getItem('kk_treninzi') || '[]'); } catch(e){}
+function dnSave() { localStorage.setItem('kk_treninzi', JSON.stringify(dnTreninzi)); }
+
+function noviTrening() {
+  const danas = new Date().toISOString().split('T')[0];
+  const naslov = 'Trening ' + new Date().toLocaleDateString('hr-HR');
+  dnAktivniTrening = { id: Date.now().toString(), datum: danas, naslov, prisutni: [] };
+  dnPrisutni = {};
+  document.getElementById('dn-trening-naslov').textContent = naslov;
+  const lista = document.getElementById('dn-prozivka-lista');
+  lista.innerHTML = state.clanovi.filter(c => c.status === 'aktivan').map(c => `
+    <div id="dn-clan-${c.id}" onclick="dnToggle(${c.id})" style="padding:12px;border-radius:8px;border:1px solid #333;cursor:pointer;text-align:center;transition:all 0.15s;background:#1C1C1C">
+      ${c.foto ? `<img src="${c.foto}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;margin-bottom:6px;display:block;margin-left:auto;margin-right:auto">` : `<div style="width:40px;height:40px;border-radius:50%;background:#2E2E2E;display:flex;align-items:center;justify-content:center;margin:0 auto 6px;font-size:14px;color:#888">${c.ime.charAt(0)}${c.prezime.charAt(0)}</div>`}
+      <div style="font-size:12px;font-weight:600;color:#EDEDED">${c.ime}<br>${c.prezime}</div>
+    </div>`).join('');
+  document.getElementById('dn-lista-panel').style.display = 'none';
+  document.getElementById('dn-prozivka-panel').style.display = 'block';
+}
+
+function dnToggle(id) {
+  dnPrisutni[id] = !dnPrisutni[id];
+  const el = document.getElementById('dn-clan-' + id);
+  if (dnPrisutni[id]) {
+    el.style.background = 'rgba(46,204,113,0.2)';
+    el.style.borderColor = 'var(--success)';
+  } else {
+    el.style.background = '#1C1C1C';
+    el.style.borderColor = '#333';
+  }
+}
+
+function spremiProzivku() {
+  if (!dnAktivniTrening) return;
+  dnAktivniTrening.prisutni = Object.entries(dnPrisutni).filter(([k,v])=>v).map(([k])=>parseInt(k));
+  dnTreninzi.push(dnAktivniTrening);
+  dnSave();
+  zatvoriProzivku();
+  logActivity('📋', 'Prozivka: ' + dnAktivniTrening.prisutni.length + ' prisutnih');
+  toast('Prozivka spremljena! ' + dnAktivniTrening.prisutni.length + ' prisutnih');
+}
+
+function zatvoriProzivku() {
+  document.getElementById('dn-prozivka-panel').style.display = 'none';
+  document.getElementById('dn-lista-panel').style.display = 'block';
+  dnRenderLista();
+}
+
+function dnRenderLista() {
+  document.getElementById('dn-st-treninga').textContent = dnTreninzi.length;
+  const danas = dnTreninzi.find(t => t.datum === new Date().toISOString().split('T')[0]);
+  document.getElementById('dn-st-danas').textContent = danas ? danas.prisutni.length : 0;
+  const el = document.getElementById('dn-lista-html');
+  if (dnTreninzi.length === 0) {
+    el.innerHTML = '<div class="empty-state"><div class="icon">📋</div><p>Nema unesenih treninga.</p></div>';
+    return;
+  }
+  el.innerHTML = [...dnTreninzi].reverse().map(t => {
+    const prisutni = state.clanovi.filter(c => t.prisutni.includes(c.id));
+    return `<div class="card" style="margin-bottom:10px">
+      <div class="card-row">
+        <div>
+          <div style="font-weight:600;color:#EDEDED">${t.naslov}</div>
+          <div style="font-size:12px;color:#aaa;margin-top:2px">${new Date(t.datum).toLocaleDateString('hr-HR')}</div>
+          <div style="font-size:12px;color:var(--success);margin-top:4px">✓ ${t.prisutni.length} prisutnih</div>
+          <div style="font-size:11px;color:#666;margin-top:2px">${prisutni.slice(0,5).map(c=>c.ime+' '+c.prezime).join(', ')}${prisutni.length > 5 ? ' +' + (prisutni.length-5) + ' više' : ''}</div>
+        </div>
+        <button class="btn btn-sm" style="background:rgba(200,16,46,0.15);color:#ff5a70;border:1px solid rgba(200,16,46,0.2);align-self:flex-start" onclick="dnObrisi('${t.id}')">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function dnObrisi(id) {
+  if (!confirm('Obrisati trening?')) return;
+  dnTreninzi = dnTreninzi.filter(t => t.id !== id);
+  dnSave(); dnRenderLista();
+}
+
+// ========== MODUL 3: KALENDAR ==========
+let kalDogadaji = [];
+let kalDatum = new Date();
+let kalOdabranDan = null;
+try { kalDogadaji = JSON.parse(localStorage.getItem('kk_kalendar') || '[]'); } catch(e){}
+function kalSave() { localStorage.setItem('kk_kalendar', JSON.stringify(kalDogadaji)); }
+
+const KAL_BOJE = { trening:'#C8102E', natjecanje:'#F0A500', sastanak:'#3b82f6', ostalo:'#888' };
+const KAL_EMOJI = { trening:'🥋', natjecanje:'🏆', sastanak:'👥', ostalo:'📌' };
+
+function kalMjesec(delta) {
+  kalDatum = new Date(kalDatum.getFullYear(), kalDatum.getMonth() + delta, 1);
+  renderKalendar();
+}
+
+function renderKalendar() {
+  const g = document.getElementById('kal-grid');
+  const mj = kalDatum.getMonth(), god = kalDatum.getFullYear();
+  const mjes = ['Siječanj','Veljača','Ožujak','Travanj','Svibanj','Lipanj','Srpanj','Kolovoz','Rujan','Listopad','Studeni','Prosinac'];
+  document.getElementById('kal-naslov').textContent = mjes[mj] + ' ' + god;
+  const prvi = new Date(god, mj, 1);
+  const zadnji = new Date(god, mj+1, 0).getDate();
+  let pocetni = prvi.getDay(); if (pocetni === 0) pocetni = 7;
+  let html = '';
+  for (let i = 1; i < pocetni; i++) html += '<div></div>';
+  const danas = new Date().toISOString().split('T')[0];
+  for (let d = 1; d <= zadnji; d++) {
+    const datStr = `${god}-${String(mj+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const ima = kalDogadaji.filter(e => e.datum === datStr);
+    const jeViked = (pocetni + d - 2) % 7 >= 5;
+    const jeDanas = datStr === danas;
+    const jeOdabran = datStr === kalOdabranDan;
+    html += `<div onclick="kalOdaberiDan('${datStr}')" style="
+      text-align:center;padding:6px 2px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;
+      background:${jeOdabran ? '#C8102E' : jeDanas ? 'rgba(200,16,46,0.2)' : 'transparent'};
+      color:${jeOdabran ? '#fff' : jeDanas ? '#C8102E' : jeViked ? '#F0A500' : '#EDEDED'};
+      border:${jeDanas && !jeOdabran ? '1px solid #C8102E' : '1px solid transparent'};
+      position:relative">
+      ${d}
+      ${ima.length > 0 ? `<div style="display:flex;justify-content:center;gap:2px;margin-top:2px">${ima.slice(0,3).map(e=>`<div style="width:5px;height:5px;border-radius:50%;background:${KAL_BOJE[e.vrsta]||'#888'}"></div>`).join('')}</div>` : '<div style="height:7px"></div>'}
+    </div>`;
+  }
+  g.innerHTML = html;
+  kalRenderLista();
+}
+
+function kalOdaberiDan(datum) {
+  kalOdabranDan = datum;
+  renderKalendar();
+  const dogadaji = kalDogadaji.filter(e => e.datum === datum);
+  const panel = document.getElementById('kal-dan-dogadaji');
+  const naslov = document.getElementById('kal-dan-naslov');
+  const lista = document.getElementById('kal-dan-lista');
+  naslov.textContent = new Date(datum + 'T12:00:00').toLocaleDateString('hr-HR', {weekday:'long', day:'numeric', month:'long'});
+  if (dogadaji.length === 0) {
+    lista.innerHTML = '<div style="font-size:13px;color:#666;padding:8px 0">Nema događaja ovaj dan.</div>';
+  } else {
+    lista.innerHTML = dogadaji.map(e => `
+      <div class="card" style="margin-bottom:8px;padding:12px 14px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:18px">${KAL_EMOJI[e.vrsta]||'📌'}</span>
+          <div style="flex:1">
+            <div style="font-weight:600;color:#EDEDED">${e.naziv}</div>
+            <div style="font-size:12px;color:#aaa">${e.pocetak||''} ${e.kraj ? '- '+e.kraj : ''} ${e.lokacija ? '· '+e.lokacija : ''}</div>
+          </div>
+          <button onclick="kalObrisi('${e.id}')" style="background:none;border:none;color:#ff5a70;cursor:pointer;font-size:16px">✕</button>
+        </div>
+      </div>`).join('');
+  }
+  panel.style.display = 'block';
+}
+
+function kalRenderLista() {
+  const danas = new Date().toISOString().split('T')[0];
+  const nadolazeci = kalDogadaji.filter(e => e.datum >= danas).sort((a,b) => a.datum.localeCompare(b.datum));
+  const el = document.getElementById('kal-lista-html');
+  if (nadolazeci.length === 0) {
+    el.innerHTML = '<div class="empty-state"><div class="icon">📅</div><p>Nema planiranih događaja.</p></div>';
+    return;
+  }
+  el.innerHTML = nadolazeci.map(e => `
+    <div class="card" style="margin-bottom:8px;padding:12px 14px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="background:${KAL_BOJE[e.vrsta]||'#888'};width:4px;border-radius:2px;align-self:stretch;flex-shrink:0"></div>
+        <span style="font-size:20px">${KAL_EMOJI[e.vrsta]||'📌'}</span>
+        <div style="flex:1">
+          <div style="font-weight:600;color:#EDEDED">${e.naziv}</div>
+          <div style="font-size:12px;color:#aaa">${new Date(e.datum+'T12:00:00').toLocaleDateString('hr-HR')} ${e.pocetak||''} ${e.lokacija ? '· '+e.lokacija : ''}</div>
+        </div>
+        <button onclick="kalObrisi('${e.id}')" style="background:none;border:none;color:#666;cursor:pointer">✕</button>
+      </div>
+    </div>`).join('');
+}
+
+function noviDogadaj() {
+  const danas = new Date().toISOString().split('T')[0];
+  document.getElementById('kal-datum').value = kalOdabranDan || danas;
+  document.getElementById('kal-forma').style.display = 'block';
+  document.getElementById('kal-forma').scrollIntoView({behavior:'smooth'});
+}
+
+function zatvoriKalFormu() { document.getElementById('kal-forma').style.display = 'none'; }
+
+function spremiDogadaj() {
+  const naziv = document.getElementById('kal-naziv').value.trim();
+  const datum = document.getElementById('kal-datum').value;
+  if (!naziv || !datum) { toast('Unesite naziv i datum!', 'err'); return; }
+  const dogadaj = {
+    id: Date.now().toString(),
+    naziv, datum,
+    vrsta: document.getElementById('kal-vrsta').value,
+    pocetak: document.getElementById('kal-pocetak').value,
+    kraj: document.getElementById('kal-kraj').value,
+    lokacija: document.getElementById('kal-lokacija').value,
+    napomena: document.getElementById('kal-napomena').value
+  };
+  kalDogadaji.push(dogadaj);
+  kalSave();
+  zatvoriKalFormu();
+  renderKalendar();
+  if (datum === kalOdabranDan) kalOdaberiDan(datum);
+  logActivity('📅', KAL_EMOJI[dogadaj.vrsta] + ' ' + naziv + ' · ' + new Date(datum+'T12:00:00').toLocaleDateString('hr-HR'));
+  toast('Događaj dodan!');
+  ['kal-naziv','kal-lokacija','kal-napomena'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+}
+
+function kalObrisi(id) {
+  if (!confirm('Obrisati događaj?')) return;
+  kalDogadaji = kalDogadaji.filter(e => e.id !== id);
+  kalSave(); renderKalendar();
+  if (kalOdabranDan) kalOdaberiDan(kalOdabranDan);
+  toast('Događaj obrisan.');
+}
+
+// ========== MODUL 4: LIJEČNIČKI PREGLEDI ==========
+let ljPregledi = [];
+try { ljPregledi = JSON.parse(localStorage.getItem('kk_lijecnicki') || '[]'); } catch(e){}
+function ljSave() { localStorage.setItem('kk_lijecnicki', JSON.stringify(ljPregledi)); }
+
+function ljRenderLista() {
+  const danas = new Date();
+  const za15 = new Date(); za15.setDate(za15.getDate() + 15);
+  let ok = 0, warn = 0, exp = 0;
+  const upoz = [];
+  const el = document.getElementById('lj-lista-html');
+
+  if (ljPregledi.length === 0) {
+    el.innerHTML = '<div class="empty-state"><div class="icon">🏥</div><p>Nema unesenih pregleda.</p></div>';
+    document.getElementById('lj-st-ok').textContent = 0;
+    document.getElementById('lj-st-warn').textContent = 0;
+    document.getElementById('lj-st-exp').textContent = 0;
+    document.getElementById('lj-upozorenja').innerHTML = '';
+    return;
+  }
+
+  // Populate dropdown
+  const sel = document.getElementById('lj-clan-sel');
+  if (sel) {
+    sel.innerHTML = '<option value="">— Odaberite člana —</option>' +
+      state.clanovi.filter(c => c.status === 'aktivan').map(c =>
+        `<option value="${c.id}">${c.ime} ${c.prezime}</option>`).join('');
+  }
+
+  const sorted = [...ljPregledi].sort((a,b) => a.vrijedi.localeCompare(b.vrijedi));
+  el.innerHTML = sorted.map(p => {
+    const clan = state.clanovi.find(c => c.id == p.clanId);
+    const vrijediDo = new Date(p.vrijedi);
+    const istekao = vrijediDo < danas;
+    const uskoro = !istekao && vrijediDo <= za15;
+    if (istekao) exp++;
+    else if (uskoro) { warn++; upoz.push({ime: clan ? clan.ime+' '+clan.prezime : p.imeRucno, dana: Math.ceil((vrijediDo-danas)/86400000)}); }
+    else ok++;
+    const boja = istekao ? 'var(--red)' : uskoro ? 'var(--warn)' : 'var(--success)';
+    const status = istekao ? '✗ Istekao' : uskoro ? '⚠ Uskoro ističe' : '✓ Valjan';
+    return `<div class="card" style="margin-bottom:8px;border-left:4px solid ${boja}">
+      <div class="card-row">
+        <div>
+          <div style="font-weight:600;color:#EDEDED">${clan ? clan.ime+' '+clan.prezime : p.imeRucno || '—'}</div>
+          <div style="font-size:12px;color:#aaa;margin-top:2px">Vrijedi do: ${new Date(p.vrijedi).toLocaleDateString('hr-HR')}</div>
+          ${p.napomena ? `<div style="font-size:11px;color:#666;margin-top:2px">${p.napomena}</div>` : ''}
+        </div>
+        <div style="text-align:right">
+          <span style="font-size:12px;color:${boja};font-weight:600">${status}</span>
+          <div style="margin-top:4px">
+            <button onclick="ljObrisi('${p.id}')" style="background:none;border:none;color:#666;cursor:pointer;font-size:12px">✕ Obriši</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('lj-st-ok').textContent = ok;
+  document.getElementById('lj-st-warn').textContent = warn;
+  document.getElementById('lj-st-exp').textContent = exp;
+
+  const upozDiv = document.getElementById('lj-upozorenja');
+  if (upoz.length > 0) {
+    upozDiv.innerHTML = `<div style="background:rgba(243,156,18,0.15);border:1px solid var(--warn);border-radius:8px;padding:12px 14px;margin-bottom:14px">
+      <div style="font-weight:600;color:var(--warn);margin-bottom:6px">⚠ Upozorenje — pregledi uskoro ističu:</div>
+      ${upoz.map(u => `<div style="font-size:13px;color:#EDEDED">• ${u.ime} — još ${u.dana} dan(a)</div>`).join('')}
+    </div>`;
+  } else {
+    upozDiv.innerHTML = '';
+  }
+}
+
+function spremiLijecnicki() {
+  const clanId = document.getElementById('lj-clan-sel').value;
+  const vrijedi = document.getElementById('lj-vrijedi').value;
+  const datum = document.getElementById('lj-datum').value;
+  if (!clanId || !vrijedi) { toast('Odaberite člana i datum!', 'err'); return; }
+  ljPregledi.push({ id: Date.now().toString(), clanId: parseInt(clanId), datum, vrijedi, napomena: document.getElementById('lj-napomena').value });
+  ljSave();
+  closeModal('modalLijecnicki');
+  ljRenderLista();
+  const clan = state.clanovi.find(c => c.id == clanId);
+  logActivity('🏥', 'Liječnički pregled: ' + (clan ? clan.ime+' '+clan.prezime : '') + ' do ' + new Date(vrijedi).toLocaleDateString('hr-HR'));
+  toast('Pregled unesen!');
+  ['lj-datum','lj-vrijedi','lj-napomena'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+}
+
+function ljObrisi(id) {
+  if (!confirm('Obrisati pregled?')) return;
+  ljPregledi = ljPregledi.filter(p => p.id !== id);
+  ljSave(); ljRenderLista();
+}
+
+// ========== MODUL 5: OBAVIJESTI HUB ==========
+let ob2Lista = [];
+try { ob2Lista = JSON.parse(localStorage.getItem('kk_obavijesti2') || '[]'); } catch(e){}
+function ob2Save() { localStorage.setItem('kk_obavijesti2', JSON.stringify(ob2Lista)); }
+
+const OB2_EMOJI = { info:'ℹ️', hitno:'🔴', trening:'🥋', natjecanje:'🏆', placanje:'💶' };
+
+function ob2RenderLista() {
+  document.getElementById('ob2-st-ukupno').textContent = ob2Lista.length;
+  document.getElementById('ob2-st-hitno').textContent = ob2Lista.filter(o => o.vrsta === 'hitno').length;
+  const el = document.getElementById('ob2-lista-html');
+  if (ob2Lista.length === 0) {
+    el.innerHTML = '<div class="empty-state"><div class="icon">📢</div><p>Nema obavijesti.</p></div>';
+    return;
+  }
+  el.innerHTML = [...ob2Lista].reverse().map(o => `
+    <div class="card" style="margin-bottom:10px;${o.vrsta==='hitno' ? 'border-left:4px solid var(--red)' : ''}">
+      <div style="display:flex;align-items:flex-start;gap:10px">
+        <span style="font-size:20px;flex-shrink:0">${OB2_EMOJI[o.vrsta]||'ℹ️'}</span>
+        <div style="flex:1">
+          <div style="font-weight:600;color:#EDEDED">${o.naslov}</div>
+          <div style="font-size:12px;color:#aaa;margin-top:2px">${new Date(o.datum).toLocaleDateString('hr-HR')} · Prima: ${o.prima}</div>
+          <div style="font-size:13px;color:#ccc;margin-top:6px;line-height:1.5">${o.tekst}</div>
+        </div>
+        <button onclick="ob2Obrisi('${o.id}')" style="background:none;border:none;color:#666;cursor:pointer;flex-shrink:0">✕</button>
+      </div>
+    </div>`).join('');
+}
+
+function spremiObavijest2() {
+  const naslov = document.getElementById('ob2-naslov').value.trim();
+  const tekst = document.getElementById('ob2-tekst').value.trim();
+  if (!naslov || !tekst) { toast('Unesite naslov i tekst!', 'err'); return; }
+  ob2Lista.push({
+    id: Date.now().toString(),
+    naslov, tekst,
+    vrsta: document.getElementById('ob2-vrsta').value,
+    prima: document.getElementById('ob2-prima').value,
+    datum: new Date().toISOString()
+  });
+  ob2Save();
+  closeModal('modalNovaObavijest2');
+  ob2RenderLista();
+  logActivity('📢', 'Obavijest: ' + naslov);
+  toast('Obavijest objavljena!');
+  ['ob2-naslov','ob2-tekst'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+}
+
+function ob2Obrisi(id) {
+  if (!confirm('Obrisati obavijest?')) return;
+  ob2Lista = ob2Lista.filter(o => o.id !== id);
+  ob2Save(); ob2RenderLista();
+}
+
+
+// ========== PUTNI NALOZI ==========
+const PN_KEY = 'kk_putni_nalozi';
+let pnNalozi = [];
+let pnRacuni = [];
+let pnCurrentId = null;
+
+try { pnNalozi = JSON.parse(localStorage.getItem(PN_KEY) || '[]'); } catch(e){}
+
+function pnSave() { localStorage.setItem(PN_KEY, JSON.stringify(pnNalozi)); }
+
+const PN_KM_CIJENA = 0.30;
+const PN_DNEVNICA_CIJELA = 26.54;
+const PN_DNEVNICA_POLA = 13.27;
+
+function noviPutniNalog() {
+  pnRacuni = [];
+  document.getElementById('putniLista').style.display = 'none';
+  document.getElementById('putniDetalji').style.display = 'none';
+  document.getElementById('putniForma').style.display = 'block';
+  // Set default datetime
+  const now = new Date();
+  const pad = n => String(n).padStart(2,'0');
+  const local = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  document.getElementById('pn-polazak').value = local;
+  document.getElementById('pn-povratak').value = local;
+  // Populate members dropdown
+  const sel = document.getElementById('pn-ime-sel');
+  sel.innerHTML = '<option value="">— Odaberite člana —</option>' +
+    state.clanovi.filter(c => c.status === 'aktivan').map(c =>
+      `<option value="${c.ime} ${c.prezime}">${c.ime} ${c.prezime}</option>`
+    ).join('');
+  pnCalc();
+  pnRenderRacuni();
+}
+
+function pnCombo(key) {
+  const sel = document.getElementById('pn-' + key);
+  const custom = document.getElementById('pn-' + key + '-custom');
+  if (sel.value === '__custom__') {
+    custom.style.display = 'block';
+    custom.focus();
+  } else {
+    custom.style.display = 'none';
+    custom.value = '';
+  }
+}
+
+function pnGetVal(key) {
+  const sel = document.getElementById('pn-' + key);
+  if (sel && sel.value === '__custom__') {
+    return document.getElementById('pn-' + key + '-custom').value.trim();
+  }
+  return sel ? sel.value : '';
+}
+
+function pnOdaberiClana() {
+  const val = document.getElementById('pn-ime-sel').value;
+  if (val) document.getElementById('pn-ime').value = val;
+}
+
+function zatvoriPutniFormu() {
+  document.getElementById('putniForma').style.display = 'none';
+  document.getElementById('putniLista').style.display = 'block';
+  pnRenderLista();
+}
+
+function zatvoriPutniDetalje() {
+  document.getElementById('putniDetalji').style.display = 'none';
+  document.getElementById('putniLista').style.display = 'block';
+}
+
+function pnCalc() {
+  const pol = document.getElementById('pn-polazak').value;
+  const pov = document.getElementById('pn-povratak').value;
+  let dnevnica = 0;
+  if (pol && pov) {
+    const diff = (new Date(pov) - new Date(pol)) / 3600000;
+    if (diff >= 12) dnevnica = PN_DNEVNICA_CIJELA;
+    else if (diff >= 8) dnevnica = PN_DNEVNICA_POLA;
+  }
+  const kmS = parseFloat(document.getElementById('pn-km-s').value) || 0;
+  const kmE = parseFloat(document.getElementById('pn-km-e').value) || 0;
+  const kmT = Math.max(0, kmE - kmS);
+  const kmNak = kmT * PN_KM_CIJENA;
+  const tro = parseFloat(document.getElementById('pn-troskovi').value) || 0;
+  const pred = parseFloat(document.getElementById('pn-predujam').value) || 0;
+  const ukupno = Math.max(0, kmNak + tro + dnevnica - pred);
+  document.getElementById('pn-ukupno-display').textContent = '€ ' + ukupno.toFixed(2);
+  document.getElementById('pn-breakdown').textContent = 
+    `km: €${kmNak.toFixed(2)} | dnevnica: €${dnevnica.toFixed(2)} | troškovi: €${tro.toFixed(2)}${pred > 0 ? ' | −predujam: €'+pred.toFixed(2) : ''}`;
+}
+
+function pnDodajRacun(input) {
+  const files = Array.from(input.files);
+  files.forEach(f => {
+    const reader = new FileReader();
+    reader.onload = e => { pnRacuni.push(e.target.result); pnRenderRacuni(); };
+    reader.readAsDataURL(f);
+  });
+  input.value = '';
+}
+
+function pnRenderRacuni() {
+  const grid = document.getElementById('pn-racuni-grid');
+  grid.innerHTML = pnRacuni.map((src, i) =>
+    `<div style="aspect-ratio:1;border-radius:8px;overflow:hidden;position:relative;border:1px solid #333">
+      <img src="${src}" style="width:100%;height:100%;object-fit:cover">
+      <button onclick="pnObrisiRacun(${i})" style="position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,0.7);color:#fff;border:none;cursor:pointer;font-size:11px">✕</button>
+    </div>`
+  ).join('');
+}
+
+function pnObrisiRacun(i) { pnRacuni.splice(i,1); pnRenderRacuni(); }
+
+function spremiPutniNalog() {
+  const ime = document.getElementById('pn-ime').value.trim() || document.getElementById('pn-ime-sel').value;
+  const polaziste = document.getElementById('pn-polaziste').value.trim();
+  const odrediste = document.getElementById('pn-odrediste').value.trim();
+  const napomena = document.getElementById('pn-napomena').value.trim();
+  if (!ime) { toast('Unesite ime i prezime!', 'err'); return; }
+  if (!polaziste || !odrediste) { toast('Unesite polazište i odredište!', 'err'); return; }
+  if (!napomena) { toast('Napomena je obavezna!', 'err'); return; }
+
+  const pol = document.getElementById('pn-polazak').value;
+  const pov = document.getElementById('pn-povratak').value;
+  let dnevnica = 0;
+  if (pol && pov) {
+    const diff = (new Date(pov) - new Date(pol)) / 3600000;
+    if (diff >= 12) dnevnica = PN_DNEVNICA_CIJELA;
+    else if (diff >= 8) dnevnica = PN_DNEVNICA_POLA;
+  }
+  const kmS = parseFloat(document.getElementById('pn-km-s').value) || 0;
+  const kmE = parseFloat(document.getElementById('pn-km-e').value) || 0;
+  const kmT = Math.max(0, kmE - kmS);
+  const tro = parseFloat(document.getElementById('pn-troskovi').value) || 0;
+  const pred = parseFloat(document.getElementById('pn-predujam').value) || 0;
+  const ukupno = Math.max(0, kmT * PN_KM_CIJENA + tro + dnevnica - pred);
+
+  const nalog = {
+    id: Date.now().toString(),
+    status: 'cekanje',
+    ime, 
+    uloga: pnGetVal('uloga'),
+    svrha: pnGetVal('svrha'),
+    polaziste, odrediste,
+    vozilo: pnGetVal('vozilo'),
+    marka: pnGetVal('marka'),
+    reg: document.getElementById('pn-reg').value.toUpperCase(),
+    polazak: pol, povratak: pov,
+    kmS, kmE, kmT,
+    troskovi: tro, predujam: pred, dnevnica,
+    ukupno: ukupno.toFixed(2),
+    napomena,
+    racuni: [...pnRacuni],
+    datum: new Date().toISOString()
+  };
+  pnNalozi.push(nalog);
+  pnSave();
+  zatvoriPutniFormu();
+  logActivity('🚗', 'Novi putni nalog: ' + ime + ' → ' + odrediste);
+  toast('Putni nalog spremljen!');
+}
+
+function pnRenderLista() {
+  const el = document.getElementById('pn-lista-html');
+  document.getElementById('pn-st-ukupno').textContent = pnNalozi.length;
+  document.getElementById('pn-st-cekanje').textContent = pnNalozi.filter(n => n.status === 'cekanje').length;
+  document.getElementById('pn-st-odobreno').textContent = pnNalozi.filter(n => n.status === 'odobreno').length;
+  if (pnNalozi.length === 0) {
+    el.innerHTML = '<div class="empty-state"><div class="icon">🚗</div><p>Nema putnih naloga. Dodajte prvi!</p></div>';
+    return;
+  }
+  el.innerHTML = [...pnNalozi].reverse().map(n => `
+    <div class="card" style="cursor:pointer;margin-bottom:10px" onclick="pnPrikaziDetalje('${n.id}')">
+      <div class="card-row">
+        <div>
+          <div style="font-weight:600;color:#EDEDED">${n.ime}</div>
+          <div style="font-size:12px;color:#aaa;margin-top:2px">${n.svrha} · ${n.polaziste} → ${n.odrediste}</div>
+          <div style="margin-top:6px">
+            <span class="badge ${n.status === 'odobreno' ? 'badge-green' : 'badge-gold'}">${n.status === 'odobreno' ? '✓ Odobreno' : '⏳ Na čekanju'}</span>
+          </div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-size:20px;font-weight:700;color:#C8102E">€${parseFloat(n.ukupno).toFixed(2)}</div>
+          <div style="font-size:11px;color:#666;margin-top:2px">${new Date(n.datum).toLocaleDateString('hr-HR')}</div>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function pnPrikaziDetalje(id) {
+  pnCurrentId = id;
+  const n = pnNalozi.find(x => x.id === id);
+  if (!n) return;
+  document.getElementById('putniLista').style.display = 'none';
+  document.getElementById('putniDetalji').style.display = 'block';
+  const btn = document.getElementById('pn-odobri-btn');
+  btn.disabled = n.status === 'odobreno';
+  btn.textContent = n.status === 'odobreno' ? '✓ Već odobreno' : '✓ Odobri nalog';
+  const row = (k,v) => `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #333;font-size:13px"><span style="color:#aaa">${k}</span><strong style="color:#fff">${v}</strong></div>`;
+  document.getElementById('pn-detalji-body').innerHTML = `
+    <div style="background:#1a0000;border:2px solid #C8102E;border-radius:10px;padding:16px;margin-bottom:12px;text-align:center">
+      <div style="font-size:28px;font-weight:700;color:#C8102E">€ ${parseFloat(n.ukupno).toFixed(2)}</div>
+      <div style="font-size:12px;color:#888;margin-top:4px">km: €${(n.kmT*PN_KM_CIJENA).toFixed(2)} | dnevnica: €${parseFloat(n.dnevnica).toFixed(2)} | troškovi: €${parseFloat(n.troskovi).toFixed(2)}</div>
+    </div>
+    ${row('Putnik', n.ime)}
+    ${row('Uloga', n.uloga)}
+    ${row('Svrha', n.svrha)}
+    ${row('Relacija', n.polaziste + ' → ' + n.odrediste)}
+    ${row('Polazak', new Date(n.polazak).toLocaleString('hr-HR'))}
+    ${row('Povratak', new Date(n.povratak).toLocaleString('hr-HR'))}
+    ${row('Vozilo', n.vozilo + (n.marka ? ' · ' + n.marka : '') + (n.reg ? ' · ' + n.reg : ''))}
+    ${row('Prijeđeni km', n.kmT + ' km × €0,30')}
+    ${row('Status', n.status === 'odobreno' ? '✅ Odobreno' : '⏳ Na čekanju')}
+    <div style="margin-top:12px;padding:12px;background:#242424;border-radius:8px;font-size:13px;color:#ccc;line-height:1.6">${n.napomena}</div>
+    ${n.racuni && n.racuni.length > 0 ? `<div style="margin-top:12px"><div style="font-size:11px;color:#aaa;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px">Računi</div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">${n.racuni.map(src => `<div style="aspect-ratio:1;border-radius:8px;overflow:hidden"><img src="${src}" style="width:100%;height:100%;object-fit:cover"></div>`).join('')}</div></div>` : ''}
+  `;
+}
+
+function odobriPutniNalog() {
+  const n = pnNalozi.find(x => x.id === pnCurrentId);
+  if (!n) return;
+  n.status = 'odobreno';
+  pnSave();
+  pnPrikaziDetalje(pnCurrentId);
+  logActivity('✅', 'Odobren putni nalog: ' + n.ime);
+  toast('Putni nalog odobren!');
+}
+
+function obrisiPutniNalog() {
+  if (!confirm('Obrisati putni nalog?')) return;
+  pnNalozi = pnNalozi.filter(x => x.id !== pnCurrentId);
+  pnSave();
+  zatvoriPutniDetalje();
+  toast('Putni nalog obrisan.');
+}
+
 
 // ========== IMPORT ČLANOVA IZ HKS POPISA ==========
 const hksClanovi = [
-{ime:“Janko”,prezime:“Avirović”,datRod:“2017-12-27”,oib:“94325146269”,sifra:“014-28555”,pojas:“Bijeli pojas”,kyu:“9. KYU”},
-{ime:“Eva”,prezime:“Benaković”,datRod:“2013-03-11”,oib:“67146276900”,sifra:“014-28537”,pojas:“Narančasti pojas”,kyu:“7. KYU”},
-{ime:“Hana”,prezime:“Benaković”,datRod:“2013-03-11”,oib:“14996799207”,sifra:“014-28531”,pojas:“Narančasti pojas”,kyu:“7. KYU”},
-{ime:“Natan”,prezime:“Benaković”,datRod:“2008-01-28”,oib:“51737725264”,sifra:“014-28539”,pojas:“Bijeli pojas”,kyu:””},
-{ime:“Noa”,prezime:“Benaković”,datRod:“2010-09-28”,oib:“96380739577”,sifra:“014-28530”,pojas:“Zeleni pojas”,kyu:“6. KYU”},
-{ime:“Valentina”,prezime:“Benc”,datRod:“1993-04-18”,oib:“49919021335”,sifra:“014-28564”,pojas:“Bijeli pojas”,kyu:””},
-{ime:“Šime”,prezime:“Bračanov”,datRod:“2016-01-25”,oib:“00079400025”,sifra:“014-28547”,pojas:“Narančasti pojas”,kyu:“7. KYU”},
-{ime:“Stipe”,prezime:“Čačija”,datRod:“1963-08-10”,oib:“18000665085”,sifra:“014-28525”,pojas:“Bijeli pojas”,kyu:””},
-{ime:“Artur”,prezime:“Chornii”,datRod:“2017-07-14”,oib:“84365232676”,sifra:“014-28569”,pojas:“Bijeli pojas”,kyu:””},
-{ime:“Vinko”,prezime:“Cibolka Igrić”,datRod:“2018-03-12”,oib:“08643795097”,sifra:“014-28571”,pojas:“Bijeli pojas”,kyu:“9. KYU”},
-{ime:“Lorena”,prezime:“Čorba”,datRod:“2009-04-13”,oib:“17879248834”,sifra:“014-28563”,pojas:“Bijeli pojas”,kyu:””},
-{ime:“Filip”,prezime:“Cugovčan”,datRod:“2010-12-30”,oib:“69423116889”,sifra:“014-28542”,pojas:“Bijeli pojas”,kyu:””},
-{ime:“Franko”,prezime:“Cugovčan”,datRod:“2016-09-21”,oib:“83829768562”,sifra:“014-28543”,pojas:“Bijeli pojas”,kyu:””},
-{ime:“Patrik”,prezime:“Dergez”,datRod:“2017-10-05”,oib:“27450168581”,sifra:“014-28575”,pojas:“Bijeli pojas”,kyu:“9. KYU”},
-{ime:“Karlo”,prezime:“Fašaić”,datRod:“2020-01-07”,oib:“52320027989”,sifra:“014-28574”,pojas:“Bijeli pojas”,kyu:“9. KYU”},
-{ime:“Klara”,prezime:“Fašaić”,datRod:“2017-04-01”,oib:“78707950144”,sifra:“014-28572”,pojas:“Bijeli pojas”,kyu:“9. KYU”},
-{ime:“Petra”,prezime:“Gašparec”,datRod:“2012-03-22”,oib:“95708392929”,sifra:“014-28513”,pojas:“Smeđi pojas”,kyu:“3. KYU”},
-{ime:“Viktor”,prezime:“Gašparec”,datRod:“2015-09-18”,oib:“41712876072”,sifra:“014-28532”,pojas:“Narančasti pojas”,kyu:“7. KYU”},
-{ime:“Ivan Konrad”,prezime:“Gavrilović”,datRod:“2012-05-21”,oib:“94712139394”,sifra:“014-28550”,pojas:“Narančasti pojas”,kyu:“7. KYU”},
-{ime:“Sergej”,prezime:“Gavrilović”,datRod:“2016-02-16”,oib:“07278305097”,sifra:“014-28549”,pojas:“Narančasti pojas”,kyu:“7. KYU”},
-{ime:“Lukas”,prezime:“Goll”,datRod:“2015-04-17”,oib:“53002167880”,sifra:“014-28561”,pojas:“Žuti pojas”,kyu:“8. KYU”},
-{ime:“Petar”,prezime:“Gregurić”,datRod:“2014-02-13”,oib:“41783074939”,sifra:“014-28565”,pojas:“Bijeli pojas”,kyu:“9. KYU”},
-{ime:“Antea”,prezime:“Ivandija”,datRod:“2014-02-21”,oib:“79943249659”,sifra:“014-28521”,pojas:“Narančasti pojas”,kyu:“7. KYU”},
-{ime:“Šimun”,prezime:“Ivandija”,datRod:“2011-09-06”,oib:“63614164248”,sifra:“014-28520”,pojas:“Plavi pojas”,kyu:“5. KYU”},
-{ime:“Dani”,prezime:“Janči”,datRod:“2018-07-02”,oib:“02440956617”,sifra:“014-28553”,pojas:“Žuti pojas”,kyu:“8. KYU”},
-{ime:“Petra”,prezime:“Jančijev”,datRod:“2004-04-05”,oib:“07232716121”,sifra:“014-20999”,pojas:“Smeđi pojas”,kyu:“2. KYU”},
-{ime:“Dunja”,prezime:“Jendrašić”,datRod:“2017-03-14”,oib:“28835342659”,sifra:“014-28562”,pojas:“Narančasti pojas”,kyu:“7. KYU”},
-{ime:“Ivan”,prezime:“Juričić”,datRod:“1976-04-11”,oib:“11935978789”,sifra:“014-28545”,pojas:“Bijeli pojas”,kyu:””},
-{ime:“Ivan”,prezime:“Juričić”,datRod:“2007-03-29”,oib:“30389244965”,sifra:“014-28557”,pojas:“Smeđi pojas”,kyu:“2. KYU”},
-{ime:“Tin”,prezime:“Krčmar”,datRod:“2015-01-28”,oib:“65466852158”,sifra:“014-28546”,pojas:“Narančasti pojas”,kyu:“7. KYU”},
-{ime:“Lucija”,prezime:“Lauš”,datRod:“2010-05-28”,oib:“99055889954”,sifra:“014-28558”,pojas:“Smeđi pojas”,kyu:“3. KYU”},
-{ime:“Luna”,prezime:“Lisjak”,datRod:“2017-10-24”,oib:“06817087573”,sifra:“014-28554”,pojas:“Zeleni pojas”,kyu:“6. KYU”},
-{ime:“Aleks”,prezime:“Lopar”,datRod:“1995-02-26”,oib:“03167651028”,sifra:“014-28552”,pojas:“Žuti pojas”,kyu:“8. KYU”},
-{ime:“Borna”,prezime:“Lopar”,datRod:“2015-02-26”,oib:“90561869235”,sifra:“014-28551”,pojas:“Žuti pojas”,kyu:“8. KYU”},
-{ime:“Danyl”,prezime:“Marchenko”,datRod:“2016-06-22”,oib:“19579752466”,sifra:“014-28576”,pojas:“Bijeli pojas”,kyu:“9. KYU”},
-{ime:“Yaroslav”,prezime:“Marchenko”,datRod:“2019-10-24”,oib:“98288865833”,sifra:“014-28578”,pojas:“Bijeli pojas”,kyu:“9. KYU”},
-{ime:“Yehor”,prezime:“Marchenko”,datRod:“2015-05-24”,oib:“39691415631”,sifra:“014-28577”,pojas:“Bijeli pojas”,kyu:“9. KYU”},
-{ime:“Erik”,prezime:“Matočec Španić”,datRod:“2014-10-04”,oib:“93256539321”,sifra:“014-28527”,pojas:“Bijeli pojas”,kyu:””},
-{ime:“David”,prezime:“Mikulić”,datRod:“2013-10-29”,oib:“43302005429”,sifra:“014-28528”,pojas:“Bijeli pojas”,kyu:””},
-{ime:“Josip”,prezime:“Mikulić”,datRod:“2013-10-29”,oib:“74014108960”,sifra:“014-28529”,pojas:“Bijeli pojas”,kyu:””},
-{ime:“Lana”,prezime:“Modrić”,datRod:“2010-05-13”,oib:“12468548578”,sifra:“014-28541”,pojas:“Plavi pojas”,kyu:“4. KYU”},
-{ime:“Leona”,prezime:“Modrić”,datRod:“2012-09-24”,oib:“21398350642”,sifra:“014-28540”,pojas:“Plavi pojas”,kyu:“4. KYU”},
-{ime:“Nika”,prezime:“Pandur”,datRod:“2012-11-16”,oib:“48264879609”,sifra:“014-28518”,pojas:“Smeđi pojas”,kyu:“3. KYU”},
-{ime:“Antonija”,prezime:“Petrović”,datRod:“2006-05-23”,oib:“61537561921”,sifra:“014-28559”,pojas:“Smeđi pojas”,kyu:“3. KYU”},
-{ime:“Pavlo”,prezime:“Petrukhin”,datRod:“2013-07-07”,oib:“31928625821”,sifra:“014-28566”,pojas:“Bijeli pojas”,kyu:“9. KYU”},
-{ime:“Borna”,prezime:“Prevedan”,datRod:“2015-11-19”,oib:“52868015795”,sifra:“014-28544”,pojas:“Žuti pojas”,kyu:“8. KYU”},
-{ime:“Mateja”,prezime:“Prevedan”,datRod:“2003-04-08”,oib:“59237264906”,sifra:“014-28556”,pojas:“Bijeli pojas”,kyu:””},
-{ime:“Valerio”,prezime:“Prevedan”,datRod:“2006-10-14”,oib:“53139277454”,sifra:“014-28560”,pojas:“Smeđi pojas”,kyu:“2. KYU”},
-{ime:“Leon”,prezime:“Prilika”,datRod:“2013-08-17”,oib:“99471549818”,sifra:“014-28570”,pojas:“Bijeli pojas”,kyu:””},
-{ime:“Alisa”,prezime:“Razenko”,datRod:“2014-05-03”,oib:“88106700446”,sifra:“014-28568”,pojas:“Žuti pojas”,kyu:“8. KYU”},
-{ime:“Rubi Tereza”,prezime:“Roštan”,datRod:“2016-04-02”,oib:“52056421173”,sifra:“014-28548”,pojas:“Zeleni pojas”,kyu:“6. KYU”},
-{ime:“Filip”,prezime:“Šipek”,datRod:“2010-06-14”,oib:“65517843136”,sifra:“014-28536”,pojas:“Narančasti pojas”,kyu:“7. KYU”},
-{ime:“Patrik”,prezime:“Škurdija”,datRod:“2014-06-21”,oib:“17426278798”,sifra:“014-28535”,pojas:“Narančasti pojas”,kyu:“7. KYU”},
-{ime:“Kostiantyn”,prezime:“Sluzhenko”,datRod:“2011-11-23”,oib:“84697363605”,sifra:“014-28567”,pojas:“Bijeli pojas”,kyu:“9. KYU”},
-{ime:“Marko”,prezime:“Šokec”,datRod:“2011-05-13”,oib:“30541672007”,sifra:“014-28533”,pojas:“Bijeli pojas”,kyu:””},
-{ime:“Karlo”,prezime:“Šostarec”,datRod:“2019-01-13”,oib:“78708278465”,sifra:“014-28573”,pojas:“Bijeli pojas”,kyu:“9. KYU”},
-{ime:“Emanuel”,prezime:“Stanešić”,datRod:“2011-09-12”,oib:“87816933831”,sifra:“014-28538”,pojas:“Plavi pojas”,kyu:“5. KYU”},
-{ime:“Karlo”,prezime:“Vincek”,datRod:“2013-09-20”,oib:“25532004167”,sifra:“014-28526”,pojas:“Plavi pojas”,kyu:“4. KYU”},
-{ime:“Alex”,prezime:“Vunak”,datRod:“2009-10-24”,oib:“42347944599”,sifra:“014-28534”,pojas:“Bijeli pojas”,kyu:””},
-{ime:“Patrik”,prezime:“Zlatec”,datRod:“2007-08-02”,oib:“58724182708”,sifra:“014-25458”,pojas:“Smeđi pojas”,kyu:“2. KYU”}
+  {ime:"Janko",prezime:"Avirović",datRod:"2017-12-27",oib:"94325146269",sifra:"014-28555",pojas:"Bijeli pojas",kyu:"9. KYU"},
+  {ime:"Eva",prezime:"Benaković",datRod:"2013-03-11",oib:"67146276900",sifra:"014-28537",pojas:"Narančasti pojas",kyu:"7. KYU"},
+  {ime:"Hana",prezime:"Benaković",datRod:"2013-03-11",oib:"14996799207",sifra:"014-28531",pojas:"Narančasti pojas",kyu:"7. KYU"},
+  {ime:"Natan",prezime:"Benaković",datRod:"2008-01-28",oib:"51737725264",sifra:"014-28539",pojas:"Bijeli pojas",kyu:""},
+  {ime:"Noa",prezime:"Benaković",datRod:"2010-09-28",oib:"96380739577",sifra:"014-28530",pojas:"Zeleni pojas",kyu:"6. KYU"},
+  {ime:"Valentina",prezime:"Benc",datRod:"1993-04-18",oib:"49919021335",sifra:"014-28564",pojas:"Bijeli pojas",kyu:""},
+  {ime:"Šime",prezime:"Bračanov",datRod:"2016-01-25",oib:"00079400025",sifra:"014-28547",pojas:"Narančasti pojas",kyu:"7. KYU"},
+  {ime:"Stipe",prezime:"Čačija",datRod:"1963-08-10",oib:"18000665085",sifra:"014-28525",pojas:"Bijeli pojas",kyu:""},
+  {ime:"Artur",prezime:"Chornii",datRod:"2017-07-14",oib:"84365232676",sifra:"014-28569",pojas:"Bijeli pojas",kyu:""},
+  {ime:"Vinko",prezime:"Cibolka Igrić",datRod:"2018-03-12",oib:"08643795097",sifra:"014-28571",pojas:"Bijeli pojas",kyu:"9. KYU"},
+  {ime:"Lorena",prezime:"Čorba",datRod:"2009-04-13",oib:"17879248834",sifra:"014-28563",pojas:"Bijeli pojas",kyu:""},
+  {ime:"Filip",prezime:"Cugovčan",datRod:"2010-12-30",oib:"69423116889",sifra:"014-28542",pojas:"Bijeli pojas",kyu:""},
+  {ime:"Franko",prezime:"Cugovčan",datRod:"2016-09-21",oib:"83829768562",sifra:"014-28543",pojas:"Bijeli pojas",kyu:""},
+  {ime:"Patrik",prezime:"Dergez",datRod:"2017-10-05",oib:"27450168581",sifra:"014-28575",pojas:"Bijeli pojas",kyu:"9. KYU"},
+  {ime:"Karlo",prezime:"Fašaić",datRod:"2020-01-07",oib:"52320027989",sifra:"014-28574",pojas:"Bijeli pojas",kyu:"9. KYU"},
+  {ime:"Klara",prezime:"Fašaić",datRod:"2017-04-01",oib:"78707950144",sifra:"014-28572",pojas:"Bijeli pojas",kyu:"9. KYU"},
+  {ime:"Petra",prezime:"Gašparec",datRod:"2012-03-22",oib:"95708392929",sifra:"014-28513",pojas:"Smeđi pojas",kyu:"3. KYU"},
+  {ime:"Viktor",prezime:"Gašparec",datRod:"2015-09-18",oib:"41712876072",sifra:"014-28532",pojas:"Narančasti pojas",kyu:"7. KYU"},
+  {ime:"Ivan Konrad",prezime:"Gavrilović",datRod:"2012-05-21",oib:"94712139394",sifra:"014-28550",pojas:"Narančasti pojas",kyu:"7. KYU"},
+  {ime:"Sergej",prezime:"Gavrilović",datRod:"2016-02-16",oib:"07278305097",sifra:"014-28549",pojas:"Narančasti pojas",kyu:"7. KYU"},
+  {ime:"Lukas",prezime:"Goll",datRod:"2015-04-17",oib:"53002167880",sifra:"014-28561",pojas:"Žuti pojas",kyu:"8. KYU"},
+  {ime:"Petar",prezime:"Gregurić",datRod:"2014-02-13",oib:"41783074939",sifra:"014-28565",pojas:"Bijeli pojas",kyu:"9. KYU"},
+  {ime:"Antea",prezime:"Ivandija",datRod:"2014-02-21",oib:"79943249659",sifra:"014-28521",pojas:"Narančasti pojas",kyu:"7. KYU"},
+  {ime:"Šimun",prezime:"Ivandija",datRod:"2011-09-06",oib:"63614164248",sifra:"014-28520",pojas:"Plavi pojas",kyu:"5. KYU"},
+  {ime:"Dani",prezime:"Janči",datRod:"2018-07-02",oib:"02440956617",sifra:"014-28553",pojas:"Žuti pojas",kyu:"8. KYU"},
+  {ime:"Petra",prezime:"Jančijev",datRod:"2004-04-05",oib:"07232716121",sifra:"014-20999",pojas:"Smeđi pojas",kyu:"2. KYU"},
+  {ime:"Dunja",prezime:"Jendrašić",datRod:"2017-03-14",oib:"28835342659",sifra:"014-28562",pojas:"Narančasti pojas",kyu:"7. KYU"},
+  {ime:"Ivan",prezime:"Juričić",datRod:"1976-04-11",oib:"11935978789",sifra:"014-28545",pojas:"Bijeli pojas",kyu:""},
+  {ime:"Ivan",prezime:"Juričić",datRod:"2007-03-29",oib:"30389244965",sifra:"014-28557",pojas:"Smeđi pojas",kyu:"2. KYU"},
+  {ime:"Tin",prezime:"Krčmar",datRod:"2015-01-28",oib:"65466852158",sifra:"014-28546",pojas:"Narančasti pojas",kyu:"7. KYU"},
+  {ime:"Lucija",prezime:"Lauš",datRod:"2010-05-28",oib:"99055889954",sifra:"014-28558",pojas:"Smeđi pojas",kyu:"3. KYU"},
+  {ime:"Luna",prezime:"Lisjak",datRod:"2017-10-24",oib:"06817087573",sifra:"014-28554",pojas:"Zeleni pojas",kyu:"6. KYU"},
+  {ime:"Aleks",prezime:"Lopar",datRod:"1995-02-26",oib:"03167651028",sifra:"014-28552",pojas:"Žuti pojas",kyu:"8. KYU"},
+  {ime:"Borna",prezime:"Lopar",datRod:"2015-02-26",oib:"90561869235",sifra:"014-28551",pojas:"Žuti pojas",kyu:"8. KYU"},
+  {ime:"Danyl",prezime:"Marchenko",datRod:"2016-06-22",oib:"19579752466",sifra:"014-28576",pojas:"Bijeli pojas",kyu:"9. KYU"},
+  {ime:"Yaroslav",prezime:"Marchenko",datRod:"2019-10-24",oib:"98288865833",sifra:"014-28578",pojas:"Bijeli pojas",kyu:"9. KYU"},
+  {ime:"Yehor",prezime:"Marchenko",datRod:"2015-05-24",oib:"39691415631",sifra:"014-28577",pojas:"Bijeli pojas",kyu:"9. KYU"},
+  {ime:"Erik",prezime:"Matočec Španić",datRod:"2014-10-04",oib:"93256539321",sifra:"014-28527",pojas:"Bijeli pojas",kyu:""},
+  {ime:"David",prezime:"Mikulić",datRod:"2013-10-29",oib:"43302005429",sifra:"014-28528",pojas:"Bijeli pojas",kyu:""},
+  {ime:"Josip",prezime:"Mikulić",datRod:"2013-10-29",oib:"74014108960",sifra:"014-28529",pojas:"Bijeli pojas",kyu:""},
+  {ime:"Lana",prezime:"Modrić",datRod:"2010-05-13",oib:"12468548578",sifra:"014-28541",pojas:"Plavi pojas",kyu:"4. KYU"},
+  {ime:"Leona",prezime:"Modrić",datRod:"2012-09-24",oib:"21398350642",sifra:"014-28540",pojas:"Plavi pojas",kyu:"4. KYU"},
+  {ime:"Nika",prezime:"Pandur",datRod:"2012-11-16",oib:"48264879609",sifra:"014-28518",pojas:"Smeđi pojas",kyu:"3. KYU"},
+  {ime:"Antonija",prezime:"Petrović",datRod:"2006-05-23",oib:"61537561921",sifra:"014-28559",pojas:"Smeđi pojas",kyu:"3. KYU"},
+  {ime:"Pavlo",prezime:"Petrukhin",datRod:"2013-07-07",oib:"31928625821",sifra:"014-28566",pojas:"Bijeli pojas",kyu:"9. KYU"},
+  {ime:"Borna",prezime:"Prevedan",datRod:"2015-11-19",oib:"52868015795",sifra:"014-28544",pojas:"Žuti pojas",kyu:"8. KYU"},
+  {ime:"Mateja",prezime:"Prevedan",datRod:"2003-04-08",oib:"59237264906",sifra:"014-28556",pojas:"Bijeli pojas",kyu:""},
+  {ime:"Valerio",prezime:"Prevedan",datRod:"2006-10-14",oib:"53139277454",sifra:"014-28560",pojas:"Smeđi pojas",kyu:"2. KYU"},
+  {ime:"Leon",prezime:"Prilika",datRod:"2013-08-17",oib:"99471549818",sifra:"014-28570",pojas:"Bijeli pojas",kyu:""},
+  {ime:"Alisa",prezime:"Razenko",datRod:"2014-05-03",oib:"88106700446",sifra:"014-28568",pojas:"Žuti pojas",kyu:"8. KYU"},
+  {ime:"Rubi Tereza",prezime:"Roštan",datRod:"2016-04-02",oib:"52056421173",sifra:"014-28548",pojas:"Zeleni pojas",kyu:"6. KYU"},
+  {ime:"Filip",prezime:"Šipek",datRod:"2010-06-14",oib:"65517843136",sifra:"014-28536",pojas:"Narančasti pojas",kyu:"7. KYU"},
+  {ime:"Patrik",prezime:"Škurdija",datRod:"2014-06-21",oib:"17426278798",sifra:"014-28535",pojas:"Narančasti pojas",kyu:"7. KYU"},
+  {ime:"Kostiantyn",prezime:"Sluzhenko",datRod:"2011-11-23",oib:"84697363605",sifra:"014-28567",pojas:"Bijeli pojas",kyu:"9. KYU"},
+  {ime:"Marko",prezime:"Šokec",datRod:"2011-05-13",oib:"30541672007",sifra:"014-28533",pojas:"Bijeli pojas",kyu:""},
+  {ime:"Karlo",prezime:"Šostarec",datRod:"2019-01-13",oib:"78708278465",sifra:"014-28573",pojas:"Bijeli pojas",kyu:"9. KYU"},
+  {ime:"Emanuel",prezime:"Stanešić",datRod:"2011-09-12",oib:"87816933831",sifra:"014-28538",pojas:"Plavi pojas",kyu:"5. KYU"},
+  {ime:"Karlo",prezime:"Vincek",datRod:"2013-09-20",oib:"25532004167",sifra:"014-28526",pojas:"Plavi pojas",kyu:"4. KYU"},
+  {ime:"Alex",prezime:"Vunak",datRod:"2009-10-24",oib:"42347944599",sifra:"014-28534",pojas:"Bijeli pojas",kyu:""},
+  {ime:"Patrik",prezime:"Zlatec",datRod:"2007-08-02",oib:"58724182708",sifra:"014-25458",pojas:"Smeđi pojas",kyu:"2. KYU"}
 ];
 
 function importHksClanovi() {
-if (state.clanovi.length > 0) {
-if (!confirm(`U bazi već postoje ${state.clanovi.length} članova. Dodati još ${hksClanovi.length} iz HKS popisa (duplikati neće biti dodani)?`)) return;
-}
-let dodano = 0;
-hksClanovi.forEach(c => {
-const postoji = state.clanovi.find(x => x.ime === c.ime && x.prezime === c.prezime);
-if (!postoji) {
-const god = new Date().getFullYear() - new Date(c.datRod).getFullYear();
-state.clanovi.push({
-id: Date.now() + Math.random(),
-ime: c.ime,
-prezime: c.prezime,
-datRod: c.datRod,
-oib: c.oib || ‘’,
-adresa: ‘’,
-roditelji: ‘’,
-mobitel: ‘’,
-email: ‘’,
-pojas: c.pojas || ‘Bijeli pojas’,
-status: ‘aktivan’,
-bolest: ‘’,
-datUclan: ‘’,
-izjava: ‘ne’,
-clanarina: ‘ne’,
-kategorija: god < 14 ? ‘kadet’ : god < 18 ? ‘junior’ : ‘senior’,
-sifra: c.sifra
-});
-dodano++;
-}
-});
-save();
-updateStats();
-renderClanovi();
-showSection(‘clanovi’);
-toast(`Uvezeno ${dodano} članova iz HKS registra! 🎉`);
-logActivity(‘📥’, `Uvoz iz HKS: ${dodano} novih članova`);
+  if (state.clanovi.length > 0) {
+    if (!confirm(`U bazi već postoje ${state.clanovi.length} članova. Dodati još ${hksClanovi.length} iz HKS popisa (duplikati neće biti dodani)?`)) return;
+  }
+  let dodano = 0;
+  hksClanovi.forEach(c => {
+    const postoji = state.clanovi.find(x => x.ime === c.ime && x.prezime === c.prezime);
+    if (!postoji) {
+      const god = new Date().getFullYear() - new Date(c.datRod).getFullYear();
+      state.clanovi.push({
+        id: Date.now() + Math.random(),
+        ime: c.ime,
+        prezime: c.prezime,
+        datRod: c.datRod,
+        oib: c.oib || '',
+        adresa: '',
+        roditelji: '',
+        mobitel: '',
+        email: '',
+        pojas: c.pojas || 'Bijeli pojas',
+        status: 'aktivan',
+        bolest: '',
+        datUclan: '',
+        izjava: 'ne',
+        clanarina: 'ne',
+        kategorija: god < 14 ? 'kadet' : god < 18 ? 'junior' : 'senior',
+        sifra: c.sifra
+      });
+      dodano++;
+    }
+  });
+  save();
+  updateStats();
+  renderClanovi();
+  showSection('clanovi');
+  toast(`Uvezeno ${dodano} članova iz HKS registra! 🎉`);
+  logActivity('📥', `Uvoz iz HKS: ${dodano} novih članova`);
 }
 
 // Auto-import ako je baza prazna ili nema OIB-ove
 if (state.clanovi.length === 0 || !state.clanovi[0].oib) {
-hksClanovi.forEach(c => {
-const god = new Date().getFullYear() - new Date(c.datRod).getFullYear();
-state.clanovi.push({
-id: Date.now() + Math.random(),
-ime: c.ime,
-prezime: c.prezime,
-datRod: c.datRod,
-oib: c.oib || ‘’,
-adresa: ‘’,
-roditelji: ‘’,
-mobitel: ‘’,
-email: ‘’,
-pojas: c.pojas || ‘Bijeli pojas’,
-status: ‘aktivan’,
-bolest: ‘’,
-datUclan: ‘’,
-izjava: ‘ne’,
-clanarina: ‘ne’,
-kategorija: god < 14 ? ‘kadet’ : god < 18 ? ‘junior’ : ‘senior’,
-sifra: c.sifra
-});
-});
-save();
-logActivity(‘📥’, `Početni uvoz: ${hksClanovi.length} članova iz HKS registra`);
+  hksClanovi.forEach(c => {
+    const god = new Date().getFullYear() - new Date(c.datRod).getFullYear();
+    state.clanovi.push({
+      id: Date.now() + Math.random(),
+      ime: c.ime,
+      prezime: c.prezime,
+      datRod: c.datRod,
+      oib: c.oib || '',
+      adresa: '',
+      roditelji: '',
+      mobitel: '',
+      email: '',
+      pojas: c.pojas || 'Bijeli pojas',
+      status: 'aktivan',
+      bolest: '',
+      datUclan: '',
+      izjava: 'ne',
+      clanarina: 'ne',
+      kategorija: god < 14 ? 'kadet' : god < 18 ? 'junior' : 'senior',
+      sifra: c.sifra
+    });
+  });
+  save();
+  logActivity('📥', `Početni uvoz: ${hksClanovi.length} članova iz HKS registra`);
 }
 
+
+
 function posaljiMailAktivni() {
-const u = window._aktivnaUplatnica;
-if (!u || !u.email) return;
-posaljiMailObj(u);
+  const u = window._aktivnaUplatnica;
+  if (!u || !u.email) return;
+  posaljiMailObj(u);
 }
 
 function initUplatnice() {
-// Postavi defaultni rok na 20. u tekućem mjesecu
-const sad = new Date();
-const rok = new Date(sad.getFullYear(), sad.getMonth(), 20);
-document.getElementById(‘upRok’).value = rok.toISOString().split(‘T’)[0];
-// Postavi tekući mjesec
-const mjeseci = [‘siječanj’,‘veljača’,‘ožujak’,‘travanj’,‘svibanj’,‘lipanj’,‘srpanj’,‘kolovoz’,‘rujan’,‘listopad’,‘studeni’,‘prosinac’];
-document.getElementById(‘upMjesec’).value = mjeseci[sad.getMonth()];
-document.getElementById(‘upGodina’).value = sad.getFullYear();
+  // Postavi defaultni rok na 20. u tekućem mjesecu
+  const sad = new Date();
+  const rok = new Date(sad.getFullYear(), sad.getMonth(), 20);
+  document.getElementById('upRok').value = rok.toISOString().split('T')[0];
+  // Postavi tekući mjesec
+  const mjeseci = ['siječanj','veljača','ožujak','travanj','svibanj','lipanj','srpanj','kolovoz','rujan','listopad','studeni','prosinac'];
+  document.getElementById('upMjesec').value = mjeseci[sad.getMonth()];
+  document.getElementById('upGodina').value = sad.getFullYear();
 }
 
 // ========== UPLATNICE ==========
-const IBAN = ‘HR8823600001102289908’;
-const PRIMATELJ = ‘Karate klub Đurđevac’;
-const ADRESA_PRIMATELJ = ‘Ulica Andrije Hebranga 12, 48350 Đurđevac’;
+const IBAN = 'HR8823600001102289908';
+const PRIMATELJ = 'Karate klub Đurđevac';
+const ADRESA_PRIMATELJ = 'Ulica Andrije Hebranga 12, 48350 Đurđevac';
 
 function izracunajClanarinu(clanovi_obitelji) {
-// clanovi_obitelji = array aktivnih članova istog prezimena (djeca)
-// Sortiraj po datumu učlanjenja (stariji = puno plaćaju)
-const sorted = […clanovi_obitelji].sort((a,b) => {
-const da = a.datUclan || ‘2000-01-01’;
-const db = b.datUclan || ‘2000-01-01’;
-return da.localeCompare(db);
-});
-return sorted.map((c, i) => {
-// Provjeri je li novi član (učlanjen ovog ili prošlog mjeseca)
-const jeNovi = c.datUclan && (() => {
-const d = new Date(c.datUclan);
-const sad = new Date();
-const mjeseciRazlika = (sad.getFullYear() - d.getFullYear()) * 12 + (sad.getMonth() - d.getMonth());
-return mjeseciRazlika < 1;
-})();
-
-```
-let iznos = 0;
-let napomena_iznos = '';
-if (jeNovi) {
-  iznos = 0;
-  napomena_iznos = 'novi član — prvi mjesec besplatno';
-} else if (i === 0) {
-  iznos = 25;
-  napomena_iznos = '1. dijete';
-} else if (i === 1) {
-  iznos = 15;
-  napomena_iznos = '2. dijete';
-} else {
-  iznos = 0;
-  napomena_iznos = '3.+ dijete — gratis';
-}
-return { ...c, iznos, napomena_iznos };
-```
-
-});
+  // clanovi_obitelji = array aktivnih članova istog prezimena (djeca)
+  // Sortiraj po datumu učlanjenja (stariji = puno plaćaju)
+  const sorted = [...clanovi_obitelji].sort((a,b) => {
+    const da = a.datUclan || '2000-01-01';
+    const db = b.datUclan || '2000-01-01';
+    return da.localeCompare(db);
+  });
+  return sorted.map((c, i) => {
+    // Provjeri je li novi član (učlanjen ovog ili prošlog mjeseca)
+    const jeNovi = c.datUclan && (() => {
+      const d = new Date(c.datUclan);
+      const sad = new Date();
+      const mjeseciRazlika = (sad.getFullYear() - d.getFullYear()) * 12 + (sad.getMonth() - d.getMonth());
+      return mjeseciRazlika < 1;
+    })();
+    
+    let iznos = 0;
+    let napomena_iznos = '';
+    if (jeNovi) {
+      iznos = 0;
+      napomena_iznos = 'novi član — prvi mjesec besplatno';
+    } else if (i === 0) {
+      iznos = 25;
+      napomena_iznos = '1. dijete';
+    } else if (i === 1) {
+      iznos = 15;
+      napomena_iznos = '2. dijete';
+    } else {
+      iznos = 0;
+      napomena_iznos = '3.+ dijete — gratis';
+    }
+    return { ...c, iznos, napomena_iznos };
+  });
 }
 
 function generirajUplatnice() {
-const mjesec = document.getElementById(‘upMjesec’).value;
-const godina = document.getElementById(‘upGodina’).value;
-const rok = document.getElementById(‘upRok’).value;
-const filter = document.getElementById(‘upFilter’).value;
+  const mjesec = document.getElementById('upMjesec').value;
+  const godina = document.getElementById('upGodina').value;
+  const rok = document.getElementById('upRok').value;
+  const filter = document.getElementById('upFilter').value;
 
-// Uzmi aktivne članove
-let aktivni = state.clanovi.filter(c => c.status === ‘aktivan’);
-if (filter) aktivni = aktivni.filter(c => c.kategorija === filter);
+  // Uzmi aktivne članove
+  let aktivni = state.clanovi.filter(c => c.status === 'aktivan');
+  if (filter) aktivni = aktivni.filter(c => c.kategorija === filter);
 
-// Grupiraj po prezimenu
-const poObitelji = {};
-aktivni.forEach(c => {
-const key = c.prezime.toLowerCase().trim();
-if (!poObitelji[key]) poObitelji[key] = [];
-poObitelji[key].push(c);
-});
+  // Grupiraj po prezimenu
+  const poObitelji = {};
+  aktivni.forEach(c => {
+    const key = c.prezime.toLowerCase().trim();
+    if (!poObitelji[key]) poObitelji[key] = [];
+    poObitelji[key].push(c);
+  });
 
-// Izračunaj iznose
-const uplatnice = [];
-Object.values(poObitelji).forEach(obitelj => {
-const sRacunom = izracunajClanarinu(obitelj);
-sRacunom.forEach(c => uplatnice.push(c));
-});
+  // Izračunaj iznose
+  const uplatnice = [];
+  Object.values(poObitelji).forEach(obitelj => {
+    const sRacunom = izracunajClanarinu(obitelj);
+    sRacunom.forEach(c => uplatnice.push(c));
+  });
 
-// Sortiraj abecedno
-uplatnice.sort((a,b) => a.prezime.localeCompare(b.prezime));
+  // Sortiraj abecedno
+  uplatnice.sort((a,b) => a.prezime.localeCompare(b.prezime));
 
-const el = document.getElementById(‘listaUplatnica’);
+  const el = document.getElementById('listaUplatnica');
+  
+  const ukupnoZaPlacanje = uplatnice.filter(u => u.iznos > 0).length;
+  const ukupnoIznos = uplatnice.reduce((s,u) => s + u.iznos, 0);
+  const besplatno = uplatnice.filter(u => u.iznos === 0).length;
 
-const ukupnoZaPlacanje = uplatnice.filter(u => u.iznos > 0).length;
-const ukupnoIznos = uplatnice.reduce((s,u) => s + u.iznos, 0);
-const besplatno = uplatnice.filter(u => u.iznos === 0).length;
+  let html = `
+    <div style="display:flex;gap:12px;margin-bottom:18px;flex-wrap:wrap">
+      <div class="stat-card" style="flex:1;min-width:120px"><div class="val" style="font-size:28px">${uplatnice.length}</div><div class="lbl">Ukupno uplatnica</div></div>
+      <div class="stat-card" style="flex:1;min-width:120px"><div class="val" style="font-size:28px;color:var(--success)">${ukupnoIznos} €</div><div class="lbl">Ukupno za naplatu</div></div>
+      <div class="stat-card" style="flex:1;min-width:120px"><div class="val" style="font-size:28px;color:var(--gold)">${besplatno}</div><div class="lbl">Besplatno</div></div>
+    </div>
+    <div style="margin-bottom:12px;display:flex;gap:8px;align-items:center">
+      <button class="btn btn-gold" onclick="posaljiSveMailove()">📧 Pošalji sve mailove odjednom</button>
+      <span style="font-size:12px;color:var(--muted)">Otvara mail klijent za svaki mail zasebno</span>
+    </div>
+    <table>
+      <thead><tr>
+        <th>Član</th><th>Prezime (obitelj)</th><th>E-mail</th><th>Iznos</th><th>Napomena</th><th>Akcija</th>
+      </tr></thead>
+      <tbody>
+      ${uplatnice.map((u, idx) => `
+        <tr>
+          <td style="font-weight:600;color:var(--text)">${u.ime} ${u.prezime}</td>
+          <td style="color:#555;font-size:12px">${u.napomena_iznos}</td>
+          <td style="font-size:12px;color:var(--muted)">${u.email || '<span style="color:var(--warn)">⚠ nema maila</span>'}</td>
+          <td><strong style="color:${u.iznos > 0 ? 'var(--red)' : 'var(--success)'}">${u.iznos > 0 ? u.iznos + ' €' : 'Besplatno'}</strong></td>
+          <td style="font-size:12px;color:var(--muted)">${u.napomena_iznos}</td>
+          <td>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              ${u.iznos > 0 ? `<button class="btn btn-secondary btn-sm" onclick="prikaziUplatnicuIdx(${idx})">👁 Prikaži</button>` : ''}
+              ${u.iznos > 0 && u.email ? `<button class="btn btn-primary btn-sm" onclick="posaljiMailIdx(${idx})">📧 Mail</button>` : ''}
+            </div>
+          </td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
 
-let html = `<div style="display:flex;gap:12px;margin-bottom:18px;flex-wrap:wrap"> <div class="stat-card" style="flex:1;min-width:120px"><div class="val" style="font-size:28px">${uplatnice.length}</div><div class="lbl">Ukupno uplatnica</div></div> <div class="stat-card" style="flex:1;min-width:120px"><div class="val" style="font-size:28px;color:var(--success)">${ukupnoIznos} €</div><div class="lbl">Ukupno za naplatu</div></div> <div class="stat-card" style="flex:1;min-width:120px"><div class="val" style="font-size:28px;color:var(--gold)">${besplatno}</div><div class="lbl">Besplatno</div></div> </div> <div style="margin-bottom:12px;display:flex;gap:8px;align-items:center"> <button class="btn btn-gold" onclick="posaljiSveMailove()">📧 Pošalji sve mailove odjednom</button> <span style="font-size:12px;color:var(--muted)">Otvara mail klijent za svaki mail zasebno</span> </div> <table> <thead><tr> <th>Član</th><th>Prezime (obitelj)</th><th>E-mail</th><th>Iznos</th><th>Napomena</th><th>Akcija</th> </tr></thead> <tbody> ${uplatnice.map((u, idx) =>`
-<tr>
-<td style="font-weight:600;color:var(--text)">${u.ime} ${u.prezime}</td>
-<td style="color:#555;font-size:12px">${u.napomena_iznos}</td>
-<td style="font-size:12px;color:var(--muted)">${u.email || ‘<span style="color:var(--warn)">⚠ nema maila</span>’}</td>
-<td><strong style="color:${u.iznos > 0 ? 'var(--red)' : 'var(--success)'}">${u.iznos > 0 ? u.iznos + ’ €’ : ‘Besplatno’}</strong></td>
-<td style="font-size:12px;color:var(--muted)">${u.napomena_iznos}</td>
-<td>
-<div style="display:flex;gap:6px;flex-wrap:wrap">
-${u.iznos > 0 ? `<button class="btn btn-secondary btn-sm" onclick="prikaziUplatnicuIdx(${idx})">👁 Prikaži</button>` : ‘’}
-${u.iznos > 0 && u.email ? `<button class="btn btn-primary btn-sm" onclick="posaljiMailIdx(${idx})">📧 Mail</button>` : ‘’}
-</div>
-</td>
-</tr>`).join('')} </tbody> </table>`;
-
-el.innerHTML = html;
-
-// Spremi sve uplatnice za index-based pristup
-window._sveUplatnice = uplatnice.map(u => ({…u, mjesec, godina, rok}));
-window._zadnjeUplatnice = uplatnice.filter(u => u.iznos > 0 && u.email).map(u => ({…u, mjesec, godina, rok}));
+  el.innerHTML = html;
+  
+  // Spremi sve uplatnice za index-based pristup
+  window._sveUplatnice = uplatnice.map(u => ({...u, mjesec, godina, rok}));
+  window._zadnjeUplatnice = uplatnice.filter(u => u.iznos > 0 && u.email).map(u => ({...u, mjesec, godina, rok}));
 }
 
 function napraviOpis(u) {
-const opis = `Članarina ${u.mjesec} ${u.godina} — ${u.ime} ${u.prezime}`;
-return opis;
+  const opis = `Članarina ${u.mjesec} ${u.godina} — ${u.ime} ${u.prezime}`;
+  return opis;
 }
 
 function napraviMailBody(u) {
-const rokStr = u.rok ? new Date(u.rok).toLocaleDateString(‘hr-HR’) : `20. u mjesecu`;
-return `Poštovani,
+  const rokStr = u.rok ? new Date(u.rok).toLocaleDateString('hr-HR') : `20. u mjesecu`;
+  return `Poštovani,
 
 molimo Vas da podmiriti članarinu za ${u.mjesec} ${u.godina} za ${u.ime} ${u.prezime}.
 
@@ -2568,7 +4001,7 @@ Napomena:   ${u.ime} ${u.prezime}
 
 Rok plaćanja: ${rokStr}
 
-Napomena: ${u.napomena_iznos === ‘2. dijete’ ? ‘Drugi član obitelji — povlaštena cijena 15 €.’ : ‘’}
+Napomena: ${u.napomena_iznos === '2. dijete' ? 'Drugi član obitelji — povlaštena cijena 15 €.' : ''}
 
 Hvala na povjerenju i redovitoj uplati!
 
@@ -2579,98 +4012,96 @@ E-mail: karate.djurdjevac@gmail.com`;
 }
 
 function posaljiMailObj(u) {
-const subject = encodeURIComponent(’KK Djurdjevac - Clanarina ’ + u.mjesec + ’ ’ + u.godina + ’ - ’ + u.ime + ’ ’ + u.prezime);
-const body = encodeURIComponent(napraviMailBody(u));
-const a = document.createElement(‘a’);
-a.href = ‘mailto:’ + u.email + ‘?subject=’ + subject + ‘&body=’ + body;
-document.body.appendChild(a);
-a.click();
-document.body.removeChild(a);
+  const subject = encodeURIComponent('KK Djurdjevac - Clanarina ' + u.mjesec + ' ' + u.godina + ' - ' + u.ime + ' ' + u.prezime);
+  const body = encodeURIComponent(napraviMailBody(u));
+  const a = document.createElement('a');
+  a.href = 'mailto:' + u.email + '?subject=' + subject + '&body=' + body;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
 }
 
 function posaljiSveMailove() {
-const lista = window._zadnjeUplatnice;
-if (!lista || lista.length === 0) { toast(‘Najprije generirajte uplatnice!’, ‘err’); return; }
-const bezMaila = (window._zadnjeUplatnice_svi || []).filter(u => u.iznos > 0 && !u.email);
-if (!confirm(`Otvorit će se ${lista.length} mail prozora (samo oni koji imaju e-mail adresu).${bezMaila.length > 0 ? ' ' + bezMaila.length + ' članova nema e-mail.' : ''} Nastaviti?`)) return;
-lista.forEach((u, i) => {
-setTimeout(() => {
-posaljiMailObj(u);
-}, i * 800);
-});
-toast(`Šalje se ${lista.length} mailova...`);
+  const lista = window._zadnjeUplatnice;
+  if (!lista || lista.length === 0) { toast('Najprije generirajte uplatnice!', 'err'); return; }
+  const bezMaila = (window._zadnjeUplatnice_svi || []).filter(u => u.iznos > 0 && !u.email);
+  if (!confirm(`Otvorit će se ${lista.length} mail prozora (samo oni koji imaju e-mail adresu).${bezMaila.length > 0 ? ' ' + bezMaila.length + ' članova nema e-mail.' : ''} Nastaviti?`)) return;
+  lista.forEach((u, i) => {
+    setTimeout(() => {
+      posaljiMailObj(u);
+    }, i * 800);
+  });
+  toast(`Šalje se ${lista.length} mailova...`);
 }
 
 function prikaziUplatnicuIdx(idx) {
-const u = window._sveUplatnice[idx];
-if (!u) return;
-prikaziUplatnicuObj(u);
+  const u = window._sveUplatnice[idx];
+  if (!u) return;
+  prikaziUplatnicuObj(u);
 }
 
 function posaljiMailIdx(idx) {
-const u = window._sveUplatnice[idx];
-if (!u) return;
-posaljiMailObj(u);
+  const u = window._sveUplatnice[idx];
+  if (!u) return;
+  posaljiMailObj(u);
 }
 
 function prikaziUplatnicu(encoded) {
-const u = JSON.parse(decodeURIComponent(encoded));
-prikaziUplatnicuObj(u);
+  const u = JSON.parse(decodeURIComponent(encoded));
+  prikaziUplatnicuObj(u);
 }
 
 function posaljiMail(encoded) {
-const u = JSON.parse(decodeURIComponent(encoded));
-posaljiMailObj(u);
+  const u = JSON.parse(decodeURIComponent(encoded));
+  posaljiMailObj(u);
 }
 
 function prikaziUplatnicuObj(u) {
-window._aktivnaUplatnica = u;
-const rokStr = u.rok ? new Date(u.rok).toLocaleDateString(‘hr-HR’) : ‘20. u mjesecu’;
-document.getElementById(‘uplatnicaNaslov’).textContent = ’Uplatnica — ’ + u.ime + ’ ’ + u.prezime;
-const btnMail = document.getElementById(‘btnUplatnicaMail’);
-if (u.email) { btnMail.style.display = ‘’; } else { btnMail.style.display = ‘none’; }
-document.getElementById(‘uplatnicaBody’).innerHTML =
-‘<div style="background:#fff8f8;border:2px solid #C8102E;border-radius:8px;padding:16px;margin-bottom:12px;color:#111">’
-+ ‘<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #ddd;font-size:13px"><span style="color:var(--muted)">Član:</span><strong style="color:#111">’ + u.ime + ’ ’ + u.prezime + ‘</strong></div>’
-+ ‘<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #ddd;font-size:13px"><span style="color:var(--muted)">Za:</span><strong style="color:#111">Članarina ’ + u.mjesec + ’ ’ + u.godina + ‘</strong></div>’
-+ ‘<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #ddd;font-size:13px"><span style="color:var(--muted)">Napomena:</span><strong style="color:#111">’ + u.ime + ’ ’ + u.prezime + ’ (’ + u.napomena_iznos + ‘)</strong></div>’
-+ ‘<div style="font-size:32px;color:#C8102E;font-weight:bold;text-align:center;padding:12px">’ + u.iznos + ‘,00 EUR</div>’
-+ ‘</div>’
-+ ‘<div style="background:#f7f8fa;border:1px solid #ddd;border-radius:8px;padding:16px;color:#111">’
-+ ‘<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #ddd;font-size:13px"><span style="color:var(--muted)">Primatelj:</span><strong style="color:#111">Karate klub Đurđevac</strong></div>’
-+ ‘<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #ddd;font-size:13px"><span style="color:var(--muted)">IBAN:</span><strong style="font-family:monospace;color:#111">HR8823600001102289908</strong></div>’
-+ ‘<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #ddd;font-size:13px"><span style="color:var(--muted)">Banka:</span><strong style="color:#111">Zagrebačka banka</strong></div>’
-+ ’<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #ddd;font-size:13px"><span style="color:var(--muted)">Opis:</span><strong style="color:#111">Članarina ’ + u.mjesec + ’ ’ + u.godina + ‘</strong></div>’
-+ ‘<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:13px"><span style="color:var(--muted)">Rok plaćanja:</span><strong style="color:#111">’ + rokStr + ‘</strong></div>’
-+ ‘</div>’
-+ (u.email ? ’<div style="margin-top:10px;padding:8px 12px;background:#e8f5e9;border-radius:6px;font-size:12px;color:#2e7d32">📧 Mail: ’ + u.email + ‘</div>’ : ‘<div style="margin-top:10px;padding:8px 12px;background:#fff3e0;border-radius:6px;font-size:12px;color:#e65100">⚠ Nema e-mail adrese za ovog člana</div>’);
-openModal(‘modalUplatnica’);
+  window._aktivnaUplatnica = u;
+  const rokStr = u.rok ? new Date(u.rok).toLocaleDateString('hr-HR') : '20. u mjesecu';
+  document.getElementById('uplatnicaNaslov').textContent = 'Uplatnica — ' + u.ime + ' ' + u.prezime;
+  const btnMail = document.getElementById('btnUplatnicaMail');
+  if (u.email) { btnMail.style.display = ''; } else { btnMail.style.display = 'none'; }
+  const row = (lbl, val) => '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #333;font-size:14px"><span style="color:#aaa">' + lbl + '</span><strong style="color:#fff;text-align:right">' + val + '</strong></div>';
+  document.getElementById('uplatnicaBody').innerHTML = 
+    '<div style="font-size:28px;color:#C8102E;font-weight:bold;text-align:center;padding:16px 0;border-bottom:2px solid #C8102E;margin-bottom:12px">' + u.iznos + ',00 EUR</div>'
+    + row('Član', u.ime + ' ' + u.prezime)
+    + row('Za', 'Članarina ' + u.mjesec + ' ' + u.godina)
+    + row('Napomena', u.ime + ' ' + u.prezime + ' (' + u.napomena_iznos + ')')
+    + row('Primatelj', 'Karate klub Đurđevac')
+    + row('IBAN', 'HR8823600001102289908')
+    + row('Banka', 'Zagrebačka banka')
+    + row('Opis', 'Članarina ' + u.mjesec + ' ' + u.godina)
+    + row('Rok plaćanja', rokStr)
+    + (u.email ? '<div style="margin-top:12px;font-size:13px;color:#2ECC71">📧 ' + u.email + '</div>' : '<div style="margin-top:12px;font-size:13px;color:#F39C12">⚠ Nema e-mail adrese</div>');
+  openModal('modalUplatnica');
+
 }
 
+
 function filterIGo(status) {
-showSection(‘clanovi’);
-setTimeout(() => {
-const sel = document.getElementById(‘filterStatus’);
-if (sel) { sel.value = status; renderClanovi(); }
-}, 50);
+  showSection('clanovi');
+  setTimeout(() => {
+    const sel = document.getElementById('filterStatus');
+    if (sel) { sel.value = status; renderClanovi(); }
+  }, 50);
 }
 
 function filterNeplaceni() {
-showSection(‘clanovi’);
-setTimeout(() => {
-const sel = document.getElementById(‘filterStatus’);
-if (sel) { sel.value = ‘aktivan’; }
-// Also filter by unpaid - use search workaround via custom filter
-window._filterNeplaceni = true;
-renderClanovi();
-window._filterNeplaceni = false;
-}, 50);
+  showSection('clanovi');
+  setTimeout(() => {
+    const sel = document.getElementById('filterStatus');
+    if (sel) { sel.value = 'aktivan'; }
+    // Also filter by unpaid - use search workaround via custom filter
+    window._filterNeplaceni = true;
+    renderClanovi();
+    window._filterNeplaceni = false;
+  }, 50);
 }
 
 // Init
-initTheme();
 updateStats();
+renderKalendar();
 </script>
-
 </body>
 </html>

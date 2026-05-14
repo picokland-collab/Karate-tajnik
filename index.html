@@ -5,8 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Digitalni Tajnik – KK Đurđevac</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,300&display=swap" rel="stylesheet">
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <style>
   :root {
     --red: #C8102E;
@@ -6118,29 +6116,95 @@ initMobileNav();
 </script>
 
 <script>
-// ========== FIREBASE ==========
-const firebaseConfig = {
-  apiKey: "AIzaSyDTIt2rsrREtD5AEj_Ilix8sddBFn8TdbM",
-  authDomain: "digitalni-tajnik.firebaseapp.com",
-  projectId: "digitalni-tajnik",
-  storageBucket: "digitalni-tajnik.firebasestorage.app",
-  messagingSenderId: "270835926692",
-  appId: "1:270835926692:web:5a2982d5cf73cf14cbc831"
-};
+// ========== FIREBASE REST API (no SDK needed) ==========
+const FB_PROJECT = "digitalni-tajnik";
+const FB_API_KEY = "AIzaSyDTIt2rsrREtD5AEj_Ilix8sddBFn8TdbM";
+const FB_BASE = `https://firestore.googleapis.com/v1/projects/${FB_PROJECT}/databases/(default)/documents`;
 
-let db = null;
 let fbEnabled = false;
 
-function fbInit() {
+// Convert Firestore REST response to plain object
+function fbParse(doc) {
+  if (!doc.fields) return null;
+  const obj = {};
+  for (const [k, v] of Object.entries(doc.fields)) {
+    if (v.stringValue !== undefined) obj[k] = v.stringValue;
+    else if (v.integerValue !== undefined) obj[k] = parseInt(v.integerValue);
+    else if (v.doubleValue !== undefined) obj[k] = parseFloat(v.doubleValue);
+    else if (v.booleanValue !== undefined) obj[k] = v.booleanValue;
+    else if (v.nullValue !== undefined) obj[k] = null;
+    else if (v.arrayValue !== undefined) obj[k] = (v.arrayValue.values||[]).map(i => fbParseVal(i));
+    else if (v.mapValue !== undefined) obj[k] = fbParse(v.mapValue);
+    else obj[k] = null;
+  }
+  return obj;
+}
+
+function fbParseVal(v) {
+  if (v.stringValue !== undefined) return v.stringValue;
+  if (v.integerValue !== undefined) return parseInt(v.integerValue);
+  if (v.doubleValue !== undefined) return parseFloat(v.doubleValue);
+  if (v.booleanValue !== undefined) return v.booleanValue;
+  if (v.nullValue !== undefined) return null;
+  return null;
+}
+
+// Convert plain object to Firestore fields
+function fbFields(obj) {
+  const fields = {};
+  for (const [k, v] of Object.entries(obj)) {
+    if (v === null || v === undefined) fields[k] = { nullValue: null };
+    else if (typeof v === 'boolean') fields[k] = { booleanValue: v };
+    else if (typeof v === 'number') fields[k] = Number.isInteger(v) ? { integerValue: String(v) } : { doubleValue: v };
+    else if (typeof v === 'string') fields[k] = { stringValue: v };
+    else if (Array.isArray(v)) fields[k] = { arrayValue: { values: v.map(i => typeof i === 'string' ? { stringValue: i } : { integerValue: String(i) }) } };
+    else fields[k] = { stringValue: String(v) };
+  }
+  return { fields };
+}
+
+async function fbGet(collection) {
   try {
-    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-    db = firebase.firestore();
-    fbEnabled = true;
-    console.log('Firebase OK');
-    fbUpdateStatus(true);
-    fbSyncAll();
+    const r = await fetch(`${FB_BASE}/${collection}?key=${FB_API_KEY}`);
+    if (!r.ok) return [];
+    const data = await r.json();
+    return (data.documents || []).map(d => fbParse(d));
+  } catch(e) { return []; }
+}
+
+async function fbSet(collection, id, obj) {
+  try {
+    const r = await fetch(`${FB_BASE}/${collection}/${id}?key=${FB_API_KEY}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(fbFields(obj))
+    });
+    return r.ok;
+  } catch(e) { return false; }
+}
+
+async function fbDelete(collection, id) {
+  try {
+    await fetch(`${FB_BASE}/${collection}/${id}?key=${FB_API_KEY}`, { method: 'DELETE' });
+  } catch(e) {}
+}
+
+let db = null;
+
+async function fbInit() {
+  try {
+    // Test connection with a simple read
+    const r = await fetch(`${FB_BASE}?key=${FB_API_KEY}&pageSize=1`);
+    if (r.ok) {
+      fbEnabled = true;
+      console.log('Firebase REST OK');
+      fbUpdateStatus(true);
+      fbSyncAll();
+    } else {
+      throw new Error('HTTP ' + r.status);
+    }
   } catch(e) {
-    console.warn('Firebase error:', e);
+    console.warn('Firebase REST error:', e.message);
     fbEnabled = false;
     fbUpdateStatus(false);
   }
@@ -6156,57 +6220,50 @@ function fbUpdateStatus(ok) {
 
 // ── ČLANOVI ──────────────────────────────────────
 async function fbSaveClanovi() {
-  if (!fbEnabled || !db) return;
+  if (!fbEnabled) return;
   try {
-    const batch = db.batch();
-    state.clanovi.forEach(c => {
-      // Remove foto from Firebase to save space - keep locally
+    for (const c of state.clanovi) {
       const data = {...c};
-      delete data.foto;
-      batch.set(db.collection('clanovi').doc(String(c.id)), data);
-    });
-    await batch.commit();
+      delete data.foto; // Save space
+      await fbSet('clanovi', String(c.id), data);
+    }
   } catch(e) { console.warn('fbSaveClanovi:', e.message); }
 }
 
 async function fbLoadClanovi() {
-  if (!fbEnabled || !db) return;
+  if (!fbEnabled) return;
   try {
-    const snap = await db.collection('clanovi').get();
-    if (snap.empty) { await fbSaveClanovi(); return; }
-    const remote = snap.docs.map(d => d.data());
+    const remote = await fbGet('clanovi');
+    if (remote.length === 0) { await fbSaveClanovi(); return; }
     // Merge - keep local foto
     remote.forEach(rc => {
       const local = state.clanovi.find(c => String(c.id) === String(rc.id));
       if (local && local.foto) rc.foto = local.foto;
     });
-    state.clanovi = remote;
+    state.clanovi = remote.filter(c => c && c.id);
     save();
     if (typeof renderClanovi === 'function') renderClanovi();
     updateStats();
-    toast('👥 ' + remote.length + ' članova sinkronizirano');
+    toast('👥 ' + remote.length + ' članova sinkronizirano iz oblaka!');
   } catch(e) { console.warn('fbLoadClanovi:', e.message); }
 }
 
 // ── TRENINZI ─────────────────────────────────────
 async function fbSaveTreninzi() {
-  if (!fbEnabled || !db) return;
+  if (!fbEnabled) return;
   try {
-    const batch = db.batch();
-    dnTreninzi.forEach(t => {
-      batch.set(db.collection('treninzi').doc(String(t.id)), t);
-    });
-    await batch.commit();
+    for (const t of dnTreninzi) {
+      await fbSet('treninzi', String(t.id), t);
+    }
   } catch(e) { console.warn('fbSaveTreninzi:', e.message); }
 }
 
 async function fbLoadTreninzi() {
-  if (!fbEnabled || !db) return;
+  if (!fbEnabled) return;
   try {
-    const snap = await db.collection('treninzi').get();
-    if (!snap.empty) {
-      const remote = snap.docs.map(d => d.data());
-      dnTreninzi = remote;
+    const remote = await fbGet('treninzi');
+    if (remote.length > 0) {
+      dnTreninzi = remote.filter(t => t && t.id);
       localStorage.setItem('kk_treninzi', JSON.stringify(dnTreninzi));
     }
   } catch(e) { console.warn('fbLoadTreninzi:', e.message); }
@@ -6214,22 +6271,20 @@ async function fbLoadTreninzi() {
 
 // ── FINANCIJE ────────────────────────────────────
 async function fbSaveFinancije() {
-  if (!fbEnabled || !db) return;
+  if (!fbEnabled) return;
   try {
-    const batch = db.batch();
-    finStavke.forEach(s => {
-      batch.set(db.collection('financije').doc(String(s.id)), s);
-    });
-    await batch.commit();
+    for (const s of finStavke) {
+      await fbSet('financije', String(s.id), s);
+    }
   } catch(e) { console.warn('fbSaveFinancije:', e.message); }
 }
 
 async function fbLoadFinancije() {
-  if (!fbEnabled || !db) return;
+  if (!fbEnabled) return;
   try {
-    const snap = await db.collection('financije').get();
-    if (!snap.empty) {
-      finStavke = snap.docs.map(d => d.data());
+    const remote = await fbGet('financije');
+    if (remote.length > 0) {
+      finStavke = remote.filter(s => s && s.id);
       localStorage.setItem('kk_financije', JSON.stringify(finStavke));
     }
   } catch(e) { console.warn('fbLoadFinancije:', e.message); }

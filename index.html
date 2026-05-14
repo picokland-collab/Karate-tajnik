@@ -3941,8 +3941,7 @@ async function sendAI() {
   const input = document.getElementById('aiInput');
   const msg = input.value.trim();
   if (!msg) return;
-  // Use Gemini API
-  const GEMINI_KEY = 'AIzaSyDkmynfTwsZgE9VWPfXUaxiU99vs0ccDXs';
+  // Groq API
   
   input.value = '';
   input.style.height = 'auto';

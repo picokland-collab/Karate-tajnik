@@ -22,13 +22,18 @@
     --warn: #F39C12;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    height: 100%;
+    overflow: hidden;
+  }
   body {
     font-family: 'DM Sans', sans-serif;
     background: #0D0D0D;
     color: #EDEDED;
-    min-height: 100vh;
+    height: 100vh;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
   }
   * { color: inherit; }
   main, .content, .section { background: #0D0D0D !important; }
@@ -114,17 +119,48 @@
   .app {
     display: flex;
     flex: 1;
+    height: calc(100vh - 64px);
+    overflow: hidden;
+    position: relative;
   }
 
   /* SIDEBAR */
   nav {
     width: 220px;
+    min-width: 220px;
     background: var(--dark);
     border-right: 1px solid var(--border);
-    padding: 20px 0;
+    padding: 12px 0;
     flex-shrink: 0;
     color: var(--text);
+    overflow-y: auto;
+    overflow-x: hidden;
+    height: 100%;
+    scrollbar-width: thin;
+    scrollbar-color: #333 transparent;
   }
+  nav::-webkit-scrollbar { width: 4px; }
+  nav::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+
+  @media (max-width: 768px) {
+    nav {
+      width: 56px;
+      min-width: 56px;
+      scrollbar-width: none;
+    }
+    nav::-webkit-scrollbar { display: none; }
+    nav .section-label { display: none; }
+    nav button span:last-child { display: none; }
+    nav button {
+      padding: 12px 0;
+      justify-content: center;
+    }
+    nav button .icon { width: auto; font-size: 20px; }
+  }
+  nav::-webkit-scrollbar { width: 4px; }
+  nav::-webkit-scrollbar-track { background: transparent; }
+  nav::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+  nav::-webkit-scrollbar-thumb:hover { background: #555; }
   nav .section-label {
     font-size: 10px;
     letter-spacing: 2px;
@@ -162,6 +198,8 @@
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    height: 100%;
+    min-width: 0;
   }
 
   /* SECTIONS */
@@ -169,7 +207,9 @@
     display: none;
     flex: 1;
     flex-direction: column;
-    overflow: hidden;
+    overflow-y: auto;
+    overflow-x: hidden;
+    height: 100%;
   }
   .section.active {
     display: flex;
@@ -496,6 +536,29 @@
   }
   .doc-output-actions { display: flex; gap: 8px; margin-top: 12px; }
 
+  /* LOGIN */
+  #loginScreen {
+    position: fixed; inset: 0; z-index: 99999;
+    background: #0D0D0D;
+    display: flex; align-items: center; justify-content: center;
+    padding: 24px;
+  }
+  .login-box {
+    background: #1C1C1C;
+    border: 1px solid #2E2E2E;
+    border-radius: 16px;
+    padding: 32px 28px;
+    width: 100%; max-width: 380px;
+    text-align: center;
+  }
+  .login-box img { width: 80px; height: 80px; border-radius: 50%; margin-bottom: 16px; border: 3px solid #C8102E; }
+  .login-box h2 { font-family: 'Bebas Neue', sans-serif; font-size: 26px; letter-spacing: 2px; margin-bottom: 4px; color: #EDEDED; }
+  .login-box p { font-size: 13px; color: #888; margin-bottom: 24px; }
+  .login-box input { width: 100%; margin-bottom: 12px; font-size: 15px; letter-spacing: 2px; }
+  .login-error { color: #ff5a70; font-size: 13px; margin-bottom: 10px; display: none; }
+  .login-users { margin-top: 16px; padding-top: 16px; border-top: 1px solid #2E2E2E; text-align: left; }
+  .login-users div { font-size: 11px; color: #555; margin-bottom: 4px; }
+
   #btnMic.listening {
     background: rgba(200,16,46,0.2) !important;
     color: #C8102E !important;
@@ -508,6 +571,49 @@
   }
 
   /* SCROLL TO TOP */
+  /* ALERTS */
+  .alert-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 16px; border-radius: 8px; margin-bottom: 8px;
+    cursor: pointer; transition: opacity 0.15s;
+  }
+  .alert-item:hover { opacity: 0.85; }
+  .alert-red { background: rgba(200,16,46,0.15); border-left: 4px solid #C8102E; }
+  .alert-warn { background: rgba(243,156,18,0.15); border-left: 4px solid #F39C12; }
+  .alert-icon { font-size: 20px; flex-shrink: 0; }
+  .alert-text { flex: 1; font-size: 13px; color: #EDEDED; }
+  .alert-text strong { display: block; font-size: 14px; margin-bottom: 2px; }
+
+  /* TRENER MODE */
+  .trener-card {
+    background: #1C1C1C; border: 2px solid #2E2E2E;
+    border-radius: 12px; padding: 16px 12px;
+    cursor: pointer; text-align: center;
+    transition: all 0.15s; min-height: 100px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 8px;
+  }
+  .trener-card:active { transform: scale(0.96); }
+  .trener-card.prisutan { background: rgba(46,204,113,0.2); border-color: #2ECC71; }
+  .trener-card .tc-foto { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; border: 2px solid #2E2E2E; }
+  .trener-card.prisutan .tc-foto { border-color: #2ECC71; }
+  .trener-card .tc-initials { width: 52px; height: 52px; border-radius: 50%; background: #2E2E2E; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; color: #888; border: 2px solid #2E2E2E; }
+  .trener-card.prisutan .tc-initials { border-color: #2ECC71; color: #2ECC71; background: rgba(46,204,113,0.15); }
+  .trener-card .tc-ime { font-size: 12px; font-weight: 600; color: #EDEDED; line-height: 1.2; }
+  .trener-card .tc-status { font-size: 18px; }
+
+  /* OIB PROTECTION */
+  .oib-protected { filter: blur(4px); user-select: none; cursor: pointer; transition: filter 0.2s; }
+  .oib-protected:hover { filter: blur(0); }
+
+  @media (max-width: 768px) {
+    #hamburgerBtn { display: block !important; }
+  }
+  @media (min-width: 769px) {
+    #hamburgerBtn { display: none !important; }
+    #mobileOverlay { display: none !important; }
+  }
+
   #scrollTopBtn {
     position: fixed;
     bottom: 24px;
@@ -537,6 +643,22 @@
   </div>
 </div>
 
+
+<div id="loginScreen">
+  <div class="login-box">
+    <img src="data:image/jpeg;base64,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" alt="Logo">
+    <h2>KK Đurđevac</h2>
+    <p>Digitalni Tajnik — Prijavite se</p>
+    <input type="text" id="loginUser" placeholder="Korisničko ime" autocomplete="username"
+      onkeydown="if(event.key==='Enter')document.getElementById('loginPass').focus()">
+    <input type="password" id="loginPass" placeholder="Lozinka" autocomplete="current-password"
+      onkeydown="if(event.key==='Enter')loginSubmit()">
+    <div class="login-error" id="loginError">Pogrešno korisničko ime ili lozinka!</div>
+    <button class="btn btn-primary" style="width:100%;padding:13px;font-size:15px" onclick="loginSubmit()">Prijava</button>
+
+  </div>
+</div>
+
 <header>
   <div class="logo">
     <img src="data:image/jpeg;base64,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" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid #F0A500;flex-shrink:0" alt="KK Đurđevac logo">
@@ -544,6 +666,7 @@
       <h1>KK Đurđevac</h1>
       <span>Digitalni Tajnik</span>
     </div>
+  </div>
   </div>
   <div class="header-ai">AI Tajnik aktivan</div>
 </header>
@@ -554,10 +677,14 @@
     <button class="active" onclick="showSection('dashboard')"><span class="icon">📊</span><span>Pregled</span></button>
     <button onclick="showSection('clanovi')"><span class="icon">👥</span><span>Članovi</span></button>
     <button onclick="showSection('emailovi')"><span class="icon">📧</span><span>Email adrese</span></button>
-    <button onclick="showSection('komunikacija')"><span class="icon">✉️</span><span>Komunikacija</span></button>
+    <button onclick="showSection('korisnici')" id="navKorisnici" style="display:none"><span class="icon">👥</span><span>Korisnici</span></button>
+    <button onclick="showSection('treneri')"><span class="icon">🥋</span><span>Treneri</span></button>
+    <button onclick="showSection('gdpr')"><span class="icon">🔒</span><span>GDPR Privole</span></button>
+    <button onclick="showSection('rezultati')"><span class="icon">🏅</span><span>Natjecanja</span></button>
+    <button onclick="showSection('financije')"><span class="icon">📊</span><span>Financije</span></button>
     <div class="section-label">Dokumenti</div>
     <button onclick="showSection('odluke')"><span class="icon">📜</span><span>Odluke</span></button>
-    <button onclick="showSection('izvjestaji')"><span class="icon">🏆</span><span>Izvještaji</span></button>
+    <button onclick="showSection('godisnjiplan')"><span class="icon">📋</span><span>Godišnji plan</span></button>
     <div class="section-label">Financije</div>
     <button onclick="showSection('uplatnice')"><span class="icon">💳</span><span>Uplatnice</span></button>
     <div class="section-label">Putovanja</div>
@@ -567,7 +694,7 @@
     <button onclick="showSection('kalendar')"><span class="icon">📅</span><span>Kalendar</span></button>
     <div class="section-label">Zdravlje</div>
     <button onclick="showSection('lijecnicki')"><span class="icon">🏥</span><span>Liječnički</span></button>
-    <div class="section-label">Poruke</div>
+    <div class="section-label">Komunikacija</div>
     <button onclick="showSection('obavijesti2')"><span class="icon">📢</span><span>Obavijesti</span></button>
     <div class="section-label">AI Asistent</div>
     <button onclick="showSection('ai')"><span class="icon">🤖</span><span>Tajnik AI</span></button>
@@ -585,6 +712,12 @@
         <button class="btn btn-gold" onclick="showSection('ai')">🤖 Pitaj AI tajnika</button>
       </div>
       <div class="content">
+        <!-- ALERT PANEL -->
+        <div id="alertPanel" style="margin-bottom:16px"></div>
+
+        <!-- ALERT PANEL -->
+        <div id="alertPanel" style="margin-bottom:18px"></div>
+
         <div class="stats-row" id="statsRow">
           <div class="stat-card" onclick="showSection('clanovi')" style="cursor:pointer" title="Svi članovi">
             <div class="val" id="statUkupno">0</div><div class="lbl">Ukupno članova</div>
@@ -1006,7 +1139,10 @@
     <div id="dnevnik" class="section">
       <div class="page-header">
         <div><h2>Dnevnik rada</h2><p>Prozivka i plan treninga</p></div>
-        <button class="btn btn-primary" onclick="noviTrening()">+ Novi trening</button>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-secondary btn-sm" onclick="dnOcistiSve()" title="Obriši sve treninge">🗑</button>
+          <button class="btn btn-primary" onclick="noviTrening()">+ Novi trening</button>
+        </div>
       </div>
       <div class="content">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px">
@@ -1024,7 +1160,12 @@
             <button class="btn btn-secondary btn-sm" onclick="zatvoriProzivku()">← Natrag</button>
             <h3 style="font-family:'Bebas Neue',sans-serif;letter-spacing:1px;font-size:20px" id="dn-trening-naslov">Trening</h3>
           </div>
-          <div style="margin-bottom:12px;font-size:13px;color:#aaa">Tapnite člana za označavanje prisutnosti:</div>
+          <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
+            <span style="font-size:13px;color:#aaa;flex:1">Tapnite člana za prisutnost:</span>
+            <button class="btn btn-sm" style="background:rgba(46,204,113,0.2);color:#2ECC71;border:1px solid #2ECC71;padding:8px 14px;font-size:13px" onclick="dnOznaciSve(true)">✅ Svi prisutni</button>
+            <button class="btn btn-sm" style="background:rgba(200,16,46,0.15);color:#ff5a70;border:1px solid rgba(200,16,46,0.4);padding:8px 14px;font-size:13px" onclick="dnOznaciSve(false)">✕ Odznači sve</button>
+          </div>
+          <div id="dn-prisutni-count" style="font-size:13px;color:var(--gold);margin-bottom:10px;font-weight:600">0 prisutnih</div>
           <div id="dn-prozivka-lista" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"></div>
           <div style="margin-top:14px;display:flex;gap:8px">
             <button class="btn btn-secondary" style="flex:1" onclick="zatvoriProzivku()">Odustani</button>
@@ -1184,6 +1325,182 @@
         <div style="margin-top:16px;padding-bottom:20px">
           <button class="btn btn-primary" style="width:100%" onclick="spremiEmailove()">💾 Spremi sve email adrese</button>
         </div>
+      </div>
+    </div>
+
+    <!-- TRENERI -->
+    <div id="treneri" class="section">
+      <div class="page-header">
+        <div><h2>Stručni kadar</h2><p>Evidencija trenera i stručnih osoba</p></div>
+        <button class="btn btn-primary" onclick="openModal('modalNoviTrener')">+ Dodaj trenera</button>
+      </div>
+      <div class="content">
+        <div style="background:rgba(240,165,0,0.1);border:1px solid var(--gold);border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:13px;color:var(--gold)">
+          ⚖️ Zakon o sportu zahtijeva evidenciju svih osoba koje obavljaju stručne poslove u sportu.
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px">
+          <div class="stat-card"><div class="val" id="tr-st-ukupno" style="font-size:28px">0</div><div class="lbl">Ukupno trenera</div></div>
+          <div class="stat-card"><div class="val" id="tr-st-licenca" style="font-size:28px;color:var(--warn)">0</div><div class="lbl">Licence uskoro ističu</div></div>
+        </div>
+        <div id="tr-lista-html">
+          <div class="empty-state"><div class="icon">🥋</div><p>Nema unesenih trenera.</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GDPR PRIVOLE -->
+    <div id="gdpr" class="section">
+      <div class="page-header">
+        <div><h2>GDPR Privole</h2><p>Evidencija privola za obradu osobnih podataka</p></div>
+        <button class="btn btn-primary" onclick="gdprGenerirajSve()">📄 Generiraj sve privole</button>
+      </div>
+      <div class="content">
+        <div style="background:rgba(200,16,46,0.1);border:1px solid var(--red);border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:13px;color:#ff5a70">
+          ⚠️ GDPR obveza: Za svakog člana (posebno maloljetnika) mora postojati potpisana privola za obradu osobnih podataka i fotografija.
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px">
+          <div class="stat-card"><div class="val" id="gdpr-st-potpisano" style="font-size:24px;color:var(--success)">0</div><div class="lbl">Potpisano</div></div>
+          <div class="stat-card"><div class="val" id="gdpr-st-nepotpisano" style="font-size:24px;color:var(--red)">0</div><div class="lbl">Nije potpisano</div></div>
+          <div class="stat-card"><div class="val" id="gdpr-st-postotak" style="font-size:24px;color:var(--gold)">0%</div><div class="lbl">Usklađenost</div></div>
+        </div>
+        <div id="gdpr-lista-html">
+          <div class="empty-state"><div class="icon">🔒</div><p>Učitajte listu članova za pregled GDPR statusa.</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EVIDENCIJA SPORTSKIH REZULTATA -->
+    <div id="rezultati" class="section">
+      <div class="page-header">
+        <div><h2>Natjecanja i rezultati</h2><p>Evidencija natjecanja i plasmana</p></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-secondary" onclick="openModal('modalIzvjestaj')">📰 Izvještaj za portale</button>
+          <button class="btn btn-primary" onclick="openModal('modalNoviRezultat')">+ Dodaj rezultat</button>
+        </div>
+      </div>
+      <div class="content">
+        <div style="background:rgba(240,165,0,0.1);border:1px solid var(--gold);border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:13px;color:var(--gold)">
+          ⚖️ Zakon o sportu zahtijeva evidenciju plasmana sportaša na natjecanjima.
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px">
+          <div class="stat-card"><div class="val" id="rez-st-zlato" style="font-size:24px;color:#FFD700">0</div><div class="lbl">🥇 Zlatnih</div></div>
+          <div class="stat-card"><div class="val" id="rez-st-srebro" style="font-size:24px;color:#C0C0C0">0</div><div class="lbl">🥈 Srebrnih</div></div>
+          <div class="stat-card"><div class="val" id="rez-st-bronca" style="font-size:24px;color:#CD7F32">0</div><div class="lbl">🥉 Brončanih</div></div>
+          <div class="stat-card"><div class="val" id="rez-st-ukupno" style="font-size:24px">0</div><div class="lbl">Natjecanja</div></div>
+        </div>
+
+        <!-- Saved izvještaji -->
+        <div id="rez-izvjestaji-panel" style="margin-bottom:20px">
+          <div style="font-family:'Bebas Neue',sans-serif;letter-spacing:1px;font-size:15px;margin-bottom:10px;color:#aaa;display:flex;align-items:center;justify-content:space-between">
+            <span>📰 OBJAVLJENI IZVJEŠTAJI</span>
+            <button class="btn btn-secondary btn-sm" onclick="toggleRezIzvjestaji()">Prikaži/Sakrij</button>
+          </div>
+          <div id="rez-izvjestaji-lista" style="display:none">
+            <div id="listaIzvjestaja">
+              <div style="font-size:13px;color:#666;padding:8px 0">Nema spremljenih izvještaja.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filteri -->
+        <div class="search-bar" style="margin-bottom:14px">
+          <input type="text" id="rez-search" placeholder="Pretraži po natjecatelju ili natjecanju..." oninput="rezRenderLista()">
+          <select id="rez-filter-god" onchange="rezRenderLista()">
+            <option value="">Sve godine</option>
+          </select>
+          <select id="rez-filter-med" onchange="rezRenderLista()">
+            <option value="">Sve medalje</option>
+            <option value="1">🥇 Zlatna</option>
+            <option value="2">🥈 Srebrna</option>
+            <option value="3">🥉 Brončana</option>
+            <option value="0">Bez medalje</option>
+          </select>
+        </div>
+
+        <div id="rez-lista-html">
+          <div class="empty-state"><div class="icon">🏅</div><p>Nema unesenih rezultata.</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FINANCIJSKO IZVJEŠĆE -->
+    <div id="financije" class="section">
+      <div class="page-header">
+        <div><h2>Financijsko izvješće</h2><p>Prihodi, rashodi i godišnji pregled</p></div>
+        <button class="btn btn-primary" onclick="openModal('modalNovaTransakcija')">+ Nova stavka</button>
+      </div>
+      <div class="content">
+
+        <!-- Godina filter -->
+        <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap">
+          <select id="fin-god" onchange="finRenderLista()" style="flex:1;max-width:150px">
+          </select>
+          <button class="btn btn-secondary btn-sm" onclick="finGenerirajIzvjesce()">📄 Generiraj izvješće za Skupštinu</button>
+        </div>
+
+        <!-- Summary kartice -->
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px">
+          <div class="stat-card" style="border-left:4px solid var(--success)">
+            <div class="val" id="fin-prihodi" style="font-size:22px;color:var(--success)">0 €</div>
+            <div class="lbl">Ukupni prihodi</div>
+          </div>
+          <div class="stat-card" style="border-left:4px solid var(--red)">
+            <div class="val" id="fin-rashodi" style="font-size:22px;color:var(--red)">0 €</div>
+            <div class="lbl">Ukupni rashodi</div>
+          </div>
+          <div class="stat-card" id="fin-saldo-card">
+            <div class="val" id="fin-saldo" style="font-size:22px">0 €</div>
+            <div class="lbl">Saldo</div>
+          </div>
+        </div>
+
+        <!-- Kategorije prihoda/rashoda -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px">
+          <div class="card">
+            <div style="font-family:'Bebas Neue',sans-serif;letter-spacing:1px;font-size:14px;margin-bottom:10px;color:var(--success)">PRIHODI PO KATEGORIJI</div>
+            <div id="fin-prihodi-kat"></div>
+          </div>
+          <div class="card">
+            <div style="font-family:'Bebas Neue',sans-serif;letter-spacing:1px;font-size:14px;margin-bottom:10px;color:var(--red)">RASHODI PO KATEGORIJI</div>
+            <div id="fin-rashodi-kat"></div>
+          </div>
+        </div>
+
+        <!-- Lista transakcija -->
+        <div style="font-family:'Bebas Neue',sans-serif;letter-spacing:1px;font-size:15px;margin-bottom:10px;color:#aaa">SVE STAVKE</div>
+        <div id="fin-lista-html">
+          <div class="empty-state"><div class="icon">📊</div><p>Nema financijskih stavki.</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GODIŠNJI PLAN RADA -->
+    <div id="godisnjiplan" class="section">
+      <div class="page-header">
+        <div><h2>Godišnji plan rada</h2><p>Planovi koje Skupština usvaja (čl. 25. Statuta)</p></div>
+        <button class="btn btn-primary" onclick="openModal('modalNoviPlan')">+ Novi plan</button>
+      </div>
+      <div class="content">
+        <div style="background:rgba(240,165,0,0.1);border:1px solid var(--gold);border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:13px;color:var(--gold)">
+          ⚖️ Prema čl. 25. Statuta, Skupština usvaja program rada i financijski plan za sljedeću kalendarsku godinu te izvješće o radu za prethodnu godinu.
+        </div>
+        <div id="plan-lista-html">
+          <div class="empty-state"><div class="icon">📋</div><p>Nema unesenih planova rada.</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- UPRAVLJANJE KORISNICIMA -->
+    <div id="korisnici" class="section">
+      <div class="page-header">
+        <div><h2>Korisnici</h2><p>Upravljanje pristupom aplikaciji</p></div>
+        <button class="btn btn-primary" onclick="openModal('modalNoviKorisnik')">+ Novi korisnik</button>
+      </div>
+      <div class="content">
+        <div style="background:rgba(200,16,46,0.1);border:1px solid var(--red);border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:13px;color:#ff5a70">
+          🔐 Samo administratori mogu upravljati korisnicima. Lozinke su vidljive samo vama.
+        </div>
+        <div id="korisnici-lista"></div>
       </div>
     </div>
   </main>
@@ -1375,17 +1692,33 @@
           <input type="number" id="iMedalje" placeholder="0" min="0">
         </div>
         <div class="form-group full">
-          <label>Naši rezultati (zlatne/srebrne/brončane + imena)</label>
+          <label style="display:flex;align-items:center;justify-content:space-between">
+            <span>Naši rezultati (zlatne/srebrne/brončane + imena)</span>
+            <button type="button" id="micRezultati" onclick="toggleFieldMic('iRezultati','micRezultati')" style="background:none;border:1px solid #333;border-radius:20px;padding:4px 10px;cursor:pointer;font-size:12px;color:#aaa;flex-shrink:0">🎙️ Diktiraj</button>
+          </label>
           <textarea id="iRezultati" placeholder="Npr: Zlatna – Ivan Horvat (kadet), Brončana – Ana Kovač (juniori)..."></textarea>
         </div>
         <div class="form-group full">
-          <label>Dodatne napomene / dojmovi trenera</label>
-          <textarea id  iNapomene" placeholder="Dojmovi, zahvale, posebni detalji..."></textarea>
+          <label style="display:flex;align-items:center;justify-content:space-between">
+            <span>Dodatne napomene / dojmovi trenera</span>
+            <button type="button" id="micNapomene" onclick="toggleFieldMic('iNapomene','micNapomene')" style="background:none;border:1px solid #333;border-radius:20px;padding:4px 10px;cursor:pointer;font-size:12px;color:#aaa;flex-shrink:0">🎙️ Diktiraj</button>
+          </label>
+          <textarea id="iNapomene" placeholder="Dojmovi, zahvale, posebni detalji..."></textarea>
         </div>
       </div>
       <div style="margin-top:12px;">
         <button class="btn btn-gold btn-sm" onclick="generirajIzvjestaj()">🤖 Generiraj izvještaj za portale</button>
         <span style="font-size:12px;color:var(--muted);margin-left:8px">Priprema tekst za objavu na webu/Facebooku</span>
+      </div>
+      <div style="margin-top:10px">
+        <label style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px">📸 Priložite fotografije (za objavu uz tekst)</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <label class="btn btn-secondary btn-sm" style="cursor:pointer">
+            📷 Dodaj slike
+            <input type="file" accept="image/*" multiple style="display:none" onchange="izvjDodajFotke(this)">
+          </label>
+        </div>
+        <div id="izvj-fotke-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px"></div>
       </div>
       <div id="izvjestajOutput" style="display:none;margin-top:14px;">
         <pre id="izvjestajText"></pre>
@@ -1614,6 +1947,12 @@
     </div>
     <div class="modal-body" id="uplatnicaBody"></div>
 
+    <div id="hub3QrContainer" style="text-align:center;padding:12px 24px 0;display:none">
+      <div style="font-size:11px;color:#aaa;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">🏦 HUB-3 QR kod — skenirajte mobilnom bankom</div>
+      <canvas id="hub3Canvas" style="border-radius:8px;background:#fff;padding:6px"></canvas>
+      <div style="font-size:11px;color:#555;margin-top:6px">Podržava: Zaba, PBZ, Erste, Raiffeisen i sve SEPA banke</div>
+    </div>
+    <div id="hub3Barkod" style="padding:0 24px 12px"></div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('modalUplatnica')">Zatvori</button>
       <button class="btn btn-primary" onclick="posaljiMailAktivni()" id="btnUplatnicaMail" style="display:none">📧 Pošalji mail</button>
@@ -1749,6 +2088,371 @@
   </div>
 </div>
 
+
+<!-- MODAL: NOVI TRENER -->
+<div class="modal-overlay" id="modalNoviTrener">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="trenerModalNaslov">Novi trener</h3>
+      <button class="modal-close" onclick="closeModal('modalNoviTrener')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Ime *</label>
+          <input type="text" id="tr-ime" placeholder="Ime">
+        </div>
+        <div class="form-group">
+          <label>Prezime *</label>
+          <input type="text" id="tr-prezime" placeholder="Prezime">
+        </div>
+        <div class="form-group">
+          <label>OIB *</label>
+          <input type="text" id="tr-oib" placeholder="11-znamenkasti OIB" maxlength="11">
+        </div>
+        <div class="form-group">
+          <label>Datum rođenja</label>
+          <input type="date" id="tr-datrod">
+        </div>
+        <div class="form-group">
+          <label>Uloga</label>
+          <select id="tr-uloga">
+            <option>Glavni trener</option>
+            <option>Pomoćni trener</option>
+            <option>Trener mlađih kategorija</option>
+            <option>Kondicioniski trener</option>
+            <option>Tehnički direktor</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Stručna sprema / licenca</label>
+          <select id="tr-licenca">
+            <option>Trener 1. razine (HKS)</option>
+            <option>Trener 2. razine (HKS)</option>
+            <option>Trener 3. razine (HKS)</option>
+            <option>Magistar kineziologije</option>
+            <option>Profesor tjelesne kulture</option>
+            <option>Dan nositelj</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Broj licence</label>
+          <input type="text" id="tr-brlic" placeholder="Broj licence/certifikata">
+        </div>
+        <div class="form-group">
+          <label>Licenca vrijedi do</label>
+          <input type="date" id="tr-licvrijedi">
+        </div>
+        <div class="form-group">
+          <label>Mobitel</label>
+          <input type="text" id="tr-mob" placeholder="+385 9x xxx xxxx">
+        </div>
+        <div class="form-group">
+          <label>E-mail</label>
+          <input type="email" id="tr-email" placeholder="email@primjer.hr">
+        </div>
+        <div class="form-group">
+          <label>Datum zaposlenja/angažmana</label>
+          <input type="date" id="tr-datzap">
+        </div>
+        <div class="form-group">
+          <label>Status</label>
+          <select id="tr-status">
+            <option value="aktivan">Aktivan</option>
+            <option value="neaktivan">Neaktivan</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modalNoviTrener')">Odustani</button>
+      <button class="btn btn-primary" onclick="spremiTrenera()">Spremi</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: GDPR PRIVOLA PREVIEW -->
+<div class="modal-overlay" id="modalGdprPrivola">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-header">
+      <h3 id="gdprModalNaslov">GDPR Privola</h3>
+      <button class="modal-close" onclick="closeModal('modalGdprPrivola')">✕</button>
+    </div>
+    <div class="modal-body" id="gdprPrivolaBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modalGdprPrivola')">Zatvori</button>
+      <button class="btn btn-secondary" onclick="copyGdprText()">📋 Kopiraj</button>
+      <button class="btn btn-primary" onclick="označiGdprPotpisanim()">✓ Označi potpisanim</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- MODAL: NOVI REZULTAT -->
+<div class="modal-overlay" id="modalNoviRezultat">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Novi sportski rezultat</h3>
+      <button class="modal-close" onclick="closeModal('modalNoviRezultat')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group full">
+          <label>Natjecatelj *</label>
+          <select id="rez-clan-sel">
+            <option value="">— Odaberite člana —</option>
+          </select>
+        </div>
+        <div class="form-group full">
+          <label>Naziv natjecanja *</label>
+          <input type="text" id="rez-natjecanje" placeholder="npr. Kup Đurđevca 2025, Državno prvjenstvo...">
+        </div>
+        <div class="form-group">
+          <label>Datum *</label>
+          <input type="date" id="rez-datum">
+        </div>
+        <div class="form-group">
+          <label>Mjesto/Grad</label>
+          <input type="text" id="rez-mjesto" placeholder="Grad, dvorana">
+        </div>
+        <div class="form-group">
+          <label>Razina natjecanja</label>
+          <select id="rez-razina">
+            <option>Gradsko</option>
+            <option>Županijsko</option>
+            <option>Regionalno</option>
+            <option>Državno</option>
+            <option>Međunarodno</option>
+            <option>Europsko</option>
+            <option>Svjetsko</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Disciplina</label>
+          <select id="rez-disciplina">
+            <option>Kata (pojedinačno)</option>
+            <option>Kata (ekipno)</option>
+            <option>Kumite (pojedinačno)</option>
+            <option>Kumite (ekipno)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Kategorija</label>
+          <select id="rez-kategorija">
+            <option>Mlađi kadeti</option>
+            <option>Kadeti</option>
+            <option>Juniori</option>
+            <option>Seniori</option>
+            <option>Veterani</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Plasman / Medalja</label>
+          <select id="rez-plasman">
+            <option value="1">🥇 1. mjesto (zlatna)</option>
+            <option value="2">🥈 2. mjesto (srebrna)</option>
+            <option value="3">🥉 3. mjesto (brončana)</option>
+            <option value="4">4. mjesto</option>
+            <option value="5">5-8. mjesto</option>
+            <option value="0">Sudjelovanje</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Broj natjecatelja u kategoriji</label>
+          <input type="number" id="rez-natjecatelji" placeholder="0" min="1">
+        </div>
+        <div class="form-group full">
+          <label>Napomena</label>
+          <input type="text" id="rez-napomena" placeholder="Dodatne informacije...">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modalNoviRezultat')">Odustani</button>
+      <button class="btn btn-primary" onclick="spremiRezultat()">Spremi</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- MODAL: NOVA TRANSAKCIJA -->
+<div class="modal-overlay" id="modalNovaTransakcija">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Nova financijska stavka</h3>
+      <button class="modal-close" onclick="closeModal('modalNovaTransakcija')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Vrsta *</label>
+          <select id="fin-vrsta" onchange="finVrstaChange()">
+            <option value="prihod">💚 Prihod</option>
+            <option value="rashod">🔴 Rashod</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Datum *</label>
+          <input type="date" id="fin-datum">
+        </div>
+        <div class="form-group">
+          <label>Kategorija *</label>
+          <select id="fin-kategorija">
+            <option value="clanarina">Članarina</option>
+            <option value="dotacija">Dotacija/Sufinanciranje</option>
+            <option value="sponzorstvo">Sponzorstvo</option>
+            <option value="natjecanje">Kotizacija natjecanja</option>
+            <option value="oprema">Sportska oprema</option>
+            <option value="dvorana">Najam dvorane</option>
+            <option value="putni">Putni troškovi</option>
+            <option value="administracija">Administracija</option>
+            <option value="ostalo">Ostalo</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Iznos (€) *</label>
+          <input type="number" id="fin-iznos" placeholder="0.00" min="0" step="0.01">
+        </div>
+        <div class="form-group full">
+          <label>Opis *</label>
+          <input type="text" id="fin-opis" placeholder="Opis stavke...">
+        </div>
+        <div class="form-group full">
+          <label>Napomena</label>
+          <input type="text" id="fin-napomenaF" placeholder="Dodatna napomena, broj računa...">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modalNovaTransakcija')">Odustani</button>
+      <button class="btn btn-primary" onclick="spremiTransakciju()">Spremi</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- MODAL: GODIŠNJI PLAN -->
+<div class="modal-overlay" id="modalNoviPlan">
+  <div class="modal" style="max-width:640px">
+    <div class="modal-header">
+      <h3>Godišnji plan rada</h3>
+      <button class="modal-close" onclick="closeModal('modalNoviPlan')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Godina *</label>
+          <input type="number" id="plan-god" placeholder="2026" min="2020" max="2035">
+        </div>
+        <div class="form-group">
+          <label>Vrsta dokumenta</label>
+          <select id="plan-vrsta">
+            <option value="plan">Plan rada</option>
+            <option value="izvjesce">Izvješće o radu</option>
+            <option value="financijski">Financijski plan</option>
+            <option value="financijsko_izvjesce">Financijsko izvješće</option>
+          </select>
+        </div>
+        <div class="form-group full">
+          <label>Ciljevi i aktivnosti *</label>
+          <textarea id="plan-ciljevi" placeholder="Navedite glavne ciljeve i planirane aktivnosti..." style="min-height:100px"></textarea>
+        </div>
+        <div class="form-group full">
+          <label>Sportski programi</label>
+          <textarea id="plan-programi" placeholder="Planirana natjecanja, treninzi, edukacije..." style="min-height:80px"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Planirani prihodi (€)</label>
+          <input type="number" id="plan-prihodi" placeholder="0" min="0">
+        </div>
+        <div class="form-group">
+          <label>Planirani rashodi (€)</label>
+          <input type="number" id="plan-rashodi" placeholder="0" min="0">
+        </div>
+        <div class="form-group">
+          <label>Datum usvajanja</label>
+          <input type="date" id="plan-datum">
+        </div>
+        <div class="form-group">
+          <label>Status</label>
+          <select id="plan-status">
+            <option value="nacrt">Nacrt</option>
+            <option value="usvojen">Usvojen na Skupštini</option>
+          </select>
+        </div>
+      </div>
+      <div style="margin-top:10px">
+        <button class="btn btn-gold btn-sm" onclick="planGenerirajAI()">🤖 Generiraj s AI</button>
+        <span style="font-size:12px;color:var(--muted);margin-left:8px">AI napiše plan prema statutu</span>
+      </div>
+      <div id="plan-ai-output" style="display:none;margin-top:12px">
+        <pre id="plan-ai-tekst" style="font-size:12px;max-height:200px;overflow-y:auto"></pre>
+        <button class="btn btn-secondary btn-sm" onclick="copyText('plan-ai-tekst')" style="margin-top:6px">📋 Kopiraj</button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modalNoviPlan')">Odustani</button>
+      <button class="btn btn-primary" onclick="spremiPlan()">💾 Spremi plan</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- MODAL: NOVI KORISNIK -->
+<div class="modal-overlay" id="modalNoviKorisnik">
+  <div class="modal" style="max-width:460px">
+    <div class="modal-header">
+      <h3 id="korisnikModalNaslov">Novi korisnik</h3>
+      <button class="modal-close" onclick="closeModal('modalNoviKorisnik')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group full">
+          <label>Puno ime *</label>
+          <input type="text" id="ku-ime" placeholder="Ime i prezime">
+        </div>
+        <div class="form-group">
+          <label>Korisničko ime *</label>
+          <input type="text" id="ku-username" placeholder="npr. marko" autocomplete="off" style="text-transform:lowercase">
+        </div>
+        <div class="form-group">
+          <label>Lozinka *</label>
+          <div style="position:relative">
+            <input type="password" id="ku-lozinka" placeholder="Min. 6 znakova" autocomplete="new-password">
+            <button type="button" onclick="togglePassVis('ku-lozinka')" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#888;font-size:14px">👁</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Uloga</label>
+          <select id="ku-uloga">
+            <option value="admin">🔑 Administrator</option>
+            <option value="tajnik">📋 Tajnik</option>
+            <option value="trener">🥋 Trener</option>
+            <option value="blagajnik">💶 Blagajnik</option>
+            <option value="readonly">👁 Samo pregled</option>
+          </select>
+        </div>
+        <div class="form-group full">
+          <label>Napomena</label>
+          <input type="text" id="ku-napomena" placeholder="npr. Pomoćni trener, sezonski...">
+        </div>
+      </div>
+      <div style="margin-top:12px;padding:12px;background:#1C1C1C;border-radius:8px;font-size:12px;color:#888;line-height:1.8">
+        <strong style="color:#EDEDED">Prava pristupa:</strong><br>
+        🔑 Administrator — sve funkcije + upravljanje korisnicima<br>
+        📋 Tajnik — sve funkcije osim upravljanja korisnicima<br>
+        🥋 Trener — dnevnik, kalendar, rezultati, pregled članova<br>
+        💶 Blagajnik — financije, uplatnice, pregled članova<br>
+        👁 Samo pregled — ne može mijenjati podatke
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modalNoviKorisnik')">Odustani</button>
+      <button class="btn btn-primary" onclick="spremiKorisnika()">Spremi</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <script>
@@ -1841,6 +2545,285 @@ function obrišiFoto() {
   _editFotoData = 'DELETE';
 }
 
+
+// ========== PRIJAVA / ODJAVA ==========
+const KORISNICI = {
+  'ivan':     { lozinka: 'karate2025',  ime: 'Ivan Juričić',         uloga: 'predsjednik', admin: true },
+  'jasminka': { lozinka: 'tajnik2025',  ime: 'Jasminka Sinjeri Prevedan', uloga: 'tajnica', admin: true },
+  'trener':   { lozinka: 'trening2025', ime: 'Trener',               uloga: 'trener',      admin: false }
+};
+
+let trenutniKorisnik = null;
+
+function loginSubmit() {
+  const user = document.getElementById('loginUser').value.trim().toLowerCase();
+  const pass = document.getElementById('loginPass').value;
+  const err = document.getElementById('loginError');
+
+  const allK = getKorisnici();
+  const k = allK[user];
+  if (k && k.lozinka === pass) {
+    trenutniKorisnik = { ...k, username: user };
+    localStorage.setItem('kk_session', JSON.stringify({ username: user, vrijeme: Date.now() }));
+    document.getElementById('loginScreen').style.display = 'none';
+    prijaviKorisnika();
+    err.style.display = 'none';
+  } else {
+    err.style.display = 'block';
+    document.getElementById('loginPass').value = '';
+    document.getElementById('loginPass').focus();
+  }
+}
+
+function prijaviKorisnika() {
+  if (!trenutniKorisnik) return;
+  // Show/hide admin nav
+  const navK = document.getElementById('navKorisnici');
+  if (navK) navK.style.display = trenutniKorisnik.uloga === 'admin' ? '' : 'none';
+  // Update header with user info
+  const headerAI = document.querySelector('.header-ai');
+  if (headerAI) {
+    headerAI.innerHTML = `<span style="margin-right:6px">👤 ${trenutniKorisnik.ime}</span> <button onclick="odjava()" style="background:rgba(255,90,112,0.2);border:1px solid rgba(255,90,112,0.3);color:#ff5a70;border-radius:12px;padding:3px 10px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif">Odjava</button>`;
+  }
+  // Hide admin features for non-admins
+  if (!trenutniKorisnik.admin) {
+    // Treneri ne mogu brisati odluke, članove itd.
+    document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+  }
+  toast('Dobrodošli, ' + trenutniKorisnik.ime + '! 🥋');
+}
+
+function odjava() {
+  if (!confirm('Odjaviti se?')) return;
+  trenutniKorisnik = null;
+  localStorage.removeItem('kk_session');
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('loginUser').value = '';
+  document.getElementById('loginPass').value = '';
+  const headerAI = document.querySelector('.header-ai');
+  if (headerAI) headerAI.innerHTML = '● AI Tajnik aktivan';
+}
+
+function provjeriSesiju() {
+  try {
+    const sess = JSON.parse(localStorage.getItem('kk_session') || 'null');
+    if (sess && sess.username && getKorisnici()[sess.username]) {
+      // Session valid for 24h
+      if (Date.now() - sess.vrijeme < 24 * 60 * 60 * 1000) {
+        trenutniKorisnik = { ...getKorisnici()[sess.username], username: sess.username };
+        document.getElementById('loginScreen').style.display = 'none';
+        prijaviKorisnika();
+        return;
+      }
+    }
+  } catch(e) {}
+  document.getElementById('loginScreen').style.display = 'flex';
+  setTimeout(() => document.getElementById('loginUser').focus(), 100);
+}
+
+
+// ========== UPRAVLJANJE KORISNICIMA ==========
+const KORISNICI_KEY = 'kk_korisnici';
+let korisnikEditUsername = null;
+
+function getKorisnici() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(KORISNICI_KEY) || 'null');
+    if (saved) return saved;
+  } catch(e) {}
+  // Default korisnici - first time
+  return {
+    ivan:     { ime: 'Ivan Juričić', lozinka: 'karate2025', uloga: 'admin', napomena: 'Predsjednik' },
+    jasminka: { ime: 'Jasminka Sinjeri Prevedan', lozinka: 'tajnik2025', uloga: 'tajnik', napomena: 'Tajnica' },
+    trener:   { ime: 'Trener', lozinka: 'trening2025', uloga: 'trener', napomena: '' }
+  };
+}
+
+function saveKorisnici(k) {
+  localStorage.setItem(KORISNICI_KEY, JSON.stringify(k));
+}
+
+function korisnikRenderLista() {
+  const k = getKorisnici();
+  const el = document.getElementById('korisnici-lista');
+  const ulogeLabel = { admin:'🔑 Administrator', tajnik:'📋 Tajnik', trener:'🥋 Trener', blagajnik:'💶 Blagajnik', readonly:'👁 Samo pregled' };
+
+  el.innerHTML = Object.entries(k).map(([username, u]) => `
+    <div class="card" style="margin-bottom:10px">
+      <div class="card-row">
+        <div>
+          <div style="font-weight:600;color:#EDEDED;font-size:15px">${u.ime}</div>
+          <div style="font-size:12px;color:#aaa;margin-top:2px">@${username} · ${ulogeLabel[u.uloga]||u.uloga}</div>
+          ${u.napomena ? `<div style="font-size:11px;color:#666;margin-top:2px">${u.napomena}</div>` : ''}
+          <div style="font-size:11px;color:#444;margin-top:4px;font-family:monospace">Lozinka: ${u.lozinka}</div>
+        </div>
+        <div style="display:flex;gap:6px;flex-shrink:0;align-self:flex-start">
+          <button class="btn btn-secondary btn-sm" onclick="urediKorisnika('${username}')">✏️</button>
+          ${username !== (trenutniKorisnik?.username) ? `<button class="btn btn-sm" style="background:rgba(200,16,46,0.15);color:#ff5a70;border:1px solid rgba(200,16,46,0.2)" onclick="obrisiKorisnika('${username}')">✕</button>` : '<span class="badge badge-green" style="align-self:center">Vi</span>'}
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function spremiKorisnika() {
+  const ime = document.getElementById('ku-ime').value.trim();
+  const username = document.getElementById('ku-username').value.trim().toLowerCase().replace(/[^a-z0-9]/g,'');
+  const lozinka = document.getElementById('ku-lozinka').value;
+  const uloga = document.getElementById('ku-uloga').value;
+  const napomena = document.getElementById('ku-napomena').value.trim();
+
+  if (!ime) { toast('Unesite ime!', 'err'); return; }
+  if (!username && !korisnikEditUsername) { toast('Unesite korisničko ime!', 'err'); return; }
+
+  const k = getKorisnici();
+
+  if (korisnikEditUsername) {
+    // Edit existing
+    if (!k[korisnikEditUsername]) { toast('Korisnik nije pronađen!', 'err'); return; }
+    k[korisnikEditUsername].ime = ime;
+    if (lozinka && lozinka.length >= 6) k[korisnikEditUsername].lozinka = lozinka;
+    else if (lozinka && lozinka.length < 6) { toast('Lozinka mora imati najmanje 6 znakova!', 'err'); return; }
+    k[korisnikEditUsername].uloga = uloga;
+    k[korisnikEditUsername].napomena = napomena;
+    toast('Korisnik ažuriran!');
+  } else {
+    // New user
+    if (!username) { toast('Unesite korisničko ime!', 'err'); return; }
+    if (k[username]) { toast('Korisničko ime već postoji!', 'err'); return; }
+    if (!lozinka || lozinka.length < 6) { toast('Lozinka mora imati najmanje 6 znakova!', 'err'); return; }
+    k[username] = { ime, lozinka, uloga, napomena };
+    toast('Korisnik ' + ime + ' dodan!');
+  }
+
+  saveKorisnici(k);
+  closeModal('modalNoviKorisnik');
+  korisnikRenderLista();
+  korisnikEditUsername = null;
+  ['ku-ime','ku-username','ku-lozinka','ku-napomena'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+}
+
+function urediKorisnika(username) {
+  const k = getKorisnici();
+  const u = k[username];
+  if (!u) return;
+  korisnikEditUsername = username;
+  document.getElementById('korisnikModalNaslov').textContent = 'Uredi korisnika';
+  document.getElementById('ku-ime').value = u.ime;
+  document.getElementById('ku-username').value = username;
+  document.getElementById('ku-username').disabled = true;
+  document.getElementById('ku-lozinka').value = '';
+  document.getElementById('ku-lozinka').placeholder = 'Ostavite prazno za zadržati staru';
+  document.getElementById('ku-napomena').value = u.napomena || '';
+  const setS = (id, val) => { const el=document.getElementById(id); if(el) for(let o of el.options) if(o.value===val) { el.value=o.value; break; } };
+  setS('ku-uloga', u.uloga);
+  openModal('modalNoviKorisnik');
+}
+
+function obrisiKorisnika(username) {
+  if (username === trenutniKorisnik?.username) { toast('Ne možete obrisati vlastiti račun!', 'err'); return; }
+  const k = getKorisnici();
+  if (!confirm('Obrisati korisnika ' + (k[username]?.ime || username) + '?')) return;
+  delete k[username];
+  saveKorisnici(k);
+  korisnikRenderLista();
+  toast('Korisnik obrisan.');
+}
+
+function togglePassVis(id) {
+  const el = document.getElementById(id);
+  if (el) el.type = el.type === 'password' ? 'text' : 'password';
+}
+
+
+// ========== ALERT SUSTAV ==========
+function renderAlerts() {
+  const panel = document.getElementById('alertPanel');
+  if (!panel) return;
+  const danas = new Date();
+  const za15 = new Date(); za15.setDate(za15.getDate() + 7);
+  const alerts = [];
+
+  // Istekli liječnički pregledi
+  if (typeof ljPregledi !== 'undefined') {
+    ljPregledi.forEach(p => {
+      if (!p.vrijedi) return;
+      const clan = state.clanovi.find(c => c.id == p.clanId);
+      const ime = clan ? clan.ime + ' ' + clan.prezime : '—';
+      const d = new Date(p.vrijedi);
+      if (d < danas) {
+        alerts.push({ tip: 'red', icon: '🏥', naslov: 'Istekao liječnički pregled!', tekst: ime + ' — istekao ' + d.toLocaleDateString('hr-HR'), link: 'lijecnicki' });
+      } else if (d <= za15) {
+        const dana = Math.ceil((d - danas) / 86400000);
+        alerts.push({ tip: 'warn', icon: '🏥', naslov: '⚠️ Liječnički pregled ističe za ' + dana + ' dan(a)!', tekst: ime + ' — još ' + dana + ' dan(a)', link: 'lijecnicki' });
+      }
+    });
+  }
+
+  // Neplaćena članarina
+  const neplaceni = state.clanovi.filter(c => c.status === 'aktivan' && c.clanarina === 'ne');
+  if (neplaceni.length > 0) {
+    const tip = neplaceni.length >= 5 ? 'red' : 'warn';
+    alerts.push({ tip, icon: '💶', naslov: neplaceni.length + ' članova nije platilo članarinu!', tekst: neplaceni.slice(0,3).map(c => c.ime + ' ' + c.prezime).join(', ') + (neplaceni.length > 3 ? ' i još ' + (neplaceni.length - 3) : ''), link: 'uplatnice' });
+  }
+
+  // Istekle licence trenera
+  if (typeof trenerList !== 'undefined') {
+    trenerList.forEach(t => {
+      if (!t.licvrijedi) return;
+      const d = new Date(t.licvrijedi);
+      if (d < danas) {
+        alerts.push({ tip: 'red', icon: '🎓', naslov: 'Istekla licenca trenera!', tekst: t.ime + ' ' + t.prezime + ' — ' + t.licenca, link: 'treneri' });
+      }
+    });
+  }
+
+  if (alerts.length === 0) {
+    panel.innerHTML = '<div style="background:rgba(46,204,113,0.1);border-left:4px solid var(--success);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--success);margin-bottom:8px">✅ Sve je u redu — nema upozorenja</div>';
+    return;
+  }
+
+  panel.innerHTML = alerts.map(a => `
+    <div class="alert-item alert-${a.tip}" onclick="showSection('${a.link}')">
+      <span class="alert-icon">${a.icon}</span>
+      <div class="alert-text">
+        <strong>${a.naslov}</strong>
+        ${a.tekst}
+      </div>
+      <span style="color:#666;font-size:12px">→</span>
+    </div>`).join('');
+}
+
+
+// ========== MOBILE NAV ==========
+function initMobileNav() {
+  const btn = document.getElementById('hamburgerBtn');
+  if (window.innerWidth <= 768) {
+    if (btn) btn.style.display = 'block';
+  } else {
+    if (btn) btn.style.display = 'none';
+    const nav = document.querySelector('nav');
+    if (nav) nav.classList.remove('mobile-open');
+  }
+}
+
+function toggleMobileNav() {
+  const nav = document.querySelector('nav');
+  const overlay = document.getElementById('mobileOverlay');
+  if (!nav) return;
+  nav.classList.toggle('mobile-open');
+  if (overlay) overlay.classList.toggle('show', nav.classList.contains('mobile-open'));
+}
+
+function closeMobileNav() {
+  const nav = document.querySelector('nav');
+  const overlay = document.getElementById('mobileOverlay');
+  if (nav) nav.classList.remove('mobile-open');
+  if (overlay) overlay.classList.remove('show');
+}
+
+window.addEventListener('resize', initMobileNav);
+document.addEventListener('DOMContentLoaded', initMobileNav);
+
 // ========== SCROLL TO TOP ==========
 function scrollToTop() {
   // Try all possible scrollable containers
@@ -1895,6 +2878,8 @@ function toast(msg, type='success') {
 
 // ========== NAVIGATION ==========
 function showSection(id) {
+  // Close mobile nav when item selected
+  if (window.innerWidth <= 768) closeMobileNav();
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
   document.getElementById(id).classList.add('active');
@@ -1910,6 +2895,12 @@ function showSection(id) {
   if (id === 'komunikacija') renderKomunikacija();
   if (id === 'uplatnice') initUplatnice();
   if (id === 'emailovi') { renderEmailForma(); }
+  if (id === 'treneri') { trRenderLista(); }
+  if (id === 'korisnici') { if(trenutniKorisnik?.uloga==='admin') korisnikRenderLista(); else { toast('Nemate ovlasti!','err'); showSection('dashboard'); } }
+  if (id === 'godisnjiplan') { planRenderLista(); const d=document.getElementById('plan-datum'); if(d&&!d.value) d.value=new Date().toISOString().split('T')[0]; const g=document.getElementById('plan-god'); if(g&&!g.value) g.value=new Date().getFullYear(); }
+  if (id === 'financije') { finRenderLista(); const d=document.getElementById('fin-datum'); if(d&&!d.value) d.value=new Date().toISOString().split('T')[0]; }
+  if (id === 'rezultati') { rezRenderLista(); const s=document.getElementById('rez-clan-sel'); if(s){ s.innerHTML='<option value="">— Odaberite člana —</option>'+state.clanovi.filter(c=>c.status==="aktivan").sort((a,b)=>a.prezime.localeCompare(b.prezime)).map(c=>`<option value="${c.id}">${c.ime} ${c.prezime}</option>`).join(''); } }
+  if (id === 'gdpr') { gdprRenderLista(); }
   if (id === 'dnevnik') { dnRenderLista(); }
   if (id === 'kalendar') { renderKalendar(); }
   if (id === 'lijecnicki') { ljRenderLista(); const s=document.getElementById('lj-clan-sel'); if(s){ s.innerHTML='<option value="">— Odaberite člana —</option>'+state.clanovi.filter(c=>c.status==='aktivan').map(c=>`<option value="${c.id}">${c.ime} ${c.prezime}</option>`).join(''); } }
@@ -1930,10 +2921,10 @@ function openModal(id) {
 function closeModal(id) {
   document.getElementById(id).classList.remove('open');
   if (id === 'modalUplatnica') {
-    const qrDiv = document.getElementById('qrCodeDiv');
-    const qrContainer = document.getElementById('qrCodeContainer');
-    if (qrDiv) qrDiv.innerHTML = '';
+    const qrContainer = document.getElementById('hub3QrContainer');
     if (qrContainer) qrContainer.style.display = 'none';
+    const canvas = document.getElementById('hub3Canvas');
+    if (canvas) { const ctx = canvas.getContext('2d'); ctx.clearRect(0,0,200,200); }
   }
 }
 document.querySelectorAll('.modal-overlay').forEach(m => {
@@ -1942,6 +2933,8 @@ document.querySelectorAll('.modal-overlay').forEach(m => {
 
 // ========== STATS ==========
 function updateStats() {
+  setTimeout(renderAlerts, 100);
+  updateAlerts();
   document.getElementById('statUkupno').textContent = state.clanovi.length;
   document.getElementById('statAktivni').textContent = state.clanovi.filter(c => c.status === 'aktivan').length;
   document.getElementById('statNeplaceno').textContent = state.clanovi.filter(c => c.clanarina === 'ne').length;
@@ -2049,7 +3042,7 @@ function renderClanovi() {
             }
             <div>
               <div style="font-size:14px;font-weight:600;color:#EDEDED">${c.ime} ${c.prezime}</div>
-              <div style="font-size:11px;color:#AAAAAA">${c.sifra || c.oib || '—'}</div>
+              <div style="font-size:11px;color:#AAAAAA">${c.sifra || (trenutniKorisnik?.admin ? c.oib : (c.oib ? c.oib.substring(0,3)+'••••••••' : '—')) || '—'}</div>
             </div>
           </div>
         </td>
@@ -2169,6 +3162,35 @@ function spremiUrednogClana() {
   logActivity('✏️', 'Ažuriran član: ' + c.ime + ' ' + c.prezime);
   toast('Podaci za ' + c.ime + ' ' + c.prezime + ' spremljeni!');
 }
+
+
+// Fotografije za izvještaj
+let izvjFotke = [];
+function izvjDodajFotke(input) {
+  const files = Array.from(input.files);
+  files.forEach(f => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      izvjFotke.push(e.target.result);
+      renderIzvjFotke();
+    };
+    reader.readAsDataURL(f);
+  });
+  input.value = '';
+}
+
+function renderIzvjFotke() {
+  const grid = document.getElementById('izvj-fotke-grid');
+  if (!grid) return;
+  grid.innerHTML = izvjFotke.map((src, i) =>
+    `<div style="aspect-ratio:1;border-radius:6px;overflow:hidden;position:relative;border:1px solid #333">
+      <img src="${src}" style="width:100%;height:100%;object-fit:cover">
+      <button onclick="izvjObrišiFotku(${i})" style="position:absolute;top:3px;right:3px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,0.7);color:#fff;border:none;cursor:pointer;font-size:10px;display:flex;align-items:center;justify-content:center">✕</button>
+    </div>`
+  ).join('');
+}
+
+function izvjObrišiFotku(i) { izvjFotke.splice(i,1); renderIzvjFotke(); }
 
 // ========== ODLUKE ==========
 async function generirajOdluku() {
@@ -2342,8 +3364,11 @@ function spremiIzvjestaj() {
     datum: document.getElementById('iDatum').value,
     mjesto: document.getElementById('iMjesto').value,
     medalje: document.getElementById('iMedalje').value,
-    tekst: document.getElementById('izvjestajText').textContent
+    tekst: document.getElementById('izvjestajText').textContent,
+    fotke: [...izvjFotke]
   };
+  izvjFotke = [];
+  renderIzvjFotke();
   state.izvjestaji.push(iz);
   save();
   closeModal('modalIzvjestaj');
@@ -2360,16 +3385,13 @@ function renderIzvjestaji() {
     return;
   }
   el.innerHTML = state.izvjestaji.slice().reverse().map(iz => `
-    <div class="card">
-      <div class="card-row">
-        <div>
-          <div style="font-weight:500">${iz.naziv}</div>
-          <div style="font-size:12px;color:var(--muted);margin-top:3px">${iz.datum || '—'} · ${iz.mjesto || '—'} · <span style="color:var(--gold)">${iz.medalje} medalja</span></div>
-        </div>
-        <div class="card-actions">
-          <button class="btn btn-secondary btn-sm" onclick="copyText2('${encodeURIComponent(iz.tekst)}')">📋 Kopiraj tekst</button>
-          <button class="btn btn-sm" style="background:rgba(200,16,46,0.15);color:#ff5a70;border:1px solid rgba(200,16,46,0.2)" onclick="obrisiIzvjestaj(${iz.id})">✕</button>
-        </div>
+    <div class="card" style="margin-bottom:10px">
+      <div style="font-weight:600;color:#EDEDED;margin-bottom:4px">${iz.naziv}</div>
+      <div style="font-size:12px;color:#aaa;margin-bottom:8px">${iz.datum || '—'} · ${iz.mjesto || '—'} · <span style="color:var(--gold)">${iz.medalje} medalja</span></div>
+      ${iz.fotke && iz.fotke.length > 0 ? `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:8px">${iz.fotke.slice(0,4).map(s => `<div style="aspect-ratio:1;border-radius:4px;overflow:hidden"><img src="${s}" style="width:100%;height:100%;object-fit:cover"></div>`).join('')}</div>` : ''}
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-secondary btn-sm" onclick="copyText2('${encodeURIComponent(iz.tekst)}')">📋 Kopiraj tekst</button>
+        <button class="btn btn-sm" style="background:rgba(200,16,46,0.15);color:#ff5a70;border:1px solid rgba(200,16,46,0.2)" onclick="obrisiIzvjestaj(${iz.id})">✕</button>
       </div>
     </div>`).join('');
 }
@@ -2482,6 +3504,235 @@ function obrisiObavijest(id) {
   save(); renderKomunikacija();
 }
 
+
+
+// ========== MIKROFON ZA POLJA ==========
+let fieldMicActive = {};
+let fieldMicRecognition = {};
+
+function toggleFieldMic(fieldId, btnId) {
+  if (fieldMicActive[fieldId]) {
+    stopFieldMic(fieldId, btnId);
+  } else {
+    startFieldMic(fieldId, btnId);
+  }
+}
+
+function startFieldMic(fieldId, btnId) {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    toast('Vaš preglednik ne podržava glasovni unos. Koristite Chrome ili Safari.', 'err');
+    return;
+  }
+
+  const rec = new SpeechRecognition();
+  rec.lang = 'hr-HR';
+  rec.continuous = true;
+  rec.interimResults = true;
+
+  const btn = document.getElementById(btnId);
+  const field = document.getElementById(fieldId);
+  const originalText = field.value;
+
+  rec.onstart = () => {
+    fieldMicActive[fieldId] = true;
+    if (btn) {
+      btn.style.background = 'rgba(200,16,46,0.2)';
+      btn.style.borderColor = '#C8102E';
+      btn.style.color = '#C8102E';
+      btn.innerHTML = '🔴 Snimam...';
+    }
+  };
+
+  rec.onresult = (e) => {
+    let interim = '';
+    let final = originalText;
+    for (let i = 0; i < e.results.length; i++) {
+      if (e.results[i].isFinal) {
+        final += e.results[i][0].transcript + ' ';
+      } else {
+        interim += e.results[i][0].transcript;
+      }
+    }
+    field.value = final + interim;
+    field.style.height = 'auto';
+    field.style.height = Math.min(field.scrollHeight, 200) + 'px';
+  };
+
+  rec.onerror = (e) => {
+    stopFieldMic(fieldId, btnId);
+    if (e.error === 'not-allowed') toast('Mikrofon je blokiran — dozvolite pristup.', 'err');
+  };
+
+  rec.onend = () => stopFieldMic(fieldId, btnId);
+
+  fieldMicRecognition[fieldId] = rec;
+  rec.start();
+}
+
+function stopFieldMic(fieldId, btnId) {
+  fieldMicActive[fieldId] = false;
+  const btn = document.getElementById(btnId);
+  if (btn) {
+    btn.style.background = 'none';
+    btn.style.borderColor = '#333';
+    btn.style.color = '#aaa';
+    btn.innerHTML = '🎙️ Diktiraj';
+  }
+  if (fieldMicRecognition[fieldId]) {
+    try { fieldMicRecognition[fieldId].stop(); } catch(e) {}
+    fieldMicRecognition[fieldId] = null;
+  }
+}
+
+
+
+// ========== HUB-3 QR GENERATOR (Canvas, bez vanjske biblioteke) ==========
+// EPC QR format kompatibilan s hrvatskim bankama
+
+function genHUB3QR(canvasId, iznos, primatelj, iban, opis, napomena) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+
+  // EPC QR sadržaj (EU standard koji podržavaju sve HR banke)
+  const epc = [
+    'BCD',           // Service Tag
+    '002',           // Version
+    '1',             // Encoding (UTF-8)
+    'SCT',           // Identification (SEPA Credit Transfer)
+    '',              // BIC (opcionalno)
+    primatelj,       // Primatelj
+    iban.replace(/\s/g,''),  // IBAN
+    'EUR' + parseFloat(iznos).toFixed(2),  // Iznos
+    '',              // Purpose
+    opis.substring(0,140),  // Opis plaćanja
+    napomena.substring(0,70)  // Napomena (ime djeteta)
+  ].join('\n');
+
+  // Generiraj QR s Google Charts API (fallback na tekst ako ne radi)
+  const qrUrl = 'https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=' + encodeURIComponent(epc) + '&choe=UTF-8&chld=M|2';
+
+  const ctx = canvas.getContext('2d');
+  canvas.width = 200;
+  canvas.height = 200;
+
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.onload = () => {
+    ctx.clearRect(0, 0, 200, 200);
+    ctx.drawImage(img, 0, 0, 200, 200);
+  };
+  img.onerror = () => {
+    // Fallback — nacrtaj placeholder s tekstom
+    ctx.fillStyle = '#1C1C1C';
+    ctx.fillRect(0, 0, 200, 200);
+    ctx.fillStyle = '#C8102E';
+    ctx.font = 'bold 13px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('QR kod', 100, 85);
+    ctx.fillStyle = '#888';
+    ctx.font = '11px Arial';
+    ctx.fillText('Dostupan na', 100, 105);
+    ctx.fillText('karate-tajnik.vercel.app', 100, 120);
+    // Draw border
+    ctx.strokeStyle = '#C8102E';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(2, 2, 196, 196);
+  };
+  img.src = qrUrl;
+}
+
+// ========== ALERT SUSTAV ==========
+function updateAlerts() {
+  const panel = document.getElementById('alertPanel');
+  if (!panel) return;
+
+  const alerts = [];
+  const danas = new Date();
+  const za15 = new Date(); za15.setDate(za15.getDate() + 7);
+
+  // Neplaćena članarina
+  const neplaceni = state.clanovi.filter(c => c.status === 'aktivan' && c.clanarina === 'ne');
+  if (neplaceni.length > 0) {
+    alerts.push({
+      tip: 'warn',
+      ikona: '💶',
+      naslov: neplaceni.length + ' članova nije platilo članarinu',
+      tekst: neplaceni.slice(0,3).map(c => c.ime + ' ' + c.prezime).join(', ') + (neplaceni.length > 3 ? ' i još ' + (neplaceni.length-3) + '...' : ''),
+      akcija: "showSection('clanovi');document.getElementById('filterStatus').value='aktivan';filterNeplaceni()",
+      akcijaLabel: 'Prikaži'
+    });
+  }
+
+  // Liječnički pregledi
+  try {
+    const pregledi = JSON.parse(localStorage.getItem('kk_lijecnicki') || '[]');
+    const istekli = pregledi.filter(p => new Date(p.vrijedi) < danas);
+    const uskoro = pregledi.filter(p => { const d = new Date(p.vrijedi); return d >= danas && d <= za15; });
+
+    if (istekli.length > 0) {
+      const imena = istekli.slice(0,2).map(p => {
+        const c = state.clanovi.find(x => x.id == p.clanId);
+        return c ? c.ime + ' ' + c.prezime : '—';
+      }).join(', ');
+      alerts.push({
+        tip: 'error',
+        ikona: '🏥',
+        naslov: istekli.length + ' isteklih liječničkih pregleda!',
+        tekst: imena + (istekli.length > 2 ? ' i još ' + (istekli.length-2) + '...' : ''),
+        akcija: "showSection('lijecnicki')",
+        akcijaLabel: 'Prikaži'
+      });
+    }
+
+    if (uskoro.length > 0) {
+      const imena = uskoro.slice(0,2).map(p => {
+        const c = state.clanovi.find(x => x.id == p.clanId);
+        return c ? c.ime + ' ' + c.prezime : '—';
+      }).join(', ');
+      alerts.push({
+        tip: 'warn',
+        ikona: '⚠️',
+        naslov: uskoro.length + ' pregleda ističe unutar 15 dana',
+        tekst: imena,
+        akcija: "showSection('lijecnicki')",
+        akcijaLabel: 'Prikaži'
+      });
+    }
+  } catch(e) {}
+
+  // Licence trenera
+  try {
+    const treneri = JSON.parse(localStorage.getItem('kk_treneri') || '[]');
+    const licIstekle = treneri.filter(t => t.licvrijedi && new Date(t.licvrijedi) < danas);
+    const licUskoro = treneri.filter(t => { if(!t.licvrijedi) return false; const d=new Date(t.licvrijedi); return d>=danas && d<=za15; });
+    if (licIstekle.length > 0) {
+      alerts.push({ tip: 'error', ikona: '🥋', naslov: 'Istekla licenca: ' + licIstekle.map(t=>t.ime+' '+t.prezime).join(', '), tekst: 'Obnovite licencu što prije!', akcija: "showSection('treneri')", akcijaLabel: 'Prikaži' });
+    }
+    if (licUskoro.length > 0) {
+      alerts.push({ tip: 'warn', ikona: '🥋', naslov: 'Licenca uskoro ističe: ' + licUskoro.map(t=>t.ime+' '+t.prezime).join(', '), tekst: '', akcija: "showSection('treneri')", akcijaLabel: 'Prikaži' });
+    }
+  } catch(e) {}
+
+  if (alerts.length === 0) {
+    panel.innerHTML = '<div style="background:rgba(46,204,113,0.1);border:1px solid var(--success);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--success);margin-bottom:4px">✅ Sve je u redu — nema upozorenja!</div>';
+    return;
+  }
+
+  const boje = { error: { bg: 'rgba(200,16,46,0.12)', border: 'var(--red)', text: '#ff5a70' }, warn: { bg: 'rgba(243,156,18,0.12)', border: 'var(--warn)', text: 'var(--warn)' } };
+
+  panel.innerHTML = alerts.map(a => {
+    const b = boje[a.tip];
+    return `<div style="background:${b.bg};border:1px solid ${b.border};border-radius:8px;padding:10px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px">
+      <span style="font-size:20px;flex-shrink:0">${a.ikona}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600;color:${b.text}">${a.naslov}</div>
+        ${a.tekst ? `<div style="font-size:11px;color:#888;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.tekst}</div>` : ''}
+      </div>
+      <button onclick="${a.akcija}" style="background:none;border:1px solid ${b.border};color:${b.text};border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;flex-shrink:0;font-family:'DM Sans',sans-serif">${a.akcijaLabel}</button>
+    </div>`;
+  }).join('');
+}
 
 // ========== GLASOVNA NAREDBA (Web Speech API) ==========
 let micRecognition = null;
@@ -3072,6 +4323,613 @@ function primijeniSken() {
 
 
 
+
+
+
+
+
+function toggleRezIzvjestaji() {
+  const el = document.getElementById('rez-izvjestaji-lista');
+  if (el) {
+    el.style.display = el.style.display === 'none' ? 'block' : 'none';
+    if (el.style.display === 'block') renderIzvjestaji();
+  }
+}
+
+// ========== GODIŠNJI PLAN RADA ==========
+let planLista = [];
+try { planLista = JSON.parse(localStorage.getItem('kk_planovi') || '[]'); } catch(e){}
+function planSave() { localStorage.setItem('kk_planovi', JSON.stringify(planLista)); }
+
+const PLAN_VRSTA_LABEL = {
+  plan: '📋 Plan rada', izvjesce: '📄 Izvješće o radu',
+  financijski: '💶 Financijski plan', financijsko_izvjesce: '📊 Financijsko izvješće'
+};
+
+function planRenderLista() {
+  const el = document.getElementById('plan-lista-html');
+  if (planLista.length === 0) {
+    el.innerHTML = '<div class="empty-state"><div class="icon">📋</div><p>Nema unesenih planova rada.</p></div>';
+    return;
+  }
+  el.innerHTML = [...planLista].reverse().map(p => `
+    <div class="card" style="margin-bottom:10px">
+      <div class="card-row">
+        <div>
+          <div style="font-weight:600;color:#EDEDED">${PLAN_VRSTA_LABEL[p.vrsta]||p.vrsta} — ${p.god}. godina</div>
+          <div style="font-size:12px;color:#aaa;margin-top:4px">${p.ciljevi ? p.ciljevi.substring(0,80) + '...' : ''}</div>
+          <div style="margin-top:6px;display:flex;gap:8px;flex-wrap:wrap">
+            <span class="badge ${p.status==='usvojen' ? 'badge-green' : 'badge-gray'}">${p.status==='usvojen' ? '✓ Usvojen' : '📝 Nacrt'}</span>
+            ${p.datum ? `<span style="font-size:11px;color:#666">${new Date(p.datum+'T12:00:00').toLocaleDateString('hr-HR')}</span>` : ''}
+            ${p.prihodi ? `<span style="font-size:11px;color:var(--success)">Prihodi: ${parseFloat(p.prihodi).toFixed(0)} €</span>` : ''}
+            ${p.rashodi ? `<span style="font-size:11px;color:var(--red)">Rashodi: ${parseFloat(p.rashodi).toFixed(0)} €</span>` : ''}
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;flex-shrink:0;align-items:flex-start">
+          <button class="btn btn-secondary btn-sm" onclick="planPrikaziDetalje('${p.id}')">👁</button>
+          <button class="btn btn-sm" style="background:rgba(200,16,46,0.15);color:#ff5a70;border:1px solid rgba(200,16,46,0.2)" onclick="planObrisi('${p.id}')">✕</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function spremiPlan() {
+  const god = document.getElementById('plan-god').value;
+  const ciljevi = document.getElementById('plan-ciljevi').value.trim();
+  if (!god || !ciljevi) { toast('Unesite godinu i ciljeve!', 'err'); return; }
+  const p = {
+    id: Date.now().toString(),
+    god, vrsta: document.getElementById('plan-vrsta').value,
+    ciljevi, programi: document.getElementById('plan-programi').value.trim(),
+    prihodi: document.getElementById('plan-prihodi').value,
+    rashodi: document.getElementById('plan-rashodi').value,
+    datum: document.getElementById('plan-datum').value,
+    status: document.getElementById('plan-status').value
+  };
+  planLista.push(p);
+  planSave();
+  closeModal('modalNoviPlan');
+  planRenderLista();
+  logActivity('📋', PLAN_VRSTA_LABEL[p.vrsta] + ' ' + p.god + '. — ' + p.status);
+  toast('Plan rada spremljen!');
+}
+
+function planObrisi(id) {
+  if (!confirm('Obrisati plan?')) return;
+  planLista = planLista.filter(p => p.id !== id);
+  planSave(); planRenderLista();
+}
+
+function planPrikaziDetalje(id) {
+  const p = planLista.find(x => x.id === id);
+  if (!p) return;
+  const nl = '\n';
+  const tekst = (PLAN_VRSTA_LABEL[p.vrsta]||p.vrsta) + ' — ' + p.god + '. GODINA' + nl
+    + 'KK Đurđevac | OIB: 98308789784' + nl
+    + (p.datum ? 'Usvojeno: ' + new Date(p.datum+'T12:00:00').toLocaleDateString('hr-HR') + nl : '')
+    + 'Status: ' + (p.status === 'usvojen' ? 'Usvojen na Skupštini' : 'Nacrt') + nl + nl
+    + 'CILJEVI I AKTIVNOSTI:' + nl + p.ciljevi + nl + nl
+    + (p.programi ? 'SPORTSKI PROGRAMI:' + nl + p.programi + nl + nl : '')
+    + (p.prihodi ? 'Planirani prihodi: ' + parseFloat(p.prihodi).toFixed(2) + ' EUR' + nl : '')
+    + (p.rashodi ? 'Planirani rashodi: ' + parseFloat(p.rashodi).toFixed(2) + ' EUR' : '');
+  navigator.clipboard.writeText(tekst);
+  toast('Plan kopiran u međuspremnik!');
+}
+
+async function planGenerirajAI() {
+  const god = document.getElementById('plan-god').value || new Date().getFullYear();
+  const vrsta = document.getElementById('plan-vrsta').value;
+  const btn = event.currentTarget;
+  btn.textContent = '⏳ Generira se...'; btn.disabled = true;
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: anthropicHeaders(),
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514', max_tokens: 1000,
+        messages: [{ role: 'user', content: `Napiši ${PLAN_VRSTA_LABEL[vrsta]} za Karate klub Đurđevac za ${god}. godinu. Klub ima ~60 članova, djeca i mladi, karate sport. Temelji se na statutu kluba i Zakonu o udrugama. Budi koncizan i konkretan.` }]
+      })
+    });
+    const data = await resp.json();
+    const text = data.content?.map(b => b.text||'').join('') || 'Greška.';
+    document.getElementById('plan-ai-tekst').textContent = text;
+    document.getElementById('plan-ai-output').style.display = 'block';
+    document.getElementById('plan-ciljevi').value = text.substring(0, 500);
+  } catch(e) { toast('AI nije dostupan.', 'err'); }
+  btn.textContent = '🤖 Generiraj s AI'; btn.disabled = false;
+}
+
+// ========== FINANCIJSKO IZVJEŠĆE ==========
+let finStavke = [];
+try { finStavke = JSON.parse(localStorage.getItem('kk_financije') || '[]'); } catch(e){}
+function finSave() { localStorage.setItem('kk_financije', JSON.stringify(finStavke)); }
+
+const FIN_KAT_LABELS = {
+  clanarina:'Članarina', dotacija:'Dotacija', sponzorstvo:'Sponzorstvo',
+  natjecanje:'Kotizacija natjecanja', oprema:'Sportska oprema',
+  dvorana:'Najam dvorane', putni:'Putni troškovi',
+  administracija:'Administracija', ostalo:'Ostalo'
+};
+
+function finInitGodine() {
+  const sve = [...new Set(finStavke.map(s => s.datum ? s.datum.substring(0,4) : ''))].filter(Boolean).sort().reverse();
+  const tekuca = new Date().getFullYear().toString();
+  if (!sve.includes(tekuca)) sve.unshift(tekuca);
+  const sel = document.getElementById('fin-god');
+  const current = sel.value || tekuca;
+  sel.innerHTML = sve.map(g => `<option value="${g}" ${g===current?'selected':''}>${g}. godina</option>`).join('');
+}
+
+function finRenderLista() {
+  finInitGodine();
+  const god = document.getElementById('fin-god')?.value || new Date().getFullYear().toString();
+  const stavke = finStavke.filter(s => (s.datum||'').startsWith(god));
+
+  const prihodi = stavke.filter(s => s.vrsta === 'prihod').reduce((sum, s) => sum + parseFloat(s.iznos||0), 0);
+  const rashodi = stavke.filter(s => s.vrsta === 'rashod').reduce((sum, s) => sum + parseFloat(s.iznos||0), 0);
+  const saldo = prihodi - rashodi;
+
+  document.getElementById('fin-prihodi').textContent = prihodi.toFixed(2) + ' €';
+  document.getElementById('fin-rashodi').textContent = rashodi.toFixed(2) + ' €';
+  document.getElementById('fin-saldo').textContent = (saldo >= 0 ? '+' : '') + saldo.toFixed(2) + ' €';
+  document.getElementById('fin-saldo').style.color = saldo >= 0 ? 'var(--success)' : 'var(--red)';
+
+  // Kategorije
+  const katPrihodi = {};
+  const katRashodi = {};
+  stavke.forEach(s => {
+    const kat = FIN_KAT_LABELS[s.kategorija] || s.kategorija;
+    if (s.vrsta === 'prihod') katPrihodi[kat] = (katPrihodi[kat]||0) + parseFloat(s.iznos||0);
+    else katRashodi[kat] = (katRashodi[kat]||0) + parseFloat(s.iznos||0);
+  });
+
+  const renderKat = (obj, boja) => Object.entries(obj).length === 0
+    ? '<div style="font-size:12px;color:#555">Nema stavki</div>'
+    : Object.entries(obj).sort((a,b)=>b[1]-a[1]).map(([k,v]) =>
+        `<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #2E2E2E;font-size:12px">
+          <span style="color:#aaa">${k}</span>
+          <strong style="color:${boja}">${v.toFixed(2)} €</strong>
+        </div>`).join('');
+
+  document.getElementById('fin-prihodi-kat').innerHTML = renderKat(katPrihodi, 'var(--success)');
+  document.getElementById('fin-rashodi-kat').innerHTML = renderKat(katRashodi, 'var(--red)');
+
+  // Lista
+  const el = document.getElementById('fin-lista-html');
+  const sortirane = [...stavke].sort((a,b) => (b.datum||'').localeCompare(a.datum||''));
+  if (sortirane.length === 0) {
+    el.innerHTML = '<div class="empty-state"><div class="icon">📊</div><p>Nema financijskih stavki za ' + god + '. godinu.</p></div>';
+    return;
+  }
+
+  el.innerHTML = sortirane.map(s => `
+    <div class="card" style="margin-bottom:8px;border-left:4px solid ${s.vrsta==='prihod'?'var(--success)':'var(--red)'}">
+      <div class="card-row">
+        <div>
+          <div style="font-weight:600;color:#EDEDED">${s.opis}</div>
+          <div style="font-size:11px;color:#666;margin-top:2px">${FIN_KAT_LABELS[s.kategorija]||s.kategorija} · ${s.datum ? new Date(s.datum+'T12:00:00').toLocaleDateString('hr-HR') : '—'}</div>
+          ${s.napomena ? `<div style="font-size:11px;color:#555;margin-top:1px">${s.napomena}</div>` : ''}
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;flex-shrink:0">
+          <strong style="font-size:16px;color:${s.vrsta==='prihod'?'var(--success)':'var(--red)'}">${s.vrsta==='prihod'?'+':'-'}${parseFloat(s.iznos).toFixed(2)} €</strong>
+          <button onclick="obrisiTransakciju('${s.id}')" style="background:none;border:none;color:#555;cursor:pointer">✕</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function spremiTransakciju() {
+  const opis = document.getElementById('fin-opis').value.trim();
+  const iznos = document.getElementById('fin-iznos').value;
+  const datum = document.getElementById('fin-datum').value;
+  if (!opis || !iznos || !datum) { toast('Popunite obavezna polja!', 'err'); return; }
+
+  const s = {
+    id: Date.now().toString(),
+    vrsta: document.getElementById('fin-vrsta').value,
+    kategorija: document.getElementById('fin-kategorija').value,
+    opis, iznos: parseFloat(iznos).toFixed(2), datum,
+    napomena: document.getElementById('fin-napomenaF').value.trim()
+  };
+
+  finStavke.push(s);
+  finSave();
+  closeModal('modalNovaTransakcija');
+  finRenderLista();
+  logActivity('📊', (s.vrsta==='prihod'?'Prihod':'Rashod') + ': ' + opis + ' ' + s.iznos + ' €');
+  toast('Stavka dodana!');
+  ['fin-opis','fin-iznos','fin-napomenaF','fin-datum'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+}
+
+function obrisiTransakciju(id) {
+  if (!confirm('Obrisati stavku?')) return;
+  finStavke = finStavke.filter(s => s.id !== id);
+  finSave(); finRenderLista();
+}
+
+function finVrstaChange() {
+  const vrsta = document.getElementById('fin-vrsta').value;
+  const sel = document.getElementById('fin-kategorija');
+  if (vrsta === 'prihod') {
+    sel.innerHTML = '<option value="clanarina">Članarina</option><option value="dotacija">Dotacija/Sufinanciranje</option><option value="sponzorstvo">Sponzorstvo</option><option value="natjecanje">Kotizacija natjecanja</option><option value="ostalo">Ostalo</option>';
+  } else {
+    sel.innerHTML = '<option value="natjecanje">Kotizacija natjecanja</option><option value="oprema">Sportska oprema</option><option value="dvorana">Najam dvorane</option><option value="putni">Putni troškovi</option><option value="administracija">Administracija</option><option value="ostalo">Ostalo</option>';
+  }
+}
+
+function finGenerirajIzvjesce() {
+  const god = document.getElementById('fin-god')?.value || new Date().getFullYear().toString();
+  const stavke = finStavke.filter(s => (s.datum||'').startsWith(god));
+  const prihodi = stavke.filter(s => s.vrsta === 'prihod').reduce((sum,s) => sum+parseFloat(s.iznos||0), 0);
+  const rashodi = stavke.filter(s => s.vrsta === 'rashod').reduce((sum,s) => sum+parseFloat(s.iznos||0), 0);
+  const saldo = prihodi - rashodi;
+
+  const tekst = `FINANCIJSKO IZVJEŠĆE ZA ${god}. GODINU
+Karate klub Đurđevac | OIB: 98308789784
+
+══════════════════════════════════════
+UKUPNI PRIHODI:  ${prihodi.toFixed(2)} EUR
+UKUPNI RASHODI:  ${rashodi.toFixed(2)} EUR
+SALDO:           ${saldo >= 0 ? '+' : ''}${saldo.toFixed(2)} EUR
+══════════════════════════════════════
+
+PRIHODI PO KATEGORIJAMA:
+${Object.entries(stavke.filter(s=>s.vrsta==='prihod').reduce((acc,s) => { acc[FIN_KAT_LABELS[s.kategorija]||s.kategorija]=(acc[FIN_KAT_LABELS[s.kategorija]||s.kategorija]||0)+parseFloat(s.iznos||0); return acc; }, {})).map(([k,v]) => '  ' + k + ': ' + v.toFixed(2) + ' EUR').join('\n')||'  Nema prihoda'}
+
+RASHODI PO KATEGORIJAMA:
+${Object.entries(stavke.filter(s=>s.vrsta==='rashod').reduce((acc,s) => { acc[FIN_KAT_LABELS[s.kategorija]||s.kategorija]=(acc[FIN_KAT_LABELS[s.kategorija]||s.kategorija]||0)+parseFloat(s.iznos||0); return acc; }, {})).map(([k,v]) => '  ' + k + ': ' + v.toFixed(2) + ' EUR').join('\n')||'  Nema rashoda'}
+
+══════════════════════════════════════
+Izvješće pripremio: Tajnik kluba
+Datum: ${new Date().toLocaleDateString('hr-HR')}
+
+Za KK Đurđevac
+Ivan Juričić — predsjednik`;
+
+  navigator.clipboard.writeText(tekst);
+  toast('Financijsko izvješće kopirano! Možete ga zalijepiti u Word ili mail.');
+}
+
+// ========== SPORTSKI REZULTATI ==========
+let rezLista = [];
+try { rezLista = JSON.parse(localStorage.getItem('kk_rezultati') || '[]'); } catch(e){}
+function rezSave() { localStorage.setItem('kk_rezultati', JSON.stringify(rezLista)); }
+
+const REZ_MEDALJA = { '1':'🥇', '2':'🥈', '3':'🥉', '4':'4.', '5':'5-8.', '0':'—' };
+const REZ_BOJA = { '1':'#FFD700', '2':'#C0C0C0', '3':'#CD7F32', '4':'#EDEDED', '5':'#888', '0':'#666' };
+
+function rezRenderLista() {
+  // Update stats
+  document.getElementById('rez-st-zlato').textContent = rezLista.filter(r => r.plasman === '1').length;
+  document.getElementById('rez-st-srebro').textContent = rezLista.filter(r => r.plasman === '2').length;
+  document.getElementById('rez-st-bronca').textContent = rezLista.filter(r => r.plasman === '3').length;
+  const natjecanja = [...new Set(rezLista.map(r => r.natjecanje))];
+  document.getElementById('rez-st-ukupno').textContent = natjecanja.length;
+
+  // Update year filter
+  const godine = [...new Set(rezLista.map(r => r.datum ? r.datum.substring(0,4) : ''))].filter(Boolean).sort().reverse();
+  const filterGod = document.getElementById('rez-filter-god');
+  const currentGod = filterGod.value;
+  filterGod.innerHTML = '<option value="">Sve godine</option>' + godine.map(g => `<option value="${g}" ${g===currentGod?'selected':''}>${g}</option>`).join('');
+
+  // Filter
+  const q = (document.getElementById('rez-search')?.value || '').toLowerCase();
+  const fg = document.getElementById('rez-filter-god')?.value || '';
+  const fm = document.getElementById('rez-filter-med')?.value || '';
+
+  let lista = rezLista.filter(r => {
+    const clan = state.clanovi.find(c => c.id == r.clanId);
+    const ime = clan ? (clan.ime + ' ' + clan.prezime).toLowerCase() : '';
+    const matchQ = !q || ime.includes(q) || (r.natjecanje||'').toLowerCase().includes(q);
+    const matchG = !fg || (r.datum||'').startsWith(fg);
+    const matchM = !fm || r.plasman === fm;
+    return matchQ && matchG && matchM;
+  }).sort((a,b) => (b.datum||'').localeCompare(a.datum||''));
+
+  const el = document.getElementById('rez-lista-html');
+  if (lista.length === 0) {
+    el.innerHTML = '<div class="empty-state"><div class="icon">🏅</div><p>Nema rezultata za odabrane filtere.</p></div>';
+    return;
+  }
+
+  el.innerHTML = lista.map(r => {
+    const clan = state.clanovi.find(c => c.id == r.clanId);
+    const ime = clan ? clan.ime + ' ' + clan.prezime : r.imeRucno || '—';
+    const medalja = REZ_MEDALJA[r.plasman] || '—';
+    const boja = REZ_BOJA[r.plasman] || '#666';
+    return `<div class="card" style="margin-bottom:8px;border-left:4px solid ${boja}">
+      <div class="card-row">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="font-size:28px;flex-shrink:0">${medalja}</div>
+          <div>
+            <div style="font-weight:600;color:#EDEDED">${ime}</div>
+            <div style="font-size:12px;color:#aaa;margin-top:2px">${r.natjecanje}</div>
+            <div style="font-size:11px;color:#666;margin-top:2px">${r.disciplina || ''} · ${r.kategorija || ''} · ${r.razina || ''}</div>
+            ${r.mjesto ? `<div style="font-size:11px;color:#555;margin-top:1px">📍 ${r.mjesto} ${r.datum ? '· ' + new Date(r.datum+'T12:00:00').toLocaleDateString('hr-HR') : ''}</div>` : ''}
+          </div>
+        </div>
+        <button onclick="obrisiRezultat('${r.id}')" style="background:none;border:none;color:#555;cursor:pointer;font-size:16px;flex-shrink:0">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function spremiRezultat() {
+  const clanId = document.getElementById('rez-clan-sel').value;
+  const natjecanje = document.getElementById('rez-natjecanje').value.trim();
+  const datum = document.getElementById('rez-datum').value;
+  if (!clanId || !natjecanje) { toast('Odaberite natjecatelja i unesite natjecanje!', 'err'); return; }
+
+  const r = {
+    id: Date.now().toString(),
+    clanId: parseInt(clanId),
+    natjecanje, datum,
+    mjesto: document.getElementById('rez-mjesto').value.trim(),
+    razina: document.getElementById('rez-razina').value,
+    disciplina: document.getElementById('rez-disciplina').value,
+    kategorija: document.getElementById('rez-kategorija').value,
+    plasman: document.getElementById('rez-plasman').value,
+    natjecatelji: document.getElementById('rez-natjecatelji').value,
+    napomena: document.getElementById('rez-napomena').value.trim()
+  };
+
+  rezLista.push(r);
+  rezSave();
+  closeModal('modalNoviRezultat');
+  rezRenderLista();
+
+  const clan = state.clanovi.find(c => c.id == clanId);
+  const medalja = REZ_MEDALJA[r.plasman];
+  logActivity('🏅', medalja + ' ' + (clan ? clan.ime+' '+clan.prezime : '') + ' — ' + natjecanje);
+  toast('Rezultat dodan!');
+  ['rez-natjecanje','rez-mjesto','rez-napomena','rez-natjecatelji','rez-datum'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+}
+
+function obrisiRezultat(id) {
+  if (!confirm('Obrisati rezultat?')) return;
+  rezLista = rezLista.filter(r => r.id !== id);
+  rezSave(); rezRenderLista();
+}
+
+// ========== TRENERI ==========
+let trenerList = [];
+let trenerEditId = null;
+try { trenerList = JSON.parse(localStorage.getItem('kk_treneri') || '[]'); } catch(e){}
+function trSave() { localStorage.setItem('kk_treneri', JSON.stringify(trenerList)); }
+
+function trRenderLista() {
+  const danas = new Date();
+  const za30 = new Date(); za30.setDate(za30.getDate() + 30);
+  let warn = 0;
+
+  document.getElementById('tr-st-ukupno').textContent = trenerList.filter(t => t.status === 'aktivan').length;
+
+  const el = document.getElementById('tr-lista-html');
+  if (trenerList.length === 0) {
+    el.innerHTML = '<div class="empty-state"><div class="icon">🥋</div><p>Nema unesenih trenera.</p></div>';
+    document.getElementById('tr-st-licenca').textContent = 0;
+    return;
+  }
+
+  el.innerHTML = trenerList.map(t => {
+    let licStatus = '';
+    let licBoja = 'var(--success)';
+    if (t.licvrijedi) {
+      const lic = new Date(t.licvrijedi);
+      if (lic < danas) { licStatus = '✗ Istekla'; licBoja = 'var(--red)'; warn++; }
+      else if (lic <= za30) { licStatus = '⚠ Uskoro ističe'; licBoja = 'var(--warn)'; warn++; }
+      else { licStatus = '✓ Valjana do ' + lic.toLocaleDateString('hr-HR'); }
+    }
+    return `<div class="card" style="margin-bottom:10px">
+      <div class="card-row">
+        <div>
+          <div style="font-weight:600;color:#EDEDED;font-size:15px">${t.ime} ${t.prezime}</div>
+          <div style="font-size:12px;color:#aaa;margin-top:2px">${t.uloga} · ${t.licenca}</div>
+          ${t.brlic ? `<div style="font-size:11px;color:#666;margin-top:2px">Licenca: ${t.brlic}</div>` : ''}
+          ${licStatus ? `<div style="font-size:12px;color:${licBoja};margin-top:4px">${licStatus}</div>` : ''}
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
+          <span class="badge ${t.status === 'aktivan' ? 'badge-green' : 'badge-red'}">${t.status}</span>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-secondary btn-sm" onclick="urediTrenera('${t.id}')">✏️</button>
+            <button class="btn btn-sm" style="background:rgba(200,16,46,0.15);color:#ff5a70;border:1px solid rgba(200,16,46,0.2)" onclick="obrisiTrenera('${t.id}')">✕</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('tr-st-licenca').textContent = warn;
+}
+
+function spremiTrenera() {
+  const ime = document.getElementById('tr-ime').value.trim();
+  const prezime = document.getElementById('tr-prezime').value.trim();
+  if (!ime || !prezime) { toast('Unesite ime i prezime!', 'err'); return; }
+
+  const trener = {
+    id: trenerEditId || Date.now().toString(),
+    ime, prezime,
+    oib: document.getElementById('tr-oib').value.trim(),
+    datrod: document.getElementById('tr-datrod').value,
+    uloga: document.getElementById('tr-uloga').value,
+    licenca: document.getElementById('tr-licenca').value,
+    brlic: document.getElementById('tr-brlic').value.trim(),
+    licvrijedi: document.getElementById('tr-licvrijedi').value,
+    mob: document.getElementById('tr-mob').value.trim(),
+    email: document.getElementById('tr-email').value.trim(),
+    datzap: document.getElementById('tr-datzap').value,
+    status: document.getElementById('tr-status').value
+  };
+
+  if (trenerEditId) {
+    const idx = trenerList.findIndex(t => t.id === trenerEditId);
+    if (idx >= 0) trenerList[idx] = trener;
+  } else {
+    trenerList.push(trener);
+  }
+
+  trSave();
+  closeModal('modalNoviTrener');
+  trRenderLista();
+  trenerEditId = null;
+  logActivity('🥋', (trenerEditId ? 'Ažuriran' : 'Novi') + ' trener: ' + ime + ' ' + prezime);
+  toast('Trener ' + ime + ' ' + prezime + ' spremljen!');
+  ['tr-ime','tr-prezime','tr-oib','tr-brlic','tr-mob','tr-email'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  ['tr-datrod','tr-licvrijedi','tr-datzap'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+}
+
+function urediTrenera(id) {
+  const t = trenerList.find(x => x.id === id);
+  if (!t) return;
+  trenerEditId = id;
+  document.getElementById('trenerModalNaslov').textContent = 'Uredi trenera';
+  document.getElementById('tr-ime').value = t.ime || '';
+  document.getElementById('tr-prezime').value = t.prezime || '';
+  document.getElementById('tr-oib').value = t.oib || '';
+  document.getElementById('tr-datrod').value = t.datrod || '';
+  document.getElementById('tr-brlic').value = t.brlic || '';
+  document.getElementById('tr-licvrijedi').value = t.licvrijedi || '';
+  document.getElementById('tr-mob').value = t.mob || '';
+  document.getElementById('tr-email').value = t.email || '';
+  document.getElementById('tr-datzap').value = t.datzap || '';
+  const setS = (id, val) => { const el=document.getElementById(id); if(el) { for(let o of el.options) { if(o.value===val||o.text===val) { el.value=o.value; break; } } } };
+  setS('tr-uloga', t.uloga);
+  setS('tr-licenca', t.licenca);
+  setS('tr-status', t.status);
+  openModal('modalNoviTrener');
+}
+
+function obrisiTrenera(id) {
+  const t = trenerList.find(x => x.id === id);
+  if (!t || !confirm('Obrisati trenera ' + t.ime + ' ' + t.prezime + '?')) return;
+  trenerList = trenerList.filter(x => x.id !== id);
+  trSave(); trRenderLista();
+  toast('Trener obrisan.');
+}
+
+// ========== GDPR PRIVOLE ==========
+let gdprAktivniClan = null;
+
+function gdprRenderLista() {
+  const aktivni = state.clanovi.filter(c => c.status === 'aktivan');
+  const potpisano = aktivni.filter(c => c.gdpr === 'da').length;
+  const nepotpisano = aktivni.length - potpisano;
+  const postotak = aktivni.length > 0 ? Math.round(potpisano / aktivni.length * 100) : 0;
+
+  document.getElementById('gdpr-st-potpisano').textContent = potpisano;
+  document.getElementById('gdpr-st-nepotpisano').textContent = nepotpisano;
+  document.getElementById('gdpr-st-postotak').textContent = postotak + '%';
+
+  if (aktivni.length === 0) {
+    document.getElementById('gdpr-lista-html').innerHTML = '<div class="empty-state"><div class="icon">🔒</div><p>Nema aktivnih članova.</p></div>';
+    return;
+  }
+
+  // Sort - nepotpisani prvi
+  const sorted = [...aktivni].sort((a,b) => {
+    if (a.gdpr === 'da' && b.gdpr !== 'da') return 1;
+    if (a.gdpr !== 'da' && b.gdpr === 'da') return -1;
+    return a.prezime.localeCompare(b.prezime);
+  });
+
+  document.getElementById('gdpr-lista-html').innerHTML = sorted.map(c => {
+    const potpisana = c.gdpr === 'da';
+    const god = c.datRod ? new Date().getFullYear() - new Date(c.datRod).getFullYear() : 18;
+    const tip = god < 18 ? 'Roditelj/staratelj' : 'Član';
+    return `<div class="card" style="margin-bottom:8px;border-left:4px solid ${potpisana ? 'var(--success)' : 'var(--red)'}">
+      <div class="card-row">
+        <div>
+          <div style="font-weight:600;color:#EDEDED">${c.ime} ${c.prezime}</div>
+          <div style="font-size:11px;color:#666;margin-top:2px">${c.kategorija} · Potpisuje: ${tip}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="badge ${potpisana ? 'badge-green' : 'badge-red'}">${potpisana ? '✓ Potpisano' : '✗ Nije'}</span>
+          <button class="btn btn-secondary btn-sm" onclick="gdprPrikaziPrivolu(${c.id})">📄</button>
+          ${!potpisana ? `<button class="btn btn-primary btn-sm" onclick="gdprOznaci(${c.id})">✓</button>` : ''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function gdprGenerirajSve() {
+  const nepotpisani = state.clanovi.filter(c => c.status === 'aktivan' && c.gdpr !== 'da');
+  if (nepotpisani.length === 0) { toast('Svi aktivni članovi imaju potpisanu privolu! ✓'); return; }
+  toast(nepotpisani.length + ' članova nema potpisanu privolu — prikazujem popis');
+  gdprRenderLista();
+}
+
+function gdprPrikaziPrivolu(id) {
+  const c = state.clanovi.find(x => x.id === id);
+  if (!c) return;
+  gdprAktivniClan = id;
+  const god = c.datRod ? new Date().getFullYear() - new Date(c.datRod).getFullYear() : 18;
+  const maloljetan = god < 18;
+  document.getElementById('gdprModalNaslov').textContent = 'GDPR Privola — ' + c.ime + ' ' + c.prezime;
+
+  const privola = `IZJAVA O PRIVOLI ZA OBRADU OSOBNIH PODATAKA
+(sukladno Uredbi EU 2016/679 - GDPR)
+
+Karate klub Đurđevac, Ulica Andrije Hebranga 12, 48350 Đurđevac
+OIB: 98308789784
+
+${maloljetan ? 'Ja, roditelj/staratelj člana:' : 'Ja,'}
+
+Ime i prezime: ${c.ime} ${c.prezime}
+Datum rođenja: ${c.datRod ? new Date(c.datRod).toLocaleDateString('hr-HR') : '___________'}
+OIB: ${c.oib || '___________'}
+Adresa: ${c.adresa || '___________'}
+
+${maloljetan ? 'dajem suglasnost za obradu osobnih podataka mog maloljetnog djeteta' : 'dajem privolu za obradu svojih osobnih podataka'} u svrhu:
+
+✓ Vođenja evidencije članova kluba
+✓ Administrativnih i sportskih aktivnosti
+✓ Prijave na natjecanja i komunikacije s HKS-om
+✓ Objave fotografija i video snimki na web/društvenim mrežama kluba
+
+Osobni podaci koji se obrađuju: ime i prezime, OIB, datum rođenja, adresa, kontakt podaci, zdravstveni podaci relevantni za sport.
+
+Privolu mogu povući u svako doba pisanim putem na adresu kluba.
+
+U Đurđevcu, _______________
+
+${maloljetan ? 'Potpis roditelja/staratelja: ______________________________' : 'Potpis člana: ______________________________'}
+
+Za KK Đurđevac — Ivan Juričić, predsjednik`;
+
+  document.getElementById('gdprPrivolaBody').innerHTML =
+    '<pre style="font-size:12px;white-space:pre-wrap;line-height:1.6;color:#EDEDED;background:#1C1C1C;padding:14px;border-radius:8px;border:1px solid #2E2E2E">' + privola + '</pre>' +
+    (c.gdpr === 'da' ? '<div style="margin-top:10px;padding:8px 12px;background:rgba(46,204,113,0.15);border-radius:6px;font-size:12px;color:var(--success)">✓ Privola već potpisana</div>' : '');
+
+  openModal('modalGdprPrivola');
+}
+
+function copyGdprText() {
+  const text = document.querySelector('#gdprPrivolaBody pre')?.textContent;
+  if (text) { navigator.clipboard.writeText(text); toast('Privola kopirana!'); }
+}
+
+function označiGdprPotpisanim() {
+  const c = state.clanovi.find(x => x.id === gdprAktivniClan);
+  if (!c) return;
+  c.gdpr = 'da';
+  save();
+  closeModal('modalGdprPrivola');
+  gdprRenderLista();
+  logActivity('🔒', 'GDPR privola potpisana: ' + c.ime + ' ' + c.prezime);
+  toast('Privola označena kao potpisana!');
+}
+
+function gdprOznaci(id) {
+  const c = state.clanovi.find(x => x.id === id);
+  if (!c) return;
+  c.gdpr = 'da';
+  save();
+  gdprRenderLista();
+  toast(c.ime + ' ' + c.prezime + ' — privola potpisana!');
+}
+
 // ========== BRZI UNOS EMAILOVA ==========
 function renderEmailForma() {
   const el = document.getElementById('email-lista-forma');
@@ -3116,8 +4974,30 @@ function spremiEmailove() {
 let dnTreninzi = [];
 let dnPrisutni = {};
 let dnAktivniTrening = null;
-try { dnTreninzi = JSON.parse(localStorage.getItem('kk_treninzi') || '[]'); } catch(e){}
-function dnSave() { localStorage.setItem('kk_treninzi', JSON.stringify(dnTreninzi)); }
+
+function dnLoad() {
+  try {
+    const raw = localStorage.getItem('kk_treninzi');
+    if (!raw) { dnTreninzi = []; return; }
+    const parsed = JSON.parse(raw);
+    // Dedupliciraj po ID-u
+    const seen = {};
+    dnTreninzi = parsed.filter(t => {
+      if (!t || !t.id) return false;
+      const key = String(t.id);
+      if (seen[key]) return false;
+      seen[key] = true;
+      return true;
+    });
+    // Spremi odmah deduplicirane podatke
+    localStorage.setItem('kk_treninzi', JSON.stringify(dnTreninzi));
+  } catch(e) { dnTreninzi = []; }
+}
+
+dnLoad();
+function dnSave() {
+  localStorage.setItem('kk_treninzi', JSON.stringify(dnTreninzi));
+}
 
 function noviTrening() {
   const danas = new Date().toISOString().split('T')[0];
@@ -3126,31 +5006,82 @@ function noviTrening() {
   dnPrisutni = {};
   document.getElementById('dn-trening-naslov').textContent = naslov;
   const lista = document.getElementById('dn-prozivka-lista');
-  lista.innerHTML = state.clanovi.filter(c => c.status === 'aktivan').map(c => `
-    <div id="dn-clan-${c.id}" onclick="dnToggle(${c.id})" style="padding:12px;border-radius:8px;border:1px solid #333;cursor:pointer;text-align:center;transition:all 0.15s;background:#1C1C1C">
-      ${c.foto ? `<img src="${c.foto}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;margin-bottom:6px;display:block;margin-left:auto;margin-right:auto">` : `<div style="width:40px;height:40px;border-radius:50%;background:#2E2E2E;display:flex;align-items:center;justify-content:center;margin:0 auto 6px;font-size:14px;color:#888">${c.ime.charAt(0)}${c.prezime.charAt(0)}</div>`}
-      <div style="font-size:12px;font-weight:600;color:#EDEDED">${c.ime}<br>${c.prezime}</div>
-    </div>`).join('');
+  lista.style.cssText = 'display:grid;grid-template-columns:repeat(3,1fr);gap:8px';
+  lista.innerHTML = state.clanovi.filter(c => c.status === 'aktivan').sort((a,b) => a.prezime.localeCompare(b.prezime)).map(c => {
+    const cid = String(c.id);
+    const foto = c.foto ? `<img src="${c.foto}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;border:2px solid #333;transition:border-color 0.2s">` 
+      : `<div style="width:52px;height:52px;border-radius:50%;background:#2E2E2E;display:flex;align-items:center;justify-content:center;font-size:18px;color:#888;font-weight:700">${c.ime.charAt(0)}${c.prezime.charAt(0)}</div>`;
+    return `<div id="dn-clan-${cid}" data-cid="${cid}" onclick="dnToggle('${cid}')" style="padding:14px 8px;border-radius:12px;border:2px solid #333;cursor:pointer;text-align:center;background:#1C1C1C;min-height:110px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;user-select:none;-webkit-tap-highlight-color:transparent;transition:all 0.15s">
+      ${foto}
+      <div style="font-size:12px;font-weight:700;color:#EDEDED;line-height:1.3">${c.ime}<br>${c.prezime}</div>
+      <div class="dn-ck" style="font-size:16px;line-height:1">⬜</div>
+    </div>`;
+  }).join('');
   document.getElementById('dn-lista-panel').style.display = 'none';
   document.getElementById('dn-prozivka-panel').style.display = 'block';
+}
+
+function dnOznaciSve(prisutan) {
+  // Postavi SVE na prisutan/odsutan i odmah vizualno prikaži
+  document.querySelectorAll('[data-cid]').forEach(el => {
+    const key = el.getAttribute('data-cid');
+    dnPrisutni[key] = prisutan;
+    const ck = el.querySelector('.dn-ck');
+    if (prisutan) {
+      el.style.background = 'rgba(46,204,113,0.2)';
+      el.style.borderColor = '#2ECC71';
+      if (ck) ck.textContent = '✅';
+    } else {
+      el.style.background = '#1C1C1C';
+      el.style.borderColor = '#333';
+      if (ck) ck.textContent = '⬜';
+    }
+  });
+  dnUpdateCount();
+}
+
+function dnUpdateCount() {
+  const count = Object.values(dnPrisutni).filter(Boolean).length;
+  const el = document.getElementById('dn-prisutni-count');
+  if (el) el.textContent = count + ' prisutnih od ' + state.clanovi.filter(c => c.status === 'aktivan').length;
 }
 
 function dnToggle(id) {
   dnPrisutni[id] = !dnPrisutni[id];
   const el = document.getElementById('dn-clan-' + id);
   if (dnPrisutni[id]) {
-    el.style.background = 'rgba(46,204,113,0.2)';
-    el.style.borderColor = 'var(--success)';
+    el.style.background = 'rgba(46,204,113,0.15)';
+    el.style.borderColor = '#2ECC71';
+    el.style.transform = 'scale(0.96)';
+    setTimeout(() => { if(el) el.style.transform = ''; }, 150);
+    // Add checkmark
+    let ck = el.querySelector('.dn-check');
+    if (!ck) {
+      ck = document.createElement('div');
+      ck.className = 'dn-check';
+      ck.style.cssText = 'position:absolute;top:6px;right:6px;width:22px;height:22px;background:#2ECC71;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff';
+      ck.textContent = '✓';
+      el.style.position = 'relative';
+      el.appendChild(ck);
+    }
   } else {
     el.style.background = '#1C1C1C';
     el.style.borderColor = '#333';
+    const ck = el.querySelector('.dn-check');
+    if (ck) ck.remove();
   }
 }
 
 function spremiProzivku() {
   if (!dnAktivniTrening) return;
-  dnAktivniTrening.prisutni = Object.entries(dnPrisutni).filter(([k,v])=>v).map(([k])=>parseInt(k));
-  dnTreninzi.push(dnAktivniTrening);
+  dnAktivniTrening.prisutni = Object.entries(dnPrisutni).filter(([k,v])=>v).map(([k])=>k);
+  // Ako trening već postoji (editiranje) — ažuriraj, inače dodaj novi
+  const idx = dnTreninzi.findIndex(t => t.id === dnAktivniTrening.id);
+  if (idx >= 0) {
+    dnTreninzi[idx] = dnAktivniTrening;
+  } else {
+    dnTreninzi.push(dnAktivniTrening);
+  }
   dnSave();
   zatvoriProzivku();
   logActivity('📋', 'Prozivka: ' + dnAktivniTrening.prisutni.length + ' prisutnih');
@@ -3164,6 +5095,7 @@ function zatvoriProzivku() {
 }
 
 function dnRenderLista() {
+  dnLoad(); // Uvijek učitaj svježe iz localStorage
   document.getElementById('dn-st-treninga').textContent = dnTreninzi.length;
   const danas = dnTreninzi.find(t => t.datum === new Date().toISOString().split('T')[0]);
   document.getElementById('dn-st-danas').textContent = danas ? danas.prisutni.length : 0;
@@ -3173,16 +5105,19 @@ function dnRenderLista() {
     return;
   }
   el.innerHTML = [...dnTreninzi].reverse().map(t => {
-    const prisutni = state.clanovi.filter(c => t.prisutni.includes(c.id));
+    const prisutni = state.clanovi.filter(c => t.prisutni.map(String).includes(String(c.id)));
     return `<div class="card" style="margin-bottom:10px">
       <div class="card-row">
-        <div>
+        <div style="flex:1">
           <div style="font-weight:600;color:#EDEDED">${t.naslov}</div>
-          <div style="font-size:12px;color:#aaa;margin-top:2px">${new Date(t.datum).toLocaleDateString('hr-HR')}</div>
+          <div style="font-size:12px;color:#aaa;margin-top:2px">${new Date(t.datum+'T12:00:00').toLocaleDateString('hr-HR')}</div>
           <div style="font-size:12px;color:var(--success);margin-top:4px">✓ ${t.prisutni.length} prisutnih</div>
           <div style="font-size:11px;color:#666;margin-top:2px">${prisutni.slice(0,5).map(c=>c.ime+' '+c.prezime).join(', ')}${prisutni.length > 5 ? ' +' + (prisutni.length-5) + ' više' : ''}</div>
         </div>
-        <button class="btn btn-sm" style="background:rgba(200,16,46,0.15);color:#ff5a70;border:1px solid rgba(200,16,46,0.2);align-self:flex-start" onclick="dnObrisi('${t.id}')">✕</button>
+        <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0">
+          <button class="btn btn-secondary btn-sm" onclick="dnUredi('${t.id}')">✏️ Uredi</button>
+          <button class="btn btn-sm" style="background:rgba(200,16,46,0.15);color:#ff5a70;border:1px solid rgba(200,16,46,0.2)" onclick="dnObrisi('${t.id}')">✕ Briši</button>
+        </div>
       </div>
     </div>`;
   }).join('');
@@ -3190,8 +5125,47 @@ function dnRenderLista() {
 
 function dnObrisi(id) {
   if (!confirm('Obrisati trening?')) return;
-  dnTreninzi = dnTreninzi.filter(t => t.id !== id);
-  dnSave(); dnRenderLista();
+  dnLoad();
+  const idStr = String(id);
+  dnTreninzi = dnTreninzi.filter(t => String(t.id) !== idStr);
+  localStorage.setItem('kk_treninzi', JSON.stringify(dnTreninzi));
+  dnTreninzi = JSON.parse(localStorage.getItem('kk_treninzi') || '[]');
+  dnRenderLista();
+  toast('Trening obrisan!');
+}
+
+function dnOcistiSve() {
+  if (!confirm('Obrisati SVE treninge? Ova radnja se ne može poništiti!')) return;
+  dnTreninzi = [];
+  localStorage.setItem('kk_treninzi', '[]');
+  dnRenderLista();
+  toast('Svi treninzi obrisani.');
+}
+
+function dnUredi(id) {
+  const t = dnTreninzi.find(x => x.id === id);
+  if (!t) return;
+  // Load existing trening into prozivka for editing
+  dnAktivniTrening = t;
+  dnPrisutni = {};
+  // Mark existing prisutni
+  t.prisutni.forEach(cid => { dnPrisutni[String(cid)] = true; });
+  document.getElementById('dn-trening-naslov').textContent = t.naslov;
+  const lista = document.getElementById('dn-prozivka-lista');
+  lista.style.cssText = 'display:grid;grid-template-columns:repeat(3,1fr);gap:8px';
+  lista.innerHTML = state.clanovi.filter(c => c.status === 'aktivan').sort((a,b) => a.prezime.localeCompare(b.prezime)).map(c => {
+    const key = String(c.id);
+    const jePrisutan = dnPrisutni[key] === true;
+    const foto = c.foto ? `<img src="${c.foto}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;border:2px solid ${jePrisutan ? '#2ECC71' : '#333'}">` 
+      : `<div style="width:52px;height:52px;border-radius:50%;background:${jePrisutan ? 'rgba(46,204,113,0.15)' : '#2E2E2E'};display:flex;align-items:center;justify-content:center;font-size:18px;color:${jePrisutan ? '#2ECC71' : '#888'};font-weight:700">${c.ime.charAt(0)}${c.prezime.charAt(0)}</div>`;
+    return `<div id="dn-clan-${key}" data-cid="${key}" onclick="dnToggle('${key}')" style="padding:14px 8px;border-radius:12px;border:2px solid ${jePrisutan ? '#2ECC71' : '#333'};cursor:pointer;text-align:center;background:${jePrisutan ? 'rgba(46,204,113,0.2)' : '#1C1C1C'};min-height:110px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;user-select:none;-webkit-tap-highlight-color:transparent;transition:all 0.15s">
+      ${foto}
+      <div style="font-size:12px;font-weight:700;color:#EDEDED;line-height:1.3">${c.ime}<br>${c.prezime}</div>
+      <div class="dn-ck" style="font-size:16px;line-height:1">${jePrisutan ? '✅' : '⬜'}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('dn-lista-panel').style.display = 'none';
+  document.getElementById('dn-prozivka-panel').style.display = 'block';
 }
 
 // ========== MODUL 3: KALENDAR ==========
@@ -3335,7 +5309,7 @@ function ljSave() { localStorage.setItem('kk_lijecnicki', JSON.stringify(ljPregl
 
 function ljRenderLista() {
   const danas = new Date();
-  const za15 = new Date(); za15.setDate(za15.getDate() + 15);
+  const za15 = new Date(); za15.setDate(za15.getDate() + 7);
   let ok = 0, warn = 0, exp = 0;
   const upoz = [];
   const el = document.getElementById('lj-lista-html');
@@ -4075,6 +6049,41 @@ function prikaziUplatnicuObj(u) {
     + row('Rok plaćanja', rokStr)
     + (u.email ? '<div style="margin-top:12px;font-size:13px;color:#2ECC71">📧 ' + u.email + '</div>' : '<div style="margin-top:12px;font-size:13px;color:#F39C12">⚠ Nema e-mail adrese</div>');
   openModal('modalUplatnica');
+  // Generate HUB-3 visual barcode area
+  setTimeout(() => {
+    const barkodDiv = document.getElementById('hub3Barkod');
+    if (!barkodDiv) return;
+    // HUB-3 format data
+    const hub3 = 'HRVHUB3\nEUR\n' + String(u.iznos * 100).padStart(15,'0') + '\n\n\n\nKarate klub Djurdjevac\nUlica Andrije Hebranga 12\n48350 Djurdjevac\nHR8823600001102289908\nHR99\n\nClanarina ' + u.mjesec + ' ' + u.godina + ' ' + u.ime + ' ' + u.prezime;
+
+    barkodDiv.innerHTML = `
+      <div style="background:#fff;border-radius:8px;padding:14px;text-align:center">
+        <div style="font-size:10px;color:#333;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">HUB-3 Podaci za plaćanje</div>
+        <div style="font-family:monospace;font-size:10px;color:#111;text-align:left;background:#f5f5f5;padding:10px;border-radius:6px;word-break:break-all;line-height:1.6">
+          <div><strong>Primatelj:</strong> Karate klub Đurđevac</div>
+          <div><strong>IBAN:</strong> HR8823600001102289908</div>
+          <div><strong>Iznos:</strong> ${u.iznos},00 EUR</div>
+          <div><strong>Model:</strong> HR99</div>
+          <div><strong>Poziv na broj:</strong> Clanarina ${u.mjesec} ${u.godina}</div>
+          <div><strong>Opis:</strong> ${u.ime} ${u.prezime}</div>
+        </div>
+        <div style="margin-top:8px;font-size:10px;color:#888">Za mobilno plaćanje skenirajte QR kod vaše banke</div>
+      </div>`;
+  }, 200);
+  // Generate HUB-3 QR
+  if (u.iznos > 0) {
+    setTimeout(() => {
+      document.getElementById('hub3QrContainer').style.display = 'block';
+      genHUB3QR(
+        'hub3Canvas',
+        u.iznos,
+        'Karate klub Đurđevac',
+        'HR8823600001102289908',
+        'Clanarina ' + u.mjesec + ' ' + u.godina,
+        u.ime + ' ' + u.prezime
+      );
+    }, 200);
+  }
 
 }
 
@@ -4102,6 +6111,170 @@ function filterNeplaceni() {
 // Init
 updateStats();
 renderKalendar();
+provjeriSesiju();
+initMobileNav();
 </script>
+
+<script>
+// ========== FIREBASE ==========
+const firebaseConfig = {
+  apiKey: "AIzaSyDTIt2rsrREtD5AEj_Ilix8sddBFn8TdbM",
+  authDomain: "digitalni-tajnik.firebaseapp.com",
+  projectId: "digitalni-tajnik",
+  storageBucket: "digitalni-tajnik.firebasestorage.app",
+  messagingSenderId: "270835926692",
+  appId: "1:270835926692:web:5a2982d5cf73cf14cbc831"
+};
+
+let db = null;
+let fbEnabled = false;
+
+function fbInit() {
+  try {
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+    fbEnabled = true;
+    console.log('Firebase OK');
+    fbUpdateStatus(true);
+    fbSyncAll();
+  } catch(e) {
+    console.warn('Firebase error:', e);
+    fbEnabled = false;
+    fbUpdateStatus(false);
+  }
+}
+
+function fbUpdateStatus(ok) {
+  const el = document.querySelector('.header-ai');
+  if (!el) return;
+  if (ok) {
+    el.innerHTML = el.innerHTML.replace('●', '<span style="color:#2ECC71">●</span>') + ' <span style="font-size:11px;color:#2ECC71">☁️ sync</span>';
+  }
+}
+
+// ── ČLANOVI ──────────────────────────────────────
+async function fbSaveClanovi() {
+  if (!fbEnabled || !db) return;
+  try {
+    const batch = db.batch();
+    state.clanovi.forEach(c => {
+      // Remove foto from Firebase to save space - keep locally
+      const data = {...c};
+      delete data.foto;
+      batch.set(db.collection('clanovi').doc(String(c.id)), data);
+    });
+    await batch.commit();
+  } catch(e) { console.warn('fbSaveClanovi:', e.message); }
+}
+
+async function fbLoadClanovi() {
+  if (!fbEnabled || !db) return;
+  try {
+    const snap = await db.collection('clanovi').get();
+    if (snap.empty) { await fbSaveClanovi(); return; }
+    const remote = snap.docs.map(d => d.data());
+    // Merge - keep local foto
+    remote.forEach(rc => {
+      const local = state.clanovi.find(c => String(c.id) === String(rc.id));
+      if (local && local.foto) rc.foto = local.foto;
+    });
+    state.clanovi = remote;
+    save();
+    if (typeof renderClanovi === 'function') renderClanovi();
+    updateStats();
+    toast('👥 ' + remote.length + ' članova sinkronizirano');
+  } catch(e) { console.warn('fbLoadClanovi:', e.message); }
+}
+
+// ── TRENINZI ─────────────────────────────────────
+async function fbSaveTreninzi() {
+  if (!fbEnabled || !db) return;
+  try {
+    const batch = db.batch();
+    dnTreninzi.forEach(t => {
+      batch.set(db.collection('treninzi').doc(String(t.id)), t);
+    });
+    await batch.commit();
+  } catch(e) { console.warn('fbSaveTreninzi:', e.message); }
+}
+
+async function fbLoadTreninzi() {
+  if (!fbEnabled || !db) return;
+  try {
+    const snap = await db.collection('treninzi').get();
+    if (!snap.empty) {
+      const remote = snap.docs.map(d => d.data());
+      dnTreninzi = remote;
+      localStorage.setItem('kk_treninzi', JSON.stringify(dnTreninzi));
+    }
+  } catch(e) { console.warn('fbLoadTreninzi:', e.message); }
+}
+
+// ── FINANCIJE ────────────────────────────────────
+async function fbSaveFinancije() {
+  if (!fbEnabled || !db) return;
+  try {
+    const batch = db.batch();
+    finStavke.forEach(s => {
+      batch.set(db.collection('financije').doc(String(s.id)), s);
+    });
+    await batch.commit();
+  } catch(e) { console.warn('fbSaveFinancije:', e.message); }
+}
+
+async function fbLoadFinancije() {
+  if (!fbEnabled || !db) return;
+  try {
+    const snap = await db.collection('financije').get();
+    if (!snap.empty) {
+      finStavke = snap.docs.map(d => d.data());
+      localStorage.setItem('kk_financije', JSON.stringify(finStavke));
+    }
+  } catch(e) { console.warn('fbLoadFinancije:', e.message); }
+}
+
+// ── SYNC ALL ──────────────────────────────────────
+async function fbSyncAll() {
+  if (!fbEnabled) return;
+  await fbLoadClanovi();
+  await fbLoadTreninzi();
+  await fbLoadFinancije();
+  toast('✅ Sinkronizacija završena!');
+}
+
+// ── HOOK INTO EXISTING SAVE FUNCTIONS ─────────────
+// Wrap save() to also push to Firebase
+const _origSave = window.save || save;
+window.save = function() {
+  _origSave();
+  if (fbEnabled) setTimeout(fbSaveClanovi, 300);
+};
+
+// Wrap dnSave
+const _origDnSave = window.dnSave || dnSave;
+window.dnSave = function() {
+  _origDnSave();
+  if (fbEnabled) setTimeout(fbSaveTreninzi, 300);
+};
+
+// Wrap finSave
+const _origFinSave = window.finSave || finSave;
+window.finSave = function() {
+  _origFinSave();
+  if (fbEnabled) setTimeout(fbSaveFinancije, 300);
+};
+
+// Init Firebase after successful login
+document.addEventListener('fbLogin', () => fbInit());
+
+// Patch prijaviKorisnika to trigger Firebase
+const _origPrijavi = prijaviKorisnika;
+prijaviKorisnika = function() {
+  _origPrijavi();
+  setTimeout(fbInit, 500);
+};
+
+</script>
+
 </body>
 </html>

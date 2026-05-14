@@ -1315,7 +1315,10 @@
     <div id="emailovi" class="section">
       <div class="page-header">
         <div><h2>Email adrese</h2><p>Brzi unos za slanje uplatnica</p></div>
-        <button class="btn btn-primary" onclick="spremiEmailove()">💾 Spremi sve</button>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-secondary" onclick="posaljiSvimaMail()">📧 Pošalji svima</button>
+          <button class="btn btn-primary" onclick="spremiEmailove()">💾 Spremi sve</button>
+        </div>
       </div>
       <div class="content">
         <div style="background:rgba(240,165,0,0.1);border:1px solid var(--gold);border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:13px;color:var(--gold)">
@@ -3823,14 +3826,16 @@ const todayStr = today.toLocaleDateString('hr-HR', {weekday:'long', day:'numeric
 const SYSTEM_PROMPT = `Ti si DIGITALNI TAJNIK Karate kluba Đurđevac (KK Đurđevac). 
 Odgovaraš ISKLJUČIVO na hrvatskom jeziku.
 NIKADA ne govori da ne možeš nešto napraviti zbog tehničkih ograničenja.
+NIKADA ne objašnjavaj svoja ograničenja — samo napiši traženi dokument odmah.
 Danas je ${todayStr}.
 Tvoja uloga je pomagati tajniku i predsjedniku kluba s administrativnim poslovima.
 
-Kad te pitaju za slanje mailova — napiši gotov tekst maila koji korisnik može kopirati i poslati.
-Kad te pitaju za odluke — napiši gotovu odluku prema statutu.
-Kad te pitaju za obavijesti — napiši gotovu obavijest.
-Kad te pitaju za izvještaje — napiši gotov izvještaj.
-UVIJEK daj konkretan odgovor, nikad ne odbijaj pomoć i nikad ne pitaj za datum jer ga već znaš.
+Kad te pitaju za slanje mailova — odmah napiši gotov tekst maila, bez uvoda.
+Kad te pitaju za odluke — odmah napiši gotovu odluku prema statutu, bez uvoda.
+Kad te pitaju za obavijesti — odmah napiši gotovu obavijest, bez uvoda.
+Kad te pitaju za izvještaje — odmah napiši gotov izvještaj, bez uvoda.
+UVIJEK počni direktno s dokumentom, bez objašnjavanja što ćeš napraviti.
+Nikad ne pitaj za datum jer ga već znaš.
 
 PODACI O KLUBU:
 - Naziv: Karate klub "Đurđevac" / KK Đurđevac
@@ -4941,6 +4946,26 @@ function gdprOznaci(id) {
   save();
   gdprRenderLista();
   toast(c.ime + ' ' + c.prezime + ' — privola potpisana!');
+}
+
+
+function posaljiSvimaMail() {
+  const emailovi = state.clanovi
+    .filter(c => c.status === 'aktivan' && c.email)
+    .map(c => c.email);
+  
+  if (emailovi.length === 0) {
+    toast('Nema unesenih email adresa! Unesite ih u Email adrese sekciji.', 'err');
+    return;
+  }
+
+  const bcc = emailovi.join(',');
+  const subject = encodeURIComponent('Obavijest — Karate klub Đurđevac');
+  const body = encodeURIComponent('Poštovani,\n\n\n\nSrdačan pozdrav,\nKarate klub Đurđevac');
+  
+  const mailto = `mailto:?bcc=${bcc}&subject=${subject}&body=${body}`;
+  window.open(mailto);
+  toast('Otvara se mail s ' + emailovi.length + ' primatelja!');
 }
 
 // ========== BRZI UNOS EMAILOVA ==========

@@ -4955,23 +4955,25 @@ function gdprOznaci(id) {
 }
 
 
-function posaljiSvimaMail() {
+function posaljiSvimaMail(subject, body) {
   const emailovi = state.clanovi
-    .filter(c => c.status === 'aktivan' && c.email)
-    .map(c => c.email);
+    .filter(c => c.status === 'aktivan' && c.email && c.email.trim())
+    .map(c => c.email.trim());
   
   if (emailovi.length === 0) {
     toast('Nema unesenih email adresa! Unesite ih u Email adrese sekciji.', 'err');
+    showSection('emailovi');
     return;
   }
 
-  const bcc = emailovi.join(',');
-  const subject = encodeURIComponent('Obavijest — Karate klub Đurđevac');
-  const body = encodeURIComponent('Poštovani,\n\n\n\nSrdačan pozdrav,\nKarate klub Đurđevac');
+  const subj = encodeURIComponent(subject || 'Obavijest — Karate klub Đurđevac');
+  const bod = encodeURIComponent(body || 'Poštovani,\n\n\n\nSrdačan pozdrav,\nKarate klub Đurđevac');
+  const bcc = encodeURIComponent(emailovi.join(','));
   
-  const mailto = `mailto:?bcc=${bcc}&subject=${subject}&body=${body}`;
-  window.open(mailto);
-  toast('Otvara se mail s ' + emailovi.length + ' primatelja!');
+  // Open Gmail compose directly in browser
+  const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=karate.djurdjevac@gmail.com&bcc=${bcc}&su=${subj}&body=${bod}`;
+  window.open(gmailUrl, '_blank');
+  toast('✅ Otvara se Gmail s ' + emailovi.length + ' primatelja!');
 }
 
 // ========== BRZI UNOS EMAILOVA ==========

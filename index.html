@@ -4984,16 +4984,7 @@ async function posaljiSvimaMail(subject, body) {
   logActivity('📧', 'Grupni mail: "' + subj + '" → ' + ok + ' primatelja');
 }
 
-  const subj = encodeURIComponent(subject || 'Obavijest — Karate klub Đurđevac');
-  const bod = encodeURIComponent(body || 'Poštovani,\n\n\n\nSrdačan pozdrav,\nKarate klub Đurđevac');
-  const bcc = encodeURIComponent(emailovi.join(','));
   
-  // Open Gmail compose directly in browser
-  const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=karate.djurdjevac@gmail.com&bcc=${bcc}&su=${subj}&body=${bod}`;
-  window.open(gmailUrl, '_blank');
-  toast('✅ Otvara se Gmail s ' + emailovi.length + ' primatelja!');
-}
-
 // ========== BRZI UNOS EMAILOVA ==========
 function renderEmailForma() {
   const el = document.getElementById('email-lista-forma');

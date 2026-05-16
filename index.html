@@ -614,6 +614,29 @@
     #mobileOverlay { display: none !important; }
   }
 
+  /* FLOATING AI BUTTON */
+  #floatingAI {
+    position: fixed;
+    bottom: 80px;
+    right: 20px;
+    width: 52px;
+    height: 52px;
+    background: linear-gradient(135deg, #F0A500, #e09400);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    font-size: 22px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 490;
+    box-shadow: 0 4px 16px rgba(240,165,0,0.5);
+    transition: transform 0.2s;
+  }
+  #floatingAI:hover { transform: scale(1.1); }
+  #floatingAI:active { transform: scale(0.95); }
+
   #scrollTopBtn {
     position: fixed;
     bottom: 24px;
@@ -634,7 +657,6 @@
   }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.0.4/tesseract.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 </head>
 <body>
 
@@ -1656,7 +1678,6 @@
         <pre id="odlukaText"></pre>
         <div class="doc-output-actions">
           <button class="btn btn-secondary btn-sm" onclick="copyText('odlukaText')">📋 Kopiraj</button>
-          <button class="btn btn-gold btn-sm" onclick="posaljiObavijestMailom(document.getElementById('odlukaText').textContent, document.getElementById('oPredmet').value, this)">📧 Pošalji mailom</button>
           <button class="btn btn-primary btn-sm" onclick="spremiOdluku()">💾 Spremi odluku</button>
         </div>
       </div>
@@ -1729,7 +1750,6 @@
         <pre id="izvjestajText"></pre>
         <div class="doc-output-actions">
           <button class="btn btn-secondary btn-sm" onclick="copyText('izvjestajText')">📋 Kopiraj za portal</button>
-          <button class="btn btn-gold btn-sm" onclick="posaljiObavijestMailom(document.getElementById('izvjestajText').textContent, document.getElementById('iNaziv').value, this)">📧 Pošalji mailom</button>
           <button class="btn btn-primary btn-sm" onclick="spremiIzvjestaj()">💾 Spremi izvještaj</button>
         </div>
       </div>
@@ -1785,7 +1805,6 @@
         <pre id="obavijestText"></pre>
         <div class="doc-output-actions">
           <button class="btn btn-secondary btn-sm" onclick="copyText('obavijestText')">📋 Kopiraj</button>
-          <button class="btn btn-gold btn-sm" onclick="posaljiObavijestMailom(document.getElementById('obavijestText').textContent, document.getElementById('kVrsta').value, this)">📧 Pošalji mailom</button>
           <button class="btn btn-primary btn-sm" onclick="spremiObavijest()">💾 Spremi obavijest</button>
         </div>
       </div>
@@ -2014,6 +2033,7 @@
 </div>
 
 <button id="scrollTopBtn" onclick="scrollToTop()" title="Na vrh">↑</button>
+<button id="floatingAI" onclick="showSection('ai')" title="AI Tajnik">🤖</button>
 
 <!-- MODAL: LIJEČNIČKI PREGLED -->
 <div class="modal-overlay" id="modalLijecnicki">
@@ -2887,6 +2907,9 @@ function toast(msg, type='success') {
 function showSection(id) {
   // Close mobile nav when item selected
   if (window.innerWidth <= 768) closeMobileNav();
+  // Hide/show floating AI button
+  const fab = document.getElementById('floatingAI');
+  if (fab) fab.style.display = id === 'ai' ? 'none' : 'flex';
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
   document.getElementById(id).classList.add('active');
@@ -4010,12 +4033,19 @@ async function sendAI() {
 function appendMsg(role, content) {
   const id = 'msg_' + Date.now();
   const msgs = document.getElementById('aiMessages');
-  const icon = role === 'user' ? '👤' : '🥋';
-  msgs.insertAdjacentHTML('beforeend', `
-    <div class="msg ${role}" id="${id}">
-      <div class="msg-avatar">${icon}</div>
-      <div class="msg-bubble">${content}</div>
-    </div>`);
+  if (role === 'user') {
+    msgs.insertAdjacentHTML('beforeend', `
+      <div class="msg ${role}" id="${id}" style="flex-direction:row-reverse">
+        <div class="msg-avatar">👤</div>
+        <div class="msg-bubble" style="background:rgba(200,16,46,0.2);border:1px solid rgba(200,16,46,0.4);color:#EDEDED">${content}</div>
+      </div>`);
+  } else {
+    msgs.insertAdjacentHTML('beforeend', `
+      <div class="msg ${role}" id="${id}">
+        <div class="msg-avatar">🥋</div>
+        <div class="msg-bubble">${content}</div>
+      </div>`);
+  }
   msgs.scrollTop = msgs.scrollHeight;
   return id;
 }
@@ -4959,32 +4989,27 @@ function gdprOznaci(id) {
 }
 
 
-async function posaljiSvimaMail(subject, body) {
-  const primatelji = state.clanovi.filter(c => c.status === 'aktivan' && c.email && c.email.trim());
-  if (primatelji.length === 0) {
+function posaljiSvimaMail(subject, body) {
+  const emailovi = state.clanovi
+    .filter(c => c.status === 'aktivan' && c.email && c.email.trim())
+    .map(c => c.email.trim());
+  
+  if (emailovi.length === 0) {
     toast('Nema unesenih email adresa! Unesite ih u Email adrese sekciji.', 'err');
     showSection('emailovi');
     return;
   }
-  const subj = subject || 'Obavijest — Karate klub Đurđevac';
-  const msg = body || 'Poštovani,\n\nSrdačan pozdrav,\nKarate klub Đurđevac';
-  if (!confirm('Slanje na ' + primatelji.length + ' adresa putem EmailJS-a. Nastaviti?')) return;
-  let ok = 0;
-  for (const c of primatelji) {
-    const sent = await ejsSend({
-      to_email: c.email.trim(),
-      to_name: c.roditelji || (c.ime + ' ' + c.prezime),
-      subject: subj,
-      message: msg
-    });
-    if (sent) ok++;
-    await new Promise(r => setTimeout(r, 450));
-  }
-  toast('✅ Poslano na ' + ok + '/' + primatelji.length + ' adresa!');
-  logActivity('📧', 'Grupni mail: "' + subj + '" → ' + ok + ' primatelja');
+
+  const subj = encodeURIComponent(subject || 'Obavijest — Karate klub Đurđevac');
+  const bod = encodeURIComponent(body || 'Poštovani,\n\n\n\nSrdačan pozdrav,\nKarate klub Đurđevac');
+  const bcc = encodeURIComponent(emailovi.join(','));
+  
+  // Open Gmail compose directly in browser
+  const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=karate.djurdjevac@gmail.com&bcc=${bcc}&su=${subj}&body=${bod}`;
+  window.open(gmailUrl, '_blank');
+  toast('✅ Otvara se Gmail s ' + emailovi.length + ' primatelja!');
 }
 
-  
 // ========== BRZI UNOS EMAILOVA ==========
 function renderEmailForma() {
   const el = document.getElementById('email-lista-forma');
@@ -5407,7 +5432,7 @@ function ljRenderLista() {
         <div style="text-align:right">
           <span style="font-size:12px;color:${boja};font-weight:600">${status}</span>
           <div style="margin-top:4px">
-            <button onclick="ljObrisi('${p.id}')" style="background:none;border:none;color:#666;cursor:pointer;font-size:12px">✕ Obriši</button><button onclick="posaljiPodsjetnikLijecnicki(ljPregledi.find(x=>x.id==='${p.id}'))" style="background:none;border:1px solid #333;border-radius:6px;padding:3px 8px;cursor:pointer;font-size:11px;color:#aaa;margin-left:4px">📧 Podsjetnik</button>
+            <button onclick="ljObrisi('${p.id}')" style="background:none;border:none;color:#666;cursor:pointer;font-size:12px">✕ Obriši</button>
           </div>
         </div>
       </div>
@@ -5724,7 +5749,7 @@ function pnPrikaziDetalje(id) {
   `;
 }
 
-async function odobriPutniNalog() {
+function odobriPutniNalog() {
   const n = pnNalozi.find(x => x.id === pnCurrentId);
   if (!n) return;
   n.status = 'odobreno';
@@ -5732,7 +5757,6 @@ async function odobriPutniNalog() {
   pnPrikaziDetalje(pnCurrentId);
   logActivity('✅', 'Odobren putni nalog: ' + n.ime);
   toast('Putni nalog odobren!');
-  await posaljiPotvrduNaloga(n);
 }
 
 function obrisiPutniNalog() {
@@ -6041,54 +6065,27 @@ Tel: 098/805-555
 E-mail: karate.djurdjevac@gmail.com`;
 }
 
-async function posaljiMailObj(u) {
-  if (!u.email) { toast('Član ' + u.ime + ' ' + u.prezime + ' nema e-mail adresu!', 'err'); return; }
-  const rokStr = u.rok ? new Date(u.rok + 'T12:00:00').toLocaleDateString('hr-HR') : '20. u mjesecu';
-  const poruka = 'PODACI ZA UPLATU ČLANARINE\n' +
-    '────────────────────────────────\n' +
-    'Primatelj:  Karate klub Đurđevac\n' +
-    'Adresa:     Ul. Andrije Hebranga 12, 48350 Đurđevac\n' +
-    'IBAN:       HR8823600001102289908\n' +
-    'Iznos:      ' + u.iznos + ',00 EUR\n' +
-    'Opis:       Članarina ' + u.mjesec + ' ' + u.godina + '\n' +
-    'Napomena:   ' + u.ime + ' ' + u.prezime + '\n' +
-    '────────────────────────────────\n' +
-    'Rok plaćanja: ' + rokStr + '\n' +
-    (u.napomena_iznos === '2. dijete' ? '\nNapomena: Drugi član obitelji — povlaštena cijena 15 €.\n' : '') +
-    '\nHvala na povjerenju i redovitoj uplati!\n\n' +
-    'Sportski pozdrav,\nKK Đurđevac · 098/805-555 · karate.djurdjevac@gmail.com';
-  const ok = await ejsSend({
-    to_email: u.email,
-    to_name: u.roditelji || (u.ime + ' ' + u.prezime),
-    subject: 'KK Đurđevac — Članarina ' + u.mjesec + ' ' + u.godina + ' — ' + u.ime + ' ' + u.prezime,
-    message: poruka
-  });
-  if (ok) toast('✅ Mail poslan: ' + u.ime + ' ' + u.prezime);
+function posaljiMailObj(u) {
+  const subject = encodeURIComponent('KK Djurdjevac - Clanarina ' + u.mjesec + ' ' + u.godina + ' - ' + u.ime + ' ' + u.prezime);
+  const body = encodeURIComponent(napraviMailBody(u));
+  const a = document.createElement('a');
+  a.href = 'mailto:' + u.email + '?subject=' + subject + '&body=' + body;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
 }
 
-async function posaljiSveMailove() {
+function posaljiSveMailove() {
   const lista = window._zadnjeUplatnice;
   if (!lista || lista.length === 0) { toast('Najprije generirajte uplatnice!', 'err'); return; }
-  const bezMaila = (window._sveUplatnice || []).filter(u => u.iznos > 0 && !u.email);
-  if (!confirm('Slanje ' + lista.length + ' mailova putem EmailJS-a' + (bezMaila.length > 0 ? ' (' + bezMaila.length + ' bez e-maila preskočeno)' : '') + '. Nastaviti?')) return;
-  const btn = document.querySelector('[onclick="posaljiSveMailove()"]');
-  if (btn) { btn.disabled = true; btn.textContent = '⏳ Šalje se 0/' + lista.length + '...'; }
-  let ok = 0, err = 0;
-  for (let i = 0; i < lista.length; i++) {
-    const u = lista[i];
-    const sent = await ejsSend({
-      to_email: u.email,
-      to_name: u.roditelji || (u.ime + ' ' + u.prezime),
-      subject: 'KK Đurđevac — Članarina ' + u.mjesec + ' ' + u.godina + ' — ' + u.ime + ' ' + u.prezime,
-      message: 'PODACI ZA UPLATU\nPrimatelj: Karate klub Đurđevac\nIBAN: HR8823600001102289908\nIznos: ' + u.iznos + ',00 EUR\nOpis: Članarina ' + u.mjesec + ' ' + u.godina + '\nNapomena: ' + u.ime + ' ' + u.prezime + '\nRok: ' + (u.rok ? new Date(u.rok+'T12:00:00').toLocaleDateString('hr-HR') : '20. u mjesecu') + '\n\nHvala!\nKK Đurđevac · 098/805-555'
-    });
-    if (sent) ok++; else err++;
-    if (btn) btn.textContent = '⏳ Šalje se ' + (ok+err) + '/' + lista.length + '...';
-    await new Promise(r => setTimeout(r, 450));
-  }
-  if (btn) { btn.disabled = false; btn.textContent = '📧 Pošalji sve mailove odjednom'; }
-  toast('✅ Poslano: ' + ok + (err > 0 ? ' | ❌ Greška: ' + err : ''));
-  logActivity('📧', 'Uplatnice mailom: ' + ok + ' uspješno' + (err > 0 ? ', ' + err + ' grešaka' : ''));
+  const bezMaila = (window._zadnjeUplatnice_svi || []).filter(u => u.iznos > 0 && !u.email);
+  if (!confirm(`Otvorit će se ${lista.length} mail prozora (samo oni koji imaju e-mail adresu).${bezMaila.length > 0 ? ' ' + bezMaila.length + ' članova nema e-mail.' : ''} Nastaviti?`)) return;
+  lista.forEach((u, i) => {
+    setTimeout(() => {
+      posaljiMailObj(u);
+    }, i * 800);
+  });
+  toast(`Šalje se ${lista.length} mailova...`);
 }
 
 function prikaziUplatnicuIdx(idx) {
@@ -6413,87 +6410,7 @@ prijaviKorisnika = function() {
   _origPrijavi();
   setTimeout(fbInit, 500);
 };
-// ========== EMAILJS INTEGRACIJA ==========
-const EJS_SERVICE  = 'service_hg62jsr';
-const EJS_TEMPLATE = 'template_2oq38d8';
-const EJS_PUBLIC   = 'HtsQTuabxo_LG6_cX';
 
-function ejsInit() {
-  if (typeof emailjs !== 'undefined') {
-    emailjs.init(EJS_PUBLIC);
-    console.log('✅ EmailJS inicijaliziran — KK Đurđevac');
-  } else {
-    setTimeout(ejsInit, 600);
-  }
-}
-ejsInit();
-
-async function ejsSend({ to_email, to_name, subject, message, email = 'karate.djurdjevac@gmail.com' }) {
-  if (typeof emailjs === 'undefined') {
-    toast('EmailJS nije učitan. Provjerite internet vezu.', 'err');
-    return false;
-  }
-  try {
-    await emailjs.send(EJS_SERVICE, EJS_TEMPLATE, {
-      to_email, to_name: to_name || to_email,
-      subject, message, email, name: 'KK Đurđevac'
-    });
-    return true;
-  } catch(e) {
-    console.error('EmailJS error:', e);
-    toast('Greška pri slanju: ' + (e && (e.text || e.message) ? (e.text || e.message) : 'Provjeri EmailJS postavke'), 'err');
-    return false;
-  }
-}
-
-async function posaljiObavijestMailom(tekst, naslov, btnEl) {
-  const primatelji = state.clanovi.filter(c => c.status === 'aktivan' && c.email && c.email.trim());
-  if (primatelji.length === 0) { toast('Nema članova s e-mail adresama!', 'err'); return; }
-  if (!confirm('Poslati na ' + primatelji.length + ' e-mail adresa?')) return;
-  if (btnEl) { btnEl.disabled = true; btnEl.textContent = '⏳ Šalje se...'; }
-  let ok = 0;
-  for (const c of primatelji) {
-    const sent = await ejsSend({
-      to_email: c.email.trim(),
-      to_name: c.roditelji || (c.ime + ' ' + c.prezime),
-      subject: 'KK Đurđevac — ' + naslov,
-      message: tekst
-    });
-    if (sent) ok++;
-    await new Promise(r => setTimeout(r, 450));
-  }
-  if (btnEl) { btnEl.disabled = false; btnEl.textContent = '📧 Pošalji mailom'; }
-  toast('✅ Poslano na ' + ok + '/' + primatelji.length + ' adresa!');
-  logActivity('📧', 'Mailom: "' + naslov + '" → ' + ok + ' primatelja');
-}
-
-async function posaljiPodsjetnikLijecnicki(p) {
-  if (!p) return;
-  const clan = state.clanovi.find(c => c.id == p.clanId);
-  if (!clan || !clan.email) { toast('Nema e-mail adrese za ovog člana!', 'err'); return; }
-  const vrijediDo = new Date(p.vrijedi + 'T12:00:00').toLocaleDateString('hr-HR');
-  const dana = Math.ceil((new Date(p.vrijedi) - new Date()) / 86400000);
-  const ok = await ejsSend({
-    to_email: clan.email,
-    to_name: clan.roditelji || (clan.ime + ' ' + clan.prezime),
-    subject: 'KK Đurđevac — Podsjetnik: liječnički pregled ističe',
-    message: 'Podsjetnik za ' + clan.ime + ' ' + clan.prezime + ':\n\nLiječnički pregled ističe ' + vrijediDo + (dana > 0 ? ' (za ' + dana + ' dana)' : ' (istekao!)') + '.\n\nMolimo obnovite pregled što prije — bez valjanog pregleda nije moguće sudjelovanje na treninzima i natjecanjima.\n\nZa pitanja: 098/805-555\n\nKK Đurđevac'
-  });
-  if (ok) toast('✅ Podsjetnik poslan: ' + clan.ime + ' ' + clan.prezime);
-}
-
-async function posaljiPotvrduNaloga(n) {
-  const clan = state.clanovi.find(c => (c.ime + ' ' + c.prezime).toLowerCase() === n.ime.toLowerCase());
-  const email = clan && clan.email ? clan.email : null;
-  if (!email) { console.log('Nema emaila za putni nalog — preskačem'); return; }
-  const ok = await ejsSend({
-    to_email: email,
-    to_name: n.ime,
-    subject: 'KK Đurđevac — Putni nalog odobren',
-    message: 'Vaš putni nalog je ODOBREN.\n\nRelacija: ' + n.polaziste + ' → ' + n.odrediste + '\nSvrha: ' + n.svrha + '\nDatum: ' + new Date(n.polazak).toLocaleDateString('hr-HR') + '\nIznos za isplatu: ' + n.ukupno + ' EUR\n\nIsplata će biti izvršena u najkraćem mogućem roku.\n\nKK Đurđevac'
-  });
-  if (ok) toast('✅ Potvrda o odobrenju poslana: ' + n.ime);
-}
 </script>
 
 </body>

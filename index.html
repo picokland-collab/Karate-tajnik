@@ -2537,6 +2537,33 @@
     </div>
   </div>
 </div>
+
+<div class="modal-overlay" id="modalUrediOdluku">
+  <div class="modal" style="max-width:700px">
+    <div class="modal-header">
+      <h3>Uredi odluku</h3>
+      <button class="modal-close" onclick="closeModal('modalUrediOdluku')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="urediOdlukaId">
+      <div class="form-grid">
+        <div class="form-group full"><label>Predmet</label><input type="text" id="urediOdlukaPredmet"></div>
+        <div class="form-group"><label>Vrsta</label><select id="urediOdlukaVrsta">
+          <option>Odluka Upravnog odbora</option>
+          <option>Odluka Skupštine</option>
+          <option>Zaključak</option>
+          <option>Pravilnik</option>
+        </select></div>
+        <div class="form-group"><label>Datum</label><input type="date" id="urediOdlukaDatum"></div>
+        <div class="form-group full"><label>Sadržaj</label><textarea id="urediOdlukaSadrzaj" style="min-height:300px"></textarea></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modalUrediOdluku')">Odustani</button>
+      <button class="btn btn-primary" onclick="spremiUrediOdluku()">💾 Spremi izmjene</button>
+    </div>
+  </div>
+</div>
 <div id="toast"></div>
 
 <script>
@@ -3371,6 +3398,7 @@ function renderOdluke() {
         </div>
         <div class="card-actions">
           <button class="btn btn-secondary btn-sm" onclick="prikaziOdluku(${o.id})">Prikaži</button>
+          <button class="btn btn-secondary btn-sm" onclick="urediOdluku(${o.id})">✏️ Uredi</button>
           <button class="btn btn-sm" style="background:rgba(200,16,46,0.15);color:#ff5a70;border:1px solid rgba(200,16,46,0.2)" onclick="obrisiOdluku(${o.id})">✕</button>
         </div>
       </div>
@@ -6361,6 +6389,31 @@ function spremiAiOdluku(btnEl) {
   btnEl.textContent = '✅ Spremljeno';
   btnEl.disabled = true;
 }
+
+function urediOdluku(id) {
+  const o = state.odluke.find(x => x.id === id);
+  if (!o) return;
+  document.getElementById('urediOdlukaId').value = id;
+  document.getElementById('urediOdlukaPredmet').value = o.predmet || '';
+  document.getElementById('urediOdlukaVrsta').value = o.vrsta || 'Odluka Upravnog odbora';
+  document.getElementById('urediOdlukaDatum').value = o.datum || '';
+  document.getElementById('urediOdlukaSadrzaj').value = o.sadrzaj || '';
+  openModal('modalUrediOdluku');
+}
+function spremiUrediOdluku() {
+  const id = parseInt(document.getElementById('urediOdlukaId').value);
+  const o = state.odluke.find(x => x.id === id);
+  if (!o) return;
+  o.predmet = document.getElementById('urediOdlukaPredmet').value;
+  o.vrsta = document.getElementById('urediOdlukaVrsta').value;
+  o.datum = document.getElementById('urediOdlukaDatum').value;
+  o.sadrzaj = document.getElementById('urediOdlukaSadrzaj').value;
+  save();
+  renderOdluke();
+  closeModal('modalUrediOdluku');
+  toast('✅ Odluka ažurirana!');
+}
+
 // Init
 updateStats();
 renderKalendar();

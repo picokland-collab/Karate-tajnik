@@ -3323,7 +3323,7 @@ Budi koncizan i formalan. Koristi standardni format službenih dokumenata.`;
       method: 'POST',
       headers: anthropicHeaders(),
       body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
+        model: 'meta-llama/llama-4-scout-17b-16e-instruct',
         max_tokens: 1000,
         messages: [{ role: 'user', content: prompt }]
       })
@@ -3431,7 +3431,7 @@ Napiši uzbudljiv, pozitivan i informativan tekst na hrvatskom jeziku koji:
       method: 'POST',
       headers: anthropicHeaders(),
       body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
+        model: 'meta-llama/llama-4-scout-17b-16e-instruct',
         max_tokens: 1000,
         messages: [{ role: 'user', content: prompt }]
       })
@@ -3535,7 +3535,7 @@ Napiši kratku, jasnu obavijest koja:
       method: 'POST',
       headers: anthropicHeaders(),
       body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
+        model: 'meta-llama/llama-4-scout-17b-16e-instruct',
         max_tokens: 1000,
         messages: [{ role: 'user', content: prompt }]
       })
@@ -4079,7 +4079,7 @@ async function sendAI() {
       method: 'POST',
       headers: anthropicHeaders(),
       body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
+        model: 'meta-llama/llama-4-scout-17b-16e-instruct',
         max_tokens: 1000,
         messages: [{role:'system',content:SYSTEM_PROMPT}, ...chatHistory]
       })
@@ -4166,7 +4166,7 @@ Napiši kompletnu, formalnu izjavu s popunjenim podacima. Na kraju navedi mjesto
       method: 'POST',
       headers: anthropicHeaders(),
       body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
+        model: 'meta-llama/llama-4-scout-17b-16e-instruct',
         max_tokens: 1000,
         messages: [{ role: 'user', content: prompt }]
       })
@@ -4546,7 +4546,7 @@ async function planGenerirajAI() {
       method: 'POST',
       headers: anthropicHeaders(),
       body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile', max_tokens: 1000,
+        model: 'meta-llama/llama-4-scout-17b-16e-instruct', max_tokens: 1000,
         messages: [{ role: 'user', content: `Napiši ${PLAN_VRSTA_LABEL[vrsta]} za Karate klub Đurđevac za ${god}. godinu. Klub ima ~60 članova, djeca i mladi, karate sport. Temelji se na statutu kluba i Zakonu o udrugama. Budi koncizan i konkretan.` }]
       })
     });

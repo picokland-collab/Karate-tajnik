@@ -6313,7 +6313,7 @@ function klub(key) { return getPostavke()[key] || ''; }
 // ========== EMAILJS ==========
 function ejsReinit() {
   const p = getPostavke();
-  if(typeof emailjs !== 'undefined' && p.ejsPublic) { emailjs.init(p.ejsPublic); console.log('✅ EmailJS init'); }
+  if(typeof emailjs !== 'undefined' && p.ejsPublic) { emailjs.init(p.ejsPublic); }
   else { setTimeout(ejsReinit, 800); }
 }
 ejsReinit();
@@ -6503,14 +6503,12 @@ async function fbInit() {
     const r = await fetch(`${FB_BASE}?key=${FB_API_KEY}&pageSize=1`);
     if (r.ok) {
       fbEnabled = true;
-      console.log('Firebase REST OK');
       fbUpdateStatus(true);
       fbSyncAll();
     } else {
       throw new Error('HTTP ' + r.status);
     }
   } catch(e) {
-    console.warn('Firebase REST error:', e.message);
     fbEnabled = false;
     fbUpdateStatus(false);
   }
@@ -6533,7 +6531,7 @@ async function fbSaveClanovi() {
       delete data.foto; // Save space
       await fbSet('clanovi', String(c.id), data);
     }
-  } catch(e) { console.warn('fbSaveClanovi:', e.message); }
+  } catch(e) { }
 }
 
 async function fbLoadClanovi() {
@@ -6551,7 +6549,7 @@ async function fbLoadClanovi() {
     if (typeof renderClanovi === 'function') renderClanovi();
     updateStats();
     toast('👥 ' + remote.length + ' članova sinkronizirano iz oblaka!');
-  } catch(e) { console.warn('fbLoadClanovi:', e.message); }
+  } catch(e) { }
 }
 
 // ── TRENINZI ─────────────────────────────────────
@@ -6561,7 +6559,7 @@ async function fbSaveTreninzi() {
     for (const t of dnTreninzi) {
       await fbSet('treninzi', String(t.id), t);
     }
-  } catch(e) { console.warn('fbSaveTreninzi:', e.message); }
+  } catch(e) { }
 }
 
 async function fbLoadTreninzi() {
@@ -6572,7 +6570,7 @@ async function fbLoadTreninzi() {
       dnTreninzi = remote.filter(t => t && t.id);
       localStorage.setItem('kk_treninzi', JSON.stringify(dnTreninzi));
     }
-  } catch(e) { console.warn('fbLoadTreninzi:', e.message); }
+  } catch(e) { }
 }
 
 // ── FINANCIJE ────────────────────────────────────
@@ -6582,7 +6580,7 @@ async function fbSaveFinancije() {
     for (const s of finStavke) {
       await fbSet('financije', String(s.id), s);
     }
-  } catch(e) { console.warn('fbSaveFinancije:', e.message); }
+  } catch(e) { }
 }
 
 async function fbLoadFinancije() {
@@ -6593,7 +6591,7 @@ async function fbLoadFinancije() {
       finStavke = remote.filter(s => s && s.id);
       localStorage.setItem('kk_financije', JSON.stringify(finStavke));
     }
-  } catch(e) { console.warn('fbLoadFinancije:', e.message); }
+  } catch(e) { }
 }
 
 // ── SYNC ALL ──────────────────────────────────────

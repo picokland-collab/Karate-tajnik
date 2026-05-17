@@ -803,11 +803,16 @@
       </div>
       <div class="content">
         <div class="search-bar">
-          <input type="text" id="searchClan" placeholder="Pretraži po imenu, OIB-u..." oninput="renderClanovi()">
+          <input type="text" id="searchClan" placeholder="Pretraži po imenu, OIB-u..." oninput="renderClanovi()"><span id="clanCount" style="font-size:12px;color:var(--muted);white-space:nowrap;align-self:center"></span>
           <select id="filterStatus" onchange="renderClanovi()">
             <option value="">Svi statusi</option>
             <option value="aktivan">Aktivni</option>
             <option value="neaktivan">Neaktivni</option>
+          </select>
+          <select id="filterClanarina" onchange="renderClanovi()">
+            <option value="">Sve članarine</option>
+            <option value="da">Plaćena</option>
+            <option value="ne">Neplaćena</option>
           </select>
           <select id="filterKategorija" onchange="renderClanovi()">
             <option value="">Sve kategorije</option>
@@ -3154,15 +3159,19 @@ function renderClanovi() {
   const fs = document.getElementById('filterStatus')?.value || '';
   const fk = document.getElementById('filterKategorija')?.value || '';
   
+  const fc = document.getElementById('filterClanarina')?.value || '';
   let lista = state.clanovi.filter(c => {
     const match = (c.ime + ' ' + c.prezime + ' ' + (c.oib||'')).toLowerCase().includes(q);
     const st = !fs || c.status === fs;
     const kat = !fk || c.kategorija === fk;
+    const cl = !fc || c.clanarina === fc;
     const npl = !window._filterNeplaceni || c.clanarina === 'ne';
-    return match && st && kat && npl;
+    return match && st && kat && cl && npl;
   });
   
   const el = document.getElementById('tableClanovi');
+  const counter = document.getElementById('clanCount');
+  if (counter) counter.textContent = lista.length + ' članova';
   if (lista.length === 0) {
     el.innerHTML = '<div class="empty-state"><div class="icon">👥</div><p>Nema pronađenih članova.</p></div>';
     return;

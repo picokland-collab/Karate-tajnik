@@ -657,6 +657,7 @@
   }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.0.4/tesseract.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 </head>
 <body>
 
@@ -1678,6 +1679,7 @@
         <pre id="odlukaText"></pre>
         <div class="doc-output-actions">
           <button class="btn btn-secondary btn-sm" onclick="copyText('odlukaText')">📋 Kopiraj</button>
+          <button class="btn btn-gold btn-sm" onclick="posaljiObavijestMailom(document.getElementById('odlukaText').textContent,document.getElementById('oPredmet').value,this)">📧 Pošalji mailom</button>
           <button class="btn btn-primary btn-sm" onclick="spremiOdluku()">💾 Spremi odluku</button>
         </div>
       </div>
@@ -1750,6 +1752,7 @@
         <pre id="izvjestajText"></pre>
         <div class="doc-output-actions">
           <button class="btn btn-secondary btn-sm" onclick="copyText('izvjestajText')">📋 Kopiraj za portal</button>
+          <button class="btn btn-gold btn-sm" onclick="posaljiObavijestMailom(document.getElementById('izvjestajText').textContent,document.getElementById('iNaziv').value,this)">📧 Pošalji mailom</button>
           <button class="btn btn-primary btn-sm" onclick="spremiIzvjestaj()">💾 Spremi izvještaj</button>
         </div>
       </div>
@@ -1805,6 +1808,7 @@
         <pre id="obavijestText"></pre>
         <div class="doc-output-actions">
           <button class="btn btn-secondary btn-sm" onclick="copyText('obavijestText')">📋 Kopiraj</button>
+          <button class="btn btn-gold btn-sm" onclick="posaljiObavijestMailom(document.getElementById('obavijestText').textContent,document.getElementById('kVrsta').value,this)">📧 Pošalji mailom</button>
           <button class="btn btn-primary btn-sm" onclick="spremiObavijest()">💾 Spremi obavijest</button>
         </div>
       </div>
@@ -6187,6 +6191,63 @@ function filterNeplaceni() {
     window._filterNeplaceni = false;
   }, 50);
 }
+
+// ========== EMAILJS INTEGRACIJA ==========
+const EJS_SERVICE  = 'service_hg62jsr';
+const EJS_TEMPLATE = 'template_2oq38d8';
+const EJS_PUBLIC   = 'HtsQTuabxo_LG6_cX';
+
+function ejsInit() {
+  if (typeof emailjs !== 'undefined') {
+    emailjs.init(EJS_PUBLIC);
+  } else {
+    setTimeout(ejsInit, 600);
+  }
+}
+ejsInit();
+
+async function ejsSend({ to_email, to_name, subject, message, email = 'karate.djurdjevac@gmail.com' }) {
+  if (typeof emailjs === 'undefined') { toast('EmailJS nije učitan.', 'err'); return false; }
+  try {
+    await emailjs.send(EJS_SERVICE, EJS_TEMPLATE, { to_email, to_name: to_name || to_email, subject, message, email, name: 'KK Đurđevac' });
+    return true;
+  } catch(e) {
+    toast('Greška pri slanju: ' + (e && (e.text || e.message) ? (e.text || e.message) : 'EmailJS greška'), 'err');
+    return false;
+  }
+}
+
+async function posaljiObavijestMailom(tekst, naslov, btnEl) {
+  const primatelji = state.clanovi.filter(c => c.status === 'aktivan' && c.email && c.email.trim());
+  if (primatelji.length === 0) { toast('Nema e-mail adresa!', 'err'); return; }
+  if (!confirm('Poslati na ' + primatelji.length + ' adresa?')) return;
+  if (btnEl) { btnEl.disabled = true; btnEl.textContent = '⏳ Šalje se...'; }
+  let ok = 0;
+  for (const c of primatelji) {
+    if (await ejsSend({ to_email: c.email.trim(), to_name: c.roditelji || (c.ime + ' ' + c.prezime), subject: 'KK Đurđevac — ' + naslov, message: tekst })) ok++;
+    await new Promise(r => setTimeout(r, 450));
+  }
+  if (btnEl) { btnEl.disabled = false; btnEl.textContent = '📧 Pošalji mailom'; }
+  toast('✅ Poslano na ' + ok + '/' + primatelji.length + ' adresa!');
+  logActivity('📧', 'Mailom: "' + naslov + '" → ' + ok + ' primatelja');
+}
+
+async function posaljiPodsjetnikLijecnicki(p) {
+  if (!p) return;
+  const clan = state.clanovi.find(c => c.id == p.clanId);
+  if (!clan || !clan.email) { toast('Nema e-mail adrese!', 'err'); return; }
+  const vd = new Date(p.vrijedi + 'T12:00:00').toLocaleDateString('hr-HR');
+  const d = Math.ceil((new Date(p.vrijedi) - new Date()) / 86400000);
+  if (await ejsSend({ to_email: clan.email, to_name: clan.roditelji || (clan.ime + ' ' + clan.prezime), subject: 'KK Đurđevac — Podsjetnik: liječnički pregled ističe', message: 'Pregled za ' + clan.ime + ' ' + clan.prezime + ' ističe ' + vd + (d > 0 ? ' (za ' + d + ' dana)' : ' (istekao!)') + '.\n\nKK Đurđevac' }))
+    toast('✅ Podsjetnik poslan: ' + clan.ime + ' ' + clan.prezime);
+}
+
+async function posaljiPotvrduNaloga(n) {
+  const c = state.clanovi.find(x => (x.ime + ' ' + x.prezime).toLowerCase() === n.ime.toLowerCase());
+  if (!c || !c.email) return;
+  await ejsSend({ to_email: c.email, to_name: n.ime, subject: 'KK Đurđevac — Putni nalog odobren', message: 'Putni nalog odobren.\nRelacija: ' + n.polaziste + ' → ' + n.odrediste + '\nIznos: ' + n.ukupno + ' EUR\n\nKK Đurđevac' });
+}
+
 
 // Init
 updateStats();

@@ -6261,8 +6261,7 @@ async function posaljiPotvrduNaloga(n){
   if(!c||!c.email)return;
   await ejsSend({to_email:c.email,to_name:n.ime,subject:'KK Đurđevac — Putni nalog odobren',message:'Putni nalog odobren.\nRelacija: '+n.polaziste+' → '+n.odrediste+'\nIznos: '+n.ukupno+' EUR\n\nKK Đurđevac'});
 }
-// ========== EMAILJS ==========
-  provjeriSesiju();
+provjeriSesiju();
 initMobileNav();
 </script>
 

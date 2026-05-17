@@ -4087,7 +4087,14 @@ async function sendAI() {
     const data = await resp.json();
     const text = data.choices?.[0]?.message?.content || 'Greška pri komunikaciji.';
     
-    updateMsg(loadId, text);
+    const lowerText = text.toLowerCase();
+    const isDoc = lowerText.includes('odluka') || lowerText.includes('klasa:') || lowerText.includes('ur.broj') || lowerText.includes('obavijest') || lowerText.includes('izvještaj') || lowerText.includes('zaključak');
+    const extraBtns = isDoc ? `<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-gold btn-sm" onclick="spremiAiOdlukuBtn(this)">💾 Spremi u Odluke</button>
+      <button class="btn btn-secondary btn-sm" onclick="navigator.clipboard.writeText(this.closest('.msg').querySelector('.msg-bubble').innerText.split('💾')[0].trim());toast('Kopirano!')">📋 Kopiraj</button>
+    </div>` : '';
+    
+    updateMsg(loadId, text.replace(/\n/g,'<br>') + extraBtns);
     chatHistory.push({ role: 'assistant', content: text });
     
     // Keep history manageable
@@ -6327,6 +6334,33 @@ async function posaljiPotvrduNaloga(n) {
   await ejsSend({to_email:c.email,to_name:n.ime,subject:klub('naziv')+' — Putni nalog odobren',message:'Putni nalog odobren.\nRelacija: '+n.polaziste+' → '+n.odrediste+'\nIznos: '+n.ukupno+' EUR\n\n'+klub('naziv')});
 }
 
+function spremiAiOdlukuBtn(btnEl) {
+  const bubble = btnEl.closest('.msg').querySelector('.msg-bubble');
+  const tekst = bubble.innerText.split('💾')[0].trim();
+  const danas = new Date().toISOString().split('T')[0];
+  const predmet = tekst.split('\n')[0].replace(/^(ODLUKA|Odluka):?/i,'').trim().substring(0,60) || 'Odluka AI';
+  const odluka = { id: Date.now(), vrsta: 'Odluka Upravnog odbora', predmet, sadrzaj: tekst, datum: danas, autor: state.korisnik?.ime || 'AI Tajnik' };
+  state.odluke = state.odluke || [];
+  state.odluke.unshift(odluka);
+  save();
+  renderOdluke && renderOdluke();
+  toast('✅ Odluka spremljena!');
+  btnEl.textContent = '✅ Spremljeno';
+  btnEl.disabled = true;
+}
+function spremiAiOdluku(btnEl) {
+  const bubble = btnEl.closest('.msg-bubble');
+  const tekst = bubble.innerText.replace('💾 Spremi u Odluke','').replace('📋 Kopiraj','').trim();
+  const danas = new Date().toISOString().split('T')[0];
+  const predmet = tekst.split('\n')[0].replace(/^(ODLUKA|Odluka):?/i,'').trim().substring(0,60) || 'Odluka';
+  const odluka = { id: Date.now(), vrsta: 'Odluka Upravnog odbora', predmet, sadrzaj: tekst, datum: danas, autor: state.korisnik?.ime || 'AI Tajnik' };
+  state.odluke = state.odluke || [];
+  state.odluke.unshift(odluka);
+  save();
+  toast('✅ Odluka spremljena u Odluke i akti!');
+  btnEl.textContent = '✅ Spremljeno';
+  btnEl.disabled = true;
+}
 // Init
 updateStats();
 renderKalendar();

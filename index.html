@@ -1372,13 +1372,20 @@
       <div class="page-header">
         <div><h2>Email adrese</h2><p>Brzi unos za slanje uplatnica</p></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn btn-secondary" onclick="posaljiSvimaMail()">📧 Pošalji svima</button>
           <button class="btn btn-primary" onclick="spremiEmailove()">💾 Spremi sve</button>
         </div>
       </div>
       <div class="content">
         <div style="background:rgba(240,165,0,0.1);border:1px solid var(--gold);border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:13px;color:var(--gold)">
           💡 Unesite email adrese roditelja. Koristit će se za slanje uplatnica. Jedan email po članu.
+        </div>
+        <div class="card" style="margin-bottom:16px">
+          <div style="font-family:'Bebas Neue',sans-serif;letter-spacing:1px;font-size:15px;margin-bottom:14px;color:var(--muted)">POŠALJI SVIMA</div>
+          <div class="form-grid">
+            <div class="form-group full"><label>Naslov maila</label><input type="text" id="mail-svima-subject" placeholder="npr. Obavijest o treningu"></div>
+            <div class="form-group full"><label>Tekst maila</label><textarea id="mail-svima-body" style="min-height:120px" placeholder="Unesite tekst ili zalijepite iz AI Tajnika..."></textarea></div>
+          </div>
+          <button class="btn btn-gold" style="margin-top:10px" onclick="posaljiSvimaMail(document.getElementById('mail-svima-subject').value, document.getElementById('mail-svima-body').value)">📧 Pošalji svima</button>
         </div>
         <div id="email-lista-forma"></div>
         <div style="margin-top:16px;padding-bottom:20px">

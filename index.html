@@ -2592,7 +2592,7 @@ function initTheme() {
 
 // ========== API KEY MANAGEMENT ==========
 function anthropicHeaders() {
-  return { 'Content-Type': 'application/json', 'anthropic-dangerous-direct-browser-access': 'true' };
+  return { 'Content-Type': 'application/json', 'Authorization': 'Bearer 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' };
 }
 
 
@@ -3312,17 +3312,17 @@ Napiši formalnu odluku s:
 Budi koncizan i formalan. Koristi standardni format službenih dokumenata.`;
 
   try {
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: anthropicHeaders(),
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'llama-3.3-70b-versatile',
         max_tokens: 1000,
         messages: [{ role: 'user', content: prompt }]
       })
     });
     const data = await resp.json();
-    const text = data.content?.map(b => b.text || '').join('') || 'Greška pri generiranju.';
+    const text = data.choices?.[0]?.message?.content || 'Greška pri generiranju.';
     document.getElementById('odlukaText').textContent = text;
     document.getElementById('odlukaOutput').style.display = 'block';
   } catch(e) {
@@ -3420,17 +3420,17 @@ Napiši uzbudljiv, pozitivan i informativan tekst na hrvatskom jeziku koji:
 - Završava s hashtagovima: #KarateKlubĐurđevac #KKĐurđevac #karate #Đurđevac`;
 
   try {
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: anthropicHeaders(),
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'llama-3.3-70b-versatile',
         max_tokens: 1000,
         messages: [{ role: 'user', content: prompt }]
       })
     });
     const data = await resp.json();
-    const text = data.content?.map(b => b.text || '').join('') || 'Greška.';
+    const text = data.choices?.[0]?.message?.content || 'Greška.';
     document.getElementById('izvjestajText').textContent = text;
     document.getElementById('izvjestajOutput').style.display = 'block';
   } catch(e) {
@@ -3524,17 +3524,17 @@ Napiši kratku, jasnu obavijest koja:
 - Završava prijaznim pozdravom`;
 
   try {
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: anthropicHeaders(),
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'llama-3.3-70b-versatile',
         max_tokens: 1000,
         messages: [{ role: 'user', content: prompt }]
       })
     });
     const data = await resp.json();
-    const text = data.content?.map(b => b.text || '').join('') || 'Greška.';
+    const text = data.choices?.[0]?.message?.content || 'Greška.';
     document.getElementById('obavijestText').textContent = text;
     document.getElementById('obavijestOutput').style.display = 'block';
   } catch(e) {
@@ -4058,18 +4058,17 @@ async function sendAI() {
   document.getElementById('btnSendAI').disabled = true;
   
   try {
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: anthropicHeaders(),
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'llama-3.3-70b-versatile',
         max_tokens: 1000,
-        system: SYSTEM_PROMPT,
-        messages: chatHistory
+        messages: [{role:'system',content:SYSTEM_PROMPT}, ...chatHistory]
       })
     });
     const data = await resp.json();
-    const text = data.content?.map(b => b.text || '').join('') || 'Greška pri komunikaciji.';
+    const text = data.choices?.[0]?.message?.content || 'Greška pri komunikaciji.';
     
     updateMsg(loadId, text);
     chatHistory.push({ role: 'assistant', content: text });
@@ -4146,17 +4145,17 @@ Podaci kluba: KK Đurđevac, Ulica Andrije Hebranga 12, 48350 Đurđevac, OIB: 9
 Napiši kompletnu, formalnu izjavu s popunjenim podacima. Na kraju navedi mjesto za potpis roditelja/staratelja i predsjednika Ivana Juričića.`;
 
   try {
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: anthropicHeaders(),
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'llama-3.3-70b-versatile',
         max_tokens: 1000,
         messages: [{ role: 'user', content: prompt }]
       })
     });
     const data = await resp.json();
-    const text = data.content?.map(b => b.text || '').join('') || 'Greška.';
+    const text = data.choices?.[0]?.message?.content || 'Greška.';
     alert(text);
     navigator.clipboard.writeText(text);
     toast('Izjava generirana i kopirana!');
@@ -4526,16 +4525,16 @@ async function planGenerirajAI() {
   const btn = event.currentTarget;
   btn.textContent = '⏳ Generira se...'; btn.disabled = true;
   try {
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: anthropicHeaders(),
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514', max_tokens: 1000,
+        model: 'llama-3.3-70b-versatile', max_tokens: 1000,
         messages: [{ role: 'user', content: `Napiši ${PLAN_VRSTA_LABEL[vrsta]} za Karate klub Đurđevac za ${god}. godinu. Klub ima ~60 članova, djeca i mladi, karate sport. Temelji se na statutu kluba i Zakonu o udrugama. Budi koncizan i konkretan.` }]
       })
     });
     const data = await resp.json();
-    const text = data.content?.map(b => b.text||'').join('') || 'Greška.';
+    const text = data.choices?.[0]?.message?.content || data.content?.map(b => b.text||'').join('') || 'Greška.';
     document.getElementById('plan-ai-tekst').textContent = text;
     document.getElementById('plan-ai-output').style.display = 'block';
     document.getElementById('plan-ciljevi').value = text.substring(0, 500);

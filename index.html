@@ -741,6 +741,19 @@
         <!-- ALERT PANEL -->
         <div id="alertPanel" style="margin-bottom:16px"></div>
 
+        <!-- DATUM I BRZE RADNJE -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+          <div>
+            <div id="dashDatum" style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;color:var(--gold)"></div>
+            <div id="dashPozdrav" style="font-size:13px;color:var(--muted);margin-top:2px"></div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-primary btn-sm" onclick="openModal('modalDodajClana')">👤 Novi član</button>
+            <button class="btn btn-secondary btn-sm" onclick="openModal('modalOdluka')">📜 Nova odluka</button>
+            <button class="btn btn-secondary btn-sm" onclick="showSection('emailovi')">📧 Obavijest</button>
+          </div>
+        </div>
+
         <!-- ALERT PANEL -->
         <div id="alertPanel" style="margin-bottom:18px"></div>
 
@@ -6307,8 +6320,24 @@ function spremiUrediOdluku() {
   toast('✅ Odluka ažurirana!');
 }
 
+
+function updateDashDatum() {
+  const el = document.getElementById('dashDatum');
+  const elP = document.getElementById('dashPozdrav');
+  if (!el) return;
+  const now = new Date();
+  const dani = ['nedjelja','ponedjeljak','utorak','srijeda','četvrtak','petak','subota'];
+  const mjeseci = ['siječnja','veljače','ožujka','travnja','svibnja','lipnja','srpnja','kolovoza','rujna','listopada','studenog','prosinca'];
+  el.textContent = dani[now.getDay()].toUpperCase() + ', ' + now.getDate() + '. ' + mjeseci[now.getMonth()] + ' ' + now.getFullYear() + '.';
+  const h = now.getHours();
+  const ime = state.korisnik?.ime?.split(' ')[0] || '';
+  const pozdrav = h < 12 ? 'Dobro jutro' : h < 18 ? 'Dobar dan' : 'Dobra večer';
+  if (elP) elP.textContent = pozdrav + (ime ? ', ' + ime + '!' : '!');
+}
+
 // Init
 updateStats();
+updateDashDatum();
 renderKalendar();
 provjeriSesiju();
 initMobileNav();

@@ -429,7 +429,7 @@
     gap: 12px;
     max-width: 85%;
   }
-  .msg.user { align-self: flex-end; flex-direction: row-reverse; margin-left: auto; }
+  .msg.user { align-self: flex-end !important; flex-direction: row-reverse !important; margin-left: auto !important; max-width: 85%; }
   .msg-avatar {
     width: 32px;
     height: 32px;
@@ -4032,7 +4032,7 @@ function appendMsg(role, content) {
   const id = 'msg_' + Date.now();
   const msgs = document.getElementById('aiMessages');
   if (role === 'user') {
-    msgs.insertAdjacentHTML('beforeend', `<div class="msg user" id="${id}"><div class="msg-avatar">👤</div><div class="msg-bubble">${content}</div></div>`);
+    msgs.insertAdjacentHTML('beforeend', `<div class="msg user" id="${id}"><div class="msg-bubble">${content}</div><div class="msg-avatar">👤</div></div>`);
   } else {
     msgs.insertAdjacentHTML('beforeend', `<div class="msg assistant" id="${id}"><div class="msg-avatar">🥋</div><div class="msg-bubble">${content}</div></div>`);
   }

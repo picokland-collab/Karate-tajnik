@@ -2628,6 +2628,29 @@
     <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('modalRanglista')">Zatvori</button></div>
   </div>
 </div>
+
+<div class="modal-overlay" id="modalUrediIzvjestaj">
+  <div class="modal" style="max-width:700px">
+    <div class="modal-header">
+      <h3>Uredi izvještaj</h3>
+      <button class="modal-close" onclick="closeModal('modalUrediIzvjestaj')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="urediIzvjestajId">
+      <div class="form-grid">
+        <div class="form-group full"><label>Naziv natjecanja</label><input type="text" id="urediIzvjestajNaziv"></div>
+        <div class="form-group"><label>Datum</label><input type="date" id="urediIzvjestajDatum"></div>
+        <div class="form-group"><label>Mjesto</label><input type="text" id="urediIzvjestajMjesto"></div>
+        <div class="form-group"><label>Medalje</label><input type="text" id="urediIzvjestajMedalje"></div>
+        <div class="form-group full"><label>Tekst izvještaja</label><textarea id="urediIzvjestajTekst" style="min-height:250px"></textarea></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modalUrediIzvjestaj')">Odustani</button>
+      <button class="btn btn-primary" onclick="spremiUrediIzvjestaj()">💾 Spremi izmjene</button>
+    </div>
+  </div>
+</div>
 <div id="toast"></div>
 
 <script>
@@ -3614,6 +3637,34 @@ function renderRanglistaModal() {
 }
 
 
+
+function urediIzvjestaj(id) {
+  const iz = state.izvjestaji.find(x => x.id === id);
+  if (!iz) return;
+  document.getElementById('urediIzvjestajId').value = id;
+  document.getElementById('urediIzvjestajNaziv').value = iz.naziv || '';
+  document.getElementById('urediIzvjestajDatum').value = iz.datum || '';
+  document.getElementById('urediIzvjestajMjesto').value = iz.mjesto || '';
+  document.getElementById('urediIzvjestajMedalje').value = iz.medalje || '';
+  document.getElementById('urediIzvjestajTekst').value = iz.tekst || '';
+  openModal('modalUrediIzvjestaj');
+}
+
+function spremiUrediIzvjestaj() {
+  const id = parseInt(document.getElementById('urediIzvjestajId').value);
+  const iz = state.izvjestaji.find(x => x.id === id);
+  if (!iz) return;
+  iz.naziv = document.getElementById('urediIzvjestajNaziv').value;
+  iz.datum = document.getElementById('urediIzvjestajDatum').value;
+  iz.mjesto = document.getElementById('urediIzvjestajMjesto').value;
+  iz.medalje = document.getElementById('urediIzvjestajMedalje').value;
+  iz.tekst = document.getElementById('urediIzvjestajTekst').value;
+  save();
+  renderIzvjestaji();
+  closeModal('modalUrediIzvjestaj');
+  toast('✅ Izvještaj ažuriran!');
+}
+
 function noviIzvjestaj() {
   const polja = ['iNaziv','iDatum','iMjesto','iNatjecatelji','iMedalje','iRezultati','iNapomene'];
   polja.forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
@@ -3661,6 +3712,7 @@ function renderIzvjestaji() {
       ${iz.fotke && iz.fotke.length > 0 ? `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:8px">${iz.fotke.slice(0,4).map(s => `<div style="aspect-ratio:1;border-radius:4px;overflow:hidden"><img src="${s}" style="width:100%;height:100%;object-fit:cover"></div>`).join('')}</div>` : ''}
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn btn-secondary btn-sm" onclick="copyText2('${encodeURIComponent(iz.tekst)}')">📋 Kopiraj tekst</button>
+        <button class="btn btn-secondary btn-sm" onclick="urediIzvjestaj(${iz.id})">✏️ Uredi</button>
         <button class="btn btn-sm" style="background:rgba(200,16,46,0.15);color:#ff5a70;border:1px solid rgba(200,16,46,0.2)" onclick="obrisiIzvjestaj(${iz.id})">✕</button>
       </div>
     </div>`).join('');

@@ -3021,7 +3021,7 @@ let state = {
 };
 
 // Load from storage — v2 forces re-import of members with OIB+pojas
-const DATA_VERSION = 2;
+const DATA_VERSION = 3;
 try {
   const saved = localStorage.getItem('kk_djurdjevac');
   if (saved) {
@@ -3612,6 +3612,7 @@ function spremiIzvjestaj() {
   };
   izvjFotke = [];
   renderIzvjFotke();
+  if (!Array.isArray(state.izvjestaji)) state.izvjestaji = [];
   state.izvjestaji.push(iz);
   save();
   closeModal('modalIzvjestaj');

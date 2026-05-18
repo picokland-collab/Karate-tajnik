@@ -6408,9 +6408,10 @@ function spremiAiIzvjestajBtn(btnEl) {
   const bubble = btnEl.closest('.msg').querySelector('.msg-bubble');
   const tekst = bubble.innerText.split('💾')[0].trim();
   const danas = new Date().toISOString().split('T')[0];
-  const izvjestaj = { id: Date.now(), naziv: tekst.split('\n')[0].substring(0,60) || 'Izvještaj AI', datum: danas, mjesto: '', medalje: '', tekst: tekst, fotke: [] };
-  state.izvjestaji = state.izvjestaji || [];
-  state.izvjestaji.unshift(izvjestaj);
+  const prvaLinija = tekst.split('\n').find(l => l.trim().length > 3) || 'Izvještaj AI';
+  const izvjestaj = { id: Date.now(), naziv: prvaLinija.substring(0,60), datum: danas, mjesto: 'AI Tajnik', medalje: '0', tekst: tekst, fotke: [] };
+  if (!Array.isArray(state.izvjestaji)) state.izvjestaji = [];
+  state.izvjestaji.push(izvjestaj);
   save();
   if (typeof renderIzvjestaji === 'function') renderIzvjestaji();
   updateStats();

@@ -782,7 +782,7 @@
         <div style="display:flex;gap:10px;flex-wrap:wrap;">
           <button class="btn btn-primary" onclick="openModal('modalDodajClana')">+ Novi član</button>
           <button class="btn btn-secondary" onclick="openModal('modalOdluka')">📜 Nova odluka</button>
-          <button class="btn btn-secondary" onclick="openModal('modalIzvjestaj')">🏆 Novi izvještaj</button>
+          <button class="btn btn-secondary" onclick="noviIzvjestaj()">🏆 Novi izvještaj</button>
           <button class="btn btn-secondary" onclick="openModal('modalKomunikacija')">✉️ Pošalji obavijest</button>
         </div>
       </div>
@@ -876,7 +876,7 @@
           <p>Rezultati i sportski nastupi</p>
         </div>
         <button class="btn btn-secondary" onclick="renderRanglistaModal();openModal('modalRanglista')">🏆 Ranglista</button>
-          <button class="btn btn-primary" onclick="openModal('modalIzvjestaj')">+ Novi izvještaj</button>
+          <button class="btn btn-primary" onclick="noviIzvjestaj()">+ Novi izvještaj</button>
       </div>
       <div class="content">
         <div id="listaIzvjestaja">
@@ -1490,7 +1490,7 @@
       <div class="page-header">
         <div><h2>Natjecanja i rezultati</h2><p>Evidencija natjecanja i plasmana</p></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn btn-secondary" onclick="openModal('modalIzvjestaj')">📰 Izvještaj za portale</button>
+          <button class="btn btn-secondary" onclick="noviIzvjestaj()">📰 Izvještaj za portale</button>
           <button class="btn btn-primary" onclick="openModal('modalNoviRezultat')">+ Dodaj rezultat</button>
         </div>
       </div>
@@ -3611,6 +3611,19 @@ function renderRanglistaModal() {
       <span title="Bronca">🥉 ${m.bronca}</span>
     </div>
   </div>`)).join('');
+}
+
+
+function noviIzvjestaj() {
+  const polja = ['iNaziv','iDatum','iMjesto','iNatjecatelji','iMedalje','iRezultati','iNapomene'];
+  polja.forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+  const out = document.getElementById('izvjestajOutput');
+  if (out) out.style.display = 'none';
+  const tekst = document.getElementById('izvjestajText');
+  if (tekst) tekst.textContent = '';
+  izvjFotke = [];
+  if (typeof renderIzvjFotke === 'function') renderIzvjFotke();
+  openModal('modalIzvjestaj');
 }
 
 function spremiIzvjestaj() {

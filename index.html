@@ -6397,7 +6397,9 @@ function spremiAiObavijestBtn(btnEl) {
   const obavijest = { id: Date.now(), vrsta: 'Obavijest', naslov: tekst.split('\n')[0].substring(0,60) || 'Obavijest AI', sadrzaj: tekst, datum: danas, autor: state.korisnik?.ime || 'AI Tajnik' };
   ob2Lista.unshift(obavijest);
   ob2Save();
-  toast('✅ Obavijest spremljena u Obavijesti!');
+  if (typeof ob2RenderLista === 'function') ob2RenderLista();
+  logActivity('📢', 'AI Obavijest: ' + obavijest.naslov);
+  toast('✅ Obavijest spremljena! Idite na Obavijesti za pregled.');
   btnEl.textContent = '✅ Spremljeno';
   btnEl.disabled = true;
 }
@@ -6411,7 +6413,9 @@ function spremiAiIzvjestajBtn(btnEl) {
   state.izvjestaji.unshift(izvjestaj);
   save();
   if (typeof renderIzvjestaji === 'function') renderIzvjestaji();
-  toast('✅ Izvještaj spremljen u Izvještaje!');
+  updateStats();
+  logActivity('🏆', 'AI Izvještaj: ' + izvjestaj.naziv);
+  toast('✅ Izvještaj spremljen! Idite na Natjecanja za pregled.');
   btnEl.textContent = '✅ Spremljeno';
   btnEl.disabled = true;
 }

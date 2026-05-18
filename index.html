@@ -3616,23 +3616,23 @@ function renderRanglistaModal() {
 function spremiIzvjestaj() {
   const iz = {
     id: Date.now(),
-    naziv: document.getElementById('iNaziv').value,
-    datum: document.getElementById('iDatum').value,
-    mjesto: document.getElementById('iMjesto').value,
-    medalje: document.getElementById('iMedalje').value,
-    tekst: document.getElementById('izvjestajText').textContent,
-    fotke: [...izvjFotke]
+    naziv: document.getElementById('iNaziv')?.value || 'Izvještaj',
+    datum: document.getElementById('iDatum')?.value || new Date().toISOString().split('T')[0],
+    mjesto: document.getElementById('iMjesto')?.value || '',
+    medalje: document.getElementById('iMedalje')?.value || '0',
+    tekst: document.getElementById('izvjestajText')?.textContent || '',
+    fotke: Array.isArray(izvjFotke) ? [...izvjFotke] : []
   };
   izvjFotke = [];
-  renderIzvjFotke();
+  if (typeof renderIzvjFotke === 'function') renderIzvjFotke();
   if (!Array.isArray(state.izvjestaji)) state.izvjestaji = [];
   state.izvjestaji.push(iz);
-  save();
+  try { localStorage.setItem('kk_djurdjevac', JSON.stringify({...state, version: DATA_VERSION})); } catch(e){}
   closeModal('modalIzvjestaj');
   renderIzvjestaji();
-  logActivity('🏆', `Natjecanje: ${iz.naziv} (${iz.medalje} medalja)`);
+  logActivity('🏆', 'Natjecanje: ' + iz.naziv + ' (' + iz.medalje + ' medalja)');
   updateStats();
-  toast('Izvještaj pohranjen!');
+  toast('✅ Izvještaj pohranjen!');
 }
 
 function renderIzvjestaji() {

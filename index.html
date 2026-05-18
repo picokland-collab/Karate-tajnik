@@ -3629,10 +3629,10 @@ function spremiIzvjestaj() {
   state.izvjestaji.push(iz);
   try { localStorage.setItem('kk_djurdjevac', JSON.stringify({...state, version: DATA_VERSION})); } catch(e){}
   closeModal('modalIzvjestaj');
-  renderIzvjestaji();
   logActivity('🏆', 'Natjecanje: ' + iz.naziv + ' (' + iz.medalje + ' medalja)');
   updateStats();
   toast('✅ Izvještaj pohranjen!');
+  setTimeout(() => { showSection('izvjestaji'); }, 300);
 }
 
 function renderIzvjestaji() {

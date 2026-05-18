@@ -3555,6 +3555,19 @@ Napiši uzbudljiv, pozitivan i informativan tekst na hrvatskom jeziku koji:
     const text = data.choices?.[0]?.message?.content || 'Greška.';
     document.getElementById('izvjestajText').textContent = text;
     document.getElementById('izvjestajOutput').style.display = 'block';
+    // Automatski spremi u listu
+    if (!Array.isArray(state.izvjestaji)) state.izvjestaji = [];
+    state.izvjestaji.push({
+      id: Date.now(),
+      naziv: naziv,
+      datum: datum,
+      mjesto: mjesto,
+      medalje: medalje,
+      tekst: text,
+      fotke: []
+    });
+    save();
+    renderIzvjestaji();
   } catch(e) {
     toast('Greška pri generiranju.', 'err');
   }

@@ -6394,10 +6394,9 @@ function spremiAiObavijestBtn(btnEl) {
   const bubble = btnEl.closest('.msg').querySelector('.msg-bubble');
   const tekst = bubble.innerText.split('💾')[0].trim();
   const danas = new Date().toISOString().split('T')[0];
-  const obavijest = { id: Date.now(), vrsta: 'Obavijest', predmet: tekst.split('\n')[0].substring(0,60) || 'Obavijest AI', sadrzaj: tekst, datum: danas };
-  state.obavijesti = state.obavijesti || [];
-  state.obavijesti.unshift(obavijest);
-  save();
+  const obavijest = { id: Date.now(), vrsta: 'Obavijest', naslov: tekst.split('\n')[0].substring(0,60) || 'Obavijest AI', sadrzaj: tekst, datum: danas, autor: state.korisnik?.ime || 'AI Tajnik' };
+  ob2Lista.unshift(obavijest);
+  ob2Save();
   toast('✅ Obavijest spremljena u Obavijesti!');
   btnEl.textContent = '✅ Spremljeno';
   btnEl.disabled = true;

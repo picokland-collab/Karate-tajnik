@@ -3026,16 +3026,12 @@ try {
   const saved = localStorage.getItem('kk_djurdjevac');
   if (saved) {
     const parsed = JSON.parse(saved);
-    if ((parsed.version || 1) < DATA_VERSION) {
-      // Stari podaci — zadrži odluke/izvještaje/obavijesti, resetiraj članove
-      state.odluke = parsed.odluke || [];
-      state.izvjestaji = parsed.izvjestaji || [];
-      state.obavijesti = parsed.obavijesti || [];
-      state.aktivnosti = parsed.aktivnosti || [];
-      // clanovi se osvježavaju iz hksClanovi niže
-    } else {
-      state = {...state, ...parsed};
-    }
+    // Uvijek učitaj sve podatke
+    state = {...state, ...parsed};
+    // Osiguraj da sva polja postoje
+    if (!Array.isArray(state.izvjestaji)) state.izvjestaji = [];
+    if (!Array.isArray(state.odluke)) state.odluke = [];
+    if (!Array.isArray(state.aktivnosti)) state.aktivnosti = [];
   }
 } catch(e){}
 

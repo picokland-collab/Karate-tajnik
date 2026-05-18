@@ -853,7 +853,16 @@
         <button class="btn btn-primary" onclick="openModal('modalOdluka')">+ Nova odluka</button>
       </div>
       <div class="content">
-        <div id="listaOdluka">
+        <div class="search-bar" style="margin-bottom:16px">
+        <input type="text" id="searchOdluka" placeholder="Pretraži odluke..." oninput="renderOdluke()">
+        <select id="filterOdlukaStatus" onchange="renderOdluke()">
+          <option value="">Svi statusi</option>
+          <option value="u provedbi">U provedbi</option>
+          <option value="provedeno">Provedeno</option>
+          <option value="arhivirano">Arhivirano</option>
+        </select>
+      </div>
+      <div id="listaOdluka">
           <div class="empty-state"><div class="icon">📜</div><p>Nema zapisanih odluka.</p></div>
         </div>
       </div>
@@ -866,7 +875,8 @@
           <h2>Izvještaji s natjecanja</h2>
           <p>Rezultati i sportski nastupi</p>
         </div>
-        <button class="btn btn-primary" onclick="openModal('modalIzvjestaj')">+ Novi izvještaj</button>
+        <button class="btn btn-secondary" onclick="renderRanglistaModal();openModal('modalRanglista')">🏆 Ranglista</button>
+          <button class="btn btn-primary" onclick="openModal('modalIzvjestaj')">+ Novi izvještaj</button>
       </div>
       <div class="content">
         <div id="listaIzvjestaja">
@@ -1280,7 +1290,13 @@
             <div style="font-size:10px;color:#aaa;padding:4px;color:var(--gold)">Sub</div>
             <div style="font-size:10px;color:#aaa;padding:4px;color:#ff5a70">Ned</div>
           </div>
-          <div id="kal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px"></div>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;font-size:12px;color:var(--muted)">
+  <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#C8102E;margin-right:4px"></span>Trening</span>
+  <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#F0A500;margin-right:4px"></span>Natjecanje</span>
+  <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#3b82f6;margin-right:4px"></span>Sastanak</span>
+  <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#888;margin-right:4px"></span>Ostalo</span>
+</div>
+        <div id="kal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px"></div>
         </div>
 
         <!-- Događaji odabranog dana -->
@@ -1398,12 +1414,28 @@
           💡 Unesite email adrese roditelja. Koristit će se za slanje uplatnica. Jedan email po članu.
         </div>
         <div class="card" style="margin-bottom:16px">
+        <div style="font-family:'Bebas Neue',sans-serif;letter-spacing:1px;font-size:15px;margin-bottom:12px;color:var(--muted)">BRZI PREDLOŠCI</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-secondary btn-sm" onclick="ucitajPredlozak('trening')">🥋 Otkazivanje treninga</button>
+          <button class="btn btn-secondary btn-sm" onclick="ucitajPredlozak('natjecanje')">🏆 Poziv na natjecanje</button>
+          <button class="btn btn-secondary btn-sm" onclick="ucitajPredlozak('clanarina')">💶 Podsjetnik članarine</button>
+          <button class="btn btn-secondary btn-sm" onclick="ucitajPredlozak('cestitka')">🎉 Čestitka</button>
+        </div>
+      </div>
+        <div class="card" style="margin-bottom:16px">
           <div style="font-family:'Bebas Neue',sans-serif;letter-spacing:1px;font-size:15px;margin-bottom:14px;color:var(--muted)">POŠALJI SVIMA</div>
           <div class="form-grid">
             <div class="form-group full"><label>Naslov maila</label><input type="text" id="mail-svima-subject" placeholder="npr. Obavijest o treningu"></div>
             <div class="form-group full"><label>Tekst maila</label><textarea id="mail-svima-body" style="min-height:120px" placeholder="Unesite tekst ili zalijepite iz AI Tajnika..."></textarea></div>
           </div>
-          <button class="btn btn-gold" style="margin-top:10px" onclick="posaljiSvimaMail(document.getElementById('mail-svima-subject').value, document.getElementById('mail-svima-body').value)">📧 Pošalji svima</button>
+          <div class="form-group" style="margin-top:10px"><label>Pošalji grupi</label><select id="mail-svima-grupa">
+            <option value="svi">Svi aktivni članovi</option>
+            <option value="kadeti">Samo kadeti</option>
+            <option value="juniori">Samo juniori</option>
+            <option value="seniori">Samo seniori</option>
+            <option value="neplaceni">Samo neplaćeni</option>
+          </select></div>
+          <button class="btn btn-gold" style="margin-top:10px;width:100%" onclick="posaljiGrupiMail()">📧 Pošalji odabranoj grupi</button>
         </div>
         <div id="email-lista-forma"></div>
         <div style="margin-top:16px;padding-bottom:20px">
@@ -2566,6 +2598,12 @@
       <input type="hidden" id="urediOdlukaId">
       <div class="form-grid">
         <div class="form-group full"><label>Predmet</label><input type="text" id="urediOdlukaPredmet"></div>
+        <div class="form-group"><label>Status</label><select id="urediOdlukaStatus">
+          <option value="">— bez statusa —</option>
+          <option value="u provedbi">U provedbi</option>
+          <option value="provedeno">Provedeno</option>
+          <option value="arhivirano">Arhivirano</option>
+        </select></div>
         <div class="form-group"><label>Vrsta</label><select id="urediOdlukaVrsta">
           <option>Odluka Upravnog odbora</option>
           <option>Odluka Skupštine</option>
@@ -2580,6 +2618,14 @@
       <button class="btn btn-secondary" onclick="closeModal('modalUrediOdluku')">Odustani</button>
       <button class="btn btn-primary" onclick="spremiUrediOdluku()">💾 Spremi izmjene</button>
     </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalRanglista">
+  <div class="modal" style="max-width:600px">
+    <div class="modal-header"><h3>🏆 Ranglista natjecatelja</h3><button class="modal-close" onclick="closeModal('modalRanglista')">✕</button></div>
+    <div class="modal-body"><div id="ranglistaContent"></div></div>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('modalRanglista')">Zatvori</button></div>
   </div>
 </div>
 <div id="toast"></div>
@@ -3421,16 +3467,25 @@ function spremiOdluku() {
 
 function renderOdluke() {
   const el = document.getElementById('listaOdluka');
-  if (state.odluke.length === 0) {
-    el.innerHTML = '<div class="empty-state"><div class="icon">📜</div><p>Nema zapisanih odluka.</p></div>';
+  const q = (document.getElementById('searchOdluka')?.value||'').toLowerCase();
+  const fs = document.getElementById('filterOdlukaStatus')?.value||'';
+  let lista = state.odluke.filter(o => {
+    const match = (o.predmet+' '+(o.sadrzaj||'')).toLowerCase().includes(q);
+    const st = !fs || (o.status||'') === fs;
+    return match && st;
+  });
+  if (lista.length === 0) {
+    el.innerHTML = '<div class="empty-state"><div class="icon">📜</div><p>Nema pronađenih odluka.</p></div>';
     return;
   }
-  el.innerHTML = state.odluke.slice().reverse().map(o => `
+  // Auto-number if missing
+  lista.forEach((o,i) => { if (!o.broj) o.broj = String(state.odluke.indexOf(o)+1).padStart(2,'0') + '/' + (o.datum||new Date().getFullYear()).toString().slice(0,4); });
+  el.innerHTML = lista.slice().reverse().map(o => `
     <div class="card">
       <div class="card-row">
         <div>
           <div style="font-weight:500">${o.predmet}</div>
-          <div style="font-size:12px;color:var(--muted);margin-top:3px">${o.vrsta} · ${o.datum || '—'}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:3px">${o.vrsta} · ${o.datum || '—'} · <span style="color:var(--gold)">#${o.broj||'—'}</span>${o.status ? ' · <span style="color:#3b82f6">'+o.status+'</span>' : ''}</div>
         </div>
         <div class="card-actions">
           <button class="btn btn-secondary btn-sm" onclick="prikaziOdluku(${o.id})">Prikaži</button>
@@ -3510,6 +3565,43 @@ Napiši uzbudljiv, pozitivan i informativan tekst na hrvatskom jeziku koji:
   
   btn.textContent = '🤖 Generiraj izvještaj za portale';
   btn.disabled = false;
+}
+
+function dijelijNaDrustveneMreze(id) {
+  const izv = state.izvjestaji.find(x => x.id === id);
+  if (!izv) return;
+  const tekst = izv.sadrzaj || (izv.naziv + "\n\n" + (izv.rezultati||''));
+  navigator.clipboard.writeText(tekst);
+  toast('✅ Tekst kopiran za Facebook/Instagram!');
+}
+
+function renderRanglistaModal() {
+  const medalje = {};
+  state.izvjestaji.forEach(izv => {
+    if (!izv.rezultati) return;
+    state.clanovi.forEach(c => {
+      const ime = c.ime + ' ' + c.prezime;
+      if (izv.rezultati.includes(ime)) {
+        if (!medalje[ime]) medalje[ime] = { zlato:0, srebro:0, bronca:0 };
+        if (izv.rezultati.toLowerCase().includes('zlato') || izv.rezultati.includes('1.')) medalje[ime].zlato++;
+        if (izv.rezultati.toLowerCase().includes('srebro') || izv.rezultati.includes('2.')) medalje[ime].srebro++;
+        if (izv.rezultati.toLowerCase().includes('bronca') || izv.rezultati.includes('3.')) medalje[ime].bronca++;
+      }
+    });
+  });
+  const sorted = Object.entries(medalje).sort((a,b) => (b[1].zlato*3+b[1].srebro*2+b[1].bronca) - (a[1].zlato*3+a[1].srebro*2+a[1].bronca));
+  const el = document.getElementById('ranglistaContent');
+  if (!el) return;
+  if (!sorted.length) { el.innerHTML = '<p style="color:#aaa">Nema podataka o medaljama.</p>'; return; }
+  el.innerHTML = sorted.map((([ime, m], i) => `<div class="card" style="padding:10px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px">
+    <div style="font-size:18px;font-weight:bold;color:var(--gold);width:24px">${i+1}.</div>
+    <div style="flex:1"><strong>${ime}</strong></div>
+    <div style="display:flex;gap:8px;font-size:13px">
+      <span title="Zlato">🥇 ${m.zlato}</span>
+      <span title="Srebro">🥈 ${m.srebro}</span>
+      <span title="Bronca">🥉 ${m.bronca}</span>
+    </div>
+  </div>`)).join('');
 }
 
 function spremiIzvjestaj() {
@@ -3975,7 +4067,7 @@ function stopMic() {
 // ========== AI CHAT ==========
 const today = new Date();
 const todayStr = today.toLocaleDateString('hr-HR', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
-const SYSTEM_PROMPT = `Ti si DIGITALNI TAJNIK sportskog kluba — pametan, prijateljan i pouzdan asistent. Komuniciraš na hrvatskom jeziku, prirodno i bez krutosti.
+const SYSTEM_PROMPT = `Ti si DIGITALNI TAJNIK sportskog kluba. Podaci kluba su dostupni putem funkcije getPostavke(). Koristi ih u dokumentima automatski — ne traži ih od korisnika. Ti si pametan, prijateljan i pouzdan asistent. Komuniciraš na hrvatskom jeziku, prirodno i bez krutosti.
 
 KARAKTER:
 - Prijateljan i topao, kao iskusan kolega koji dobro poznaje posao
@@ -5307,6 +5399,16 @@ function kalOdaberiDan(datum) {
   const naslov = document.getElementById('kal-dan-naslov');
   const lista = document.getElementById('kal-dan-lista');
   naslov.textContent = new Date(datum + 'T12:00:00').toLocaleDateString('hr-HR', {weekday:'long', day:'numeric', month:'long'});
+  // Add quick-add button
+  const addBtn = document.getElementById('kal-brzi-dodaj');
+  if (addBtn) {
+    addBtn.onclick = () => {
+      document.getElementById('kalDatum').value = datum;
+      document.getElementById('kalNaslov').value = '';
+      openModal('modalKalendar');
+    };
+  }
+
   if (dogadaji.length === 0) {
     lista.innerHTML = '<div style="font-size:13px;color:#666;padding:8px 0">Nema događaja ovaj dan.</div>';
   } else {
@@ -6311,6 +6413,7 @@ function urediOdluku(id) {
   document.getElementById('urediOdlukaId').value = id;
   document.getElementById('urediOdlukaPredmet').value = o.predmet || '';
   document.getElementById('urediOdlukaVrsta').value = o.vrsta || 'Odluka Upravnog odbora';
+  document.getElementById('urediOdlukaStatus').value = o.status || '';
   document.getElementById('urediOdlukaDatum').value = o.datum || '';
   document.getElementById('urediOdlukaSadrzaj').value = o.sadrzaj || '';
   openModal('modalUrediOdluku');
@@ -6321,6 +6424,7 @@ function spremiUrediOdluku() {
   if (!o) return;
   o.predmet = document.getElementById('urediOdlukaPredmet').value;
   o.vrsta = document.getElementById('urediOdlukaVrsta').value;
+  o.status = document.getElementById('urediOdlukaStatus').value;
   o.datum = document.getElementById('urediOdlukaDatum').value;
   o.sadrzaj = document.getElementById('urediOdlukaSadrzaj').value;
   save();
@@ -6344,9 +6448,120 @@ function updateDashDatum() {
   if (elP) elP.textContent = pozdrav + (ime ? ', ' + ime + '!' : '!');
 }
 
+
+function ucitajPraznike() {
+  const god = new Date().getFullYear();
+  const praznici = [
+    { datum: god+'-01-01', naziv: 'Nova godina' },
+    { datum: god+'-01-06', naziv: 'Sveta tri kralja' },
+    { datum: god+'-05-01', naziv: 'Praznik rada' },
+    { datum: god+'-05-30', naziv: 'Dan državnosti' },
+    { datum: god+'-06-22', naziv: 'Dan antifašističke borbe' },
+    { datum: god+'-08-05', naziv: 'Dan pobjede i domovinske zahvalnosti' },
+    { datum: god+'-08-15', naziv: 'Velika Gospa' },
+    { datum: god+'-11-01', naziv: 'Svi sveti' },
+    { datum: god+'-11-18', naziv: 'Dan sjećanja na žrtve Domovinskog rata' },
+    { datum: god+'-12-25', naziv: 'Božić' },
+    { datum: god+'-12-26', naziv: 'Sveti Stjepan' },
+  ];
+  // Uskrs (algoritam za izračun)
+  const a = god % 19, b = Math.floor(god/100), c = god % 100;
+  const d = Math.floor(b/4), e = b % 4, f = Math.floor((b+8)/25);
+  const g = Math.floor((b-f+1)/3), h = (19*a+b-d-g+15) % 30;
+  const i = Math.floor(c/4), k = c % 4;
+  const l = (32+2*e+2*i-h-k) % 7;
+  const m = Math.floor((a+11*h+22*l)/451);
+  const month = Math.floor((h+l-7*m+114)/31);
+  const day = ((h+l-7*m+114) % 31) + 1;
+  const uskrs = new Date(god, month-1, day);
+  const uskrsPon = new Date(uskrs); uskrsPon.setDate(uskrs.getDate()+1);
+  const tijelovoPon = new Date(uskrs); tijelovoPon.setDate(uskrs.getDate()+60);
+  const fmt = d => d.toISOString().split('T')[0];
+  praznici.push({ datum: fmt(uskrs), naziv: 'Uskrs' });
+  praznici.push({ datum: fmt(uskrsPon), naziv: 'Uskrsni ponedjeljak' });
+  praznici.push({ datum: fmt(tijelovoPon), naziv: 'Tijelovo' });
+
+  // Add to calendar if not already there
+  let changed = false;
+  praznici.forEach(p => {
+    const exists = kalDogadaji.find(e => e.datum === p.datum && e.naslov === p.naziv);
+    if (!exists) {
+      kalDogadaji.push({ id: 'praznik_'+p.datum, datum: p.datum, naslov: p.naziv, vrsta: 'ostalo', opis: '🇭🇷 Hrvatski državni praznik' });
+      changed = true;
+    }
+  });
+  if (changed) { kalSave(); renderKalendar(); }
+}
+
+
+// ========== PREDLOŠCI ==========
+function ucitajPredlozak(tip) {
+  const p = getPostavke();
+  const predlosci = {
+    trening: { sub: 'Otkazivanje treninga — '+p.naziv, body: 'Dragi roditelji i članovi,\n\nobavještavamo vas da je trening zakazan za [DATUM] otkazan zbog [RAZLOG].\n\nSljedeći trening održat će se [DATUM].\n\nIspričavamo se na neugodnosti.\n\nSrdačan pozdrav,\n'+p.naziv },
+    natjecanje: { sub: 'Poziv na natjecanje — '+p.naziv, body: 'Dragi roditelji i članovi,\n\nobavještavamo vas da se [NAZIV NATJECANJA] održava [DATUM] u [MJESTO].\n\nMolimo sve natjecatelje da se jave treneru do [ROK].\n\nSrdačan pozdrav,\n'+p.naziv },
+    clanarina: { sub: 'Podsjetnik: članarina — '+p.naziv, body: 'Dragi roditelji,\n\npodsjećamo vas da je rok za plaćanje članarine za [MJESEC] [DAN]. u mjesecu.\n\nIBAN: '+p.iban+'\nPrimatelj: '+p.naziv+'\n\nHvala na razumijevanju!\n'+p.naziv },
+    cestitka: { sub: 'Čestitka — '+p.naziv, body: 'Dragi članovi i roditelji,\n\nčestitamo vam [PRIGODA] i želimo vam sve najbolje!\n\nSrdačan pozdrav,\n'+p.naziv }
+  };
+  const pred = predlosci[tip];
+  if (!pred) return;
+  document.getElementById('mail-svima-subject').value = pred.sub;
+  document.getElementById('mail-svima-body').value = pred.body;
+  toast('✅ Predložak učitan!');
+}
+
+// ========== GRUPE PRIMATELJA ==========
+async function posaljiGrupiMail() {
+  const grupa = document.getElementById('mail-svima-grupa')?.value || 'svi';
+  const subject = document.getElementById('mail-svima-subject').value;
+  const body = document.getElementById('mail-svima-body').value;
+  if (!subject || !body) { toast('Unesite naslov i tekst!', 'err'); return; }
+  let primatelji = state.clanovi.filter(c => c.status === 'aktivan' && c.email);
+  if (grupa === 'kadeti') primatelji = primatelji.filter(c => c.kategorija === 'kadet');
+  else if (grupa === 'juniori') primatelji = primatelji.filter(c => c.kategorija === 'junior');
+  else if (grupa === 'seniori') primatelji = primatelji.filter(c => c.kategorija === 'senior');
+  else if (grupa === 'neplaceni') primatelji = primatelji.filter(c => c.clanarina === 'ne');
+  if (!primatelji.length) { toast('Nema primatelja u odabranoj grupi!', 'err'); return; }
+  if (!confirm('Poslati na '+primatelji.length+' adresa?')) return;
+  const btn = document.querySelector('[onclick="posaljiGrupiMail()"]');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Šalje se...'; }
+  let ok = 0;
+  for (const c of primatelji) {
+    if (await ejsSend({ to_email: c.email.trim(), to_name: c.roditelji||(c.ime+' '+c.prezime), subject, message: body })) ok++;
+    await new Promise(r => setTimeout(r, 450));
+  }
+  if (btn) { btn.disabled = false; btn.textContent = '📧 Pošalji odabranoj grupi'; }
+  toast('✅ Poslano na '+ok+'/'+primatelji.length+' adresa!');
+  logActivity('📧', 'Grupni mail ('+grupa+'): "'+subject+'" → '+ok+' primatelja');
+}
+
+// ========== PODSJETNICI ČLANARINE ==========
+async function posaljiPodsjetnikeClanarina() {
+  const neplaceni = state.clanovi.filter(c => c.status === 'aktivan' && c.clanarina === 'ne' && c.email);
+  if (!neplaceni.length) { toast('Nema neplaćenih s email adresom!', 'err'); return; }
+  if (!confirm('Poslati podsjetnik na '+neplaceni.length+' adresa?')) return;
+  const p = getPostavke();
+  const rok = document.getElementById('upl-rok-dan')?.value || 20;
+  let ok = 0;
+  for (const c of neplaceni) {
+    const msg = 'Dragi '+( c.roditelji||(c.ime+' '+c.prezime))+',\n\npodsjećamo vas da je rok za plaćanje članarine '+rok+'. u mjesecu.\n\nIBAN: '+p.iban+'\nPrimatelj: '+p.naziv+'\n\nHvala!\n'+p.naziv;
+    if (await ejsSend({ to_email: c.email, to_name: c.roditelji||(c.ime+' '+c.prezime), subject: p.naziv+' — Podsjetnik: članarina', message: msg })) ok++;
+    await new Promise(r => setTimeout(r, 450));
+  }
+  toast('✅ Poslano '+ok+'/'+neplaceni.length+' podsjetnika!');
+}
+
+// ========== BRZI AI UPIT ==========
+function brziAiUpit(tekst) {
+  const input = document.getElementById('aiInput');
+  if (input) { input.value = tekst; input.focus(); }
+}
+
+
 // Init
 updateStats();
 updateDashDatum();
+ucitajPraznike();
 renderKalendar();
 provjeriSesiju();
 initMobileNav();

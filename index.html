@@ -4123,9 +4123,19 @@ async function sendAI() {
     const text = data.choices?.[0]?.message?.content || 'Greška pri komunikaciji.';
     
     const lowerText = text.toLowerCase();
-    const isDoc = lowerText.includes('odluka') || lowerText.includes('klasa:') || lowerText.includes('ur.broj') || lowerText.includes('obavijest') || lowerText.includes('izvještaj') || lowerText.includes('zaključak');
+    const isOdluka = lowerText.includes('odluka') || lowerText.includes('klasa:') || lowerText.includes('ur.broj') || lowerText.includes('zaključak');
+    const isObavijest = !isOdluka && (lowerText.includes('obavijest') || lowerText.includes('dragi') || lowerText.includes('poštovani') || lowerText.includes('srdačan pozdrav'));
+    const isIzvjestaj = !isOdluka && (lowerText.includes('izvještaj') || lowerText.includes('natjecanje') || lowerText.includes('rezultati'));
+    const isDoc = isOdluka || isObavijest || isIzvjestaj;
+    const spremiBtn = isOdluka
+      ? `<button class="btn btn-gold btn-sm" onclick="spremiAiOdlukuBtn(this)">💾 Spremi u Odluke</button>`
+      : isObavijest
+      ? `<button class="btn btn-gold btn-sm" onclick="spremiAiObavijestBtn(this)">💾 Spremi u Obavijesti</button>`
+      : isIzvjestaj
+      ? `<button class="btn btn-gold btn-sm" onclick="spremiAiIzvjestajBtn(this)">💾 Spremi u Izvještaje</button>`
+      : '';
     const extraBtns = isDoc ? `<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
-      <button class="btn btn-gold btn-sm" onclick="spremiAiOdlukuBtn(this)">💾 Spremi u Odluke</button>
+      ${spremiBtn}
       <button class="btn btn-secondary btn-sm" onclick="navigator.clipboard.writeText(this.closest('.msg').querySelector('.msg-bubble').innerText.split('💾')[0].trim());toast('Kopirano!')">📋 Kopiraj</button>
     </div>` : '';
     
@@ -6377,6 +6387,33 @@ async function posaljiPotvrduNaloga(n) {
   const c=state.clanovi.find(x=>(x.ime+' '+x.prezime).toLowerCase()===n.ime.toLowerCase());
   if(!c||!c.email) return;
   await ejsSend({to_email:c.email,to_name:n.ime,subject:klub('naziv')+' — Putni nalog odobren',message:'Putni nalog odobren.\nRelacija: '+n.polaziste+' → '+n.odrediste+'\nIznos: '+n.ukupno+' EUR\n\n'+klub('naziv')});
+}
+
+
+function spremiAiObavijestBtn(btnEl) {
+  const bubble = btnEl.closest('.msg').querySelector('.msg-bubble');
+  const tekst = bubble.innerText.split('💾')[0].trim();
+  const danas = new Date().toISOString().split('T')[0];
+  const obavijest = { id: Date.now(), vrsta: 'Obavijest', predmet: tekst.split('\n')[0].substring(0,60) || 'Obavijest AI', sadrzaj: tekst, datum: danas };
+  state.obavijesti = state.obavijesti || [];
+  state.obavijesti.unshift(obavijest);
+  save();
+  toast('✅ Obavijest spremljena u Obavijesti!');
+  btnEl.textContent = '✅ Spremljeno';
+  btnEl.disabled = true;
+}
+
+function spremiAiIzvjestajBtn(btnEl) {
+  const bubble = btnEl.closest('.msg').querySelector('.msg-bubble');
+  const tekst = bubble.innerText.split('💾')[0].trim();
+  const danas = new Date().toISOString().split('T')[0];
+  const izvjestaj = { id: Date.now(), naziv: tekst.split('\n')[0].substring(0,60) || 'Izvještaj AI', datum: danas, sadrzaj: tekst, rezultati: tekst };
+  state.izvjestaji = state.izvjestaji || [];
+  state.izvjestaji.unshift(izvjestaj);
+  save();
+  toast('✅ Izvještaj spremljen u Izvještaje!');
+  btnEl.textContent = '✅ Spremljeno';
+  btnEl.disabled = true;
 }
 
 function spremiAiOdlukuBtn(btnEl) {

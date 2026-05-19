@@ -2770,22 +2770,47 @@ async function loginSubmit() {
   const user = document.getElementById('loginUser').value.trim().toLowerCase();
   const pass = document.getElementById('loginPass').value;
   const err = document.getElementById('loginError');
-  
-  const k = KORISNICI_HASH[user];
-  if (!k) { err.textContent = 'Nepoznati korisnik.'; return; }
-  
+  err.textContent = '';
+
+  if (!user || !pass) {
+    err.textContent = 'Unesite korisničko ime i lozinku.';
+    err.style.display = 'block';
+    return;
+  }
+
   const inputHash = await hashLozinka(pass);
-  if (inputHash !== k.hash) { err.textContent = 'Pogrešna lozinka.'; return; }
-  
-  state.korisnik = { korime: user, ime: k.ime, uloga: k.uloga, admin: k.admin };
+
+  // Provjeri ugrađene korisnike (KORISNICI_HASH)
+  const builtinK = KORISNICI_HASH[user];
+  // FIX 2: Provjeri i dinamički dodane korisnike (lozinke su sada hashirane)
+  const dinamicniK = getKorisnici()[user];
+
+  let k = null;
+  if (builtinK && inputHash === builtinK.hash) {
+    k = { korime: user, ime: builtinK.ime, uloga: builtinK.uloga, admin: builtinK.admin };
+  } else if (dinamicniK && inputHash === dinamicniK.lozinka) {
+    k = { korime: user, ime: dinamicniK.ime, uloga: dinamicniK.uloga, admin: dinamicniK.uloga === 'admin' };
+  }
+
+  if (!k) {
+    err.textContent = 'Pogrešno korisničko ime ili lozinka.';
+    err.style.display = 'block';
+    await new Promise(r => setTimeout(r, 600)); // Anti brute-force
+    return;
+  }
+
+  state.korisnik = k;
+  trenutniKorisnik = k;
+  localStorage.setItem('kk_session', JSON.stringify({ username: user, vrijeme: Date.now() }));
+
   err.textContent = '';
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
+  prijaviKorisnika();
   updateStats();
   updateDashDatum();
   ucitajPraznike();
   renderKalendar();
-  provjeriSesiju();
   logActivity('🔐', k.ime + ' se prijavio/la');
 }
 
@@ -2879,7 +2904,7 @@ function korisnikRenderLista() {
     </div>`).join('');
 }
 
-function spremiKorisnika() {
+async function spremiKorisnika() {
   const ime = document.getElementById('ku-ime').value.trim();
   const username = document.getElementById('ku-username').value.trim().toLowerCase().replace(/[^a-z0-9]/g,'');
   const lozinka = document.getElementById('ku-lozinka').value;
@@ -2892,20 +2917,24 @@ function spremiKorisnika() {
   const k = getKorisnici();
 
   if (korisnikEditUsername) {
-    // Edit existing
     if (!k[korisnikEditUsername]) { toast('Korisnik nije pronađen!', 'err'); return; }
     k[korisnikEditUsername].ime = ime;
-    if (lozinka && lozinka.length >= 6) k[korisnikEditUsername].lozinka = lozinka;
-    else if (lozinka && lozinka.length < 6) { toast('Lozinka mora imati najmanje 6 znakova!', 'err'); return; }
+    if (lozinka && lozinka.length >= 6) {
+      // FIX 2: Lozinka se hashira SHA-256 prije pohrane
+      k[korisnikEditUsername].lozinka = await hashLozinka(lozinka);
+    } else if (lozinka && lozinka.length > 0 && lozinka.length < 6) {
+      toast('Lozinka mora imati najmanje 6 znakova!', 'err'); return;
+    }
     k[korisnikEditUsername].uloga = uloga;
     k[korisnikEditUsername].napomena = napomena;
     toast('Korisnik ažuriran!');
   } else {
-    // New user
     if (!username) { toast('Unesite korisničko ime!', 'err'); return; }
     if (k[username]) { toast('Korisničko ime već postoji!', 'err'); return; }
     if (!lozinka || lozinka.length < 6) { toast('Lozinka mora imati najmanje 6 znakova!', 'err'); return; }
-    k[username] = { ime, lozinka, uloga, napomena };
+    // FIX 2: SHA-256 hash lozinke — NE sprema se plain text
+    const lozinkaHash = await hashLozinka(lozinka);
+    k[username] = { ime, lozinka: lozinkaHash, uloga, napomena };
     toast('Korisnik ' + ime + ' dodan!');
   }
 
@@ -5838,7 +5867,28 @@ function pnDodajRacun(input) {
   const files = Array.from(input.files);
   files.forEach(f => {
     const reader = new FileReader();
-    reader.onload = e => { pnRacuni.push(e.target.result); pnRenderRacuni(); };
+    reader.onload = async (e) => {
+      const base64 = e.target.result;
+      // FIX 3: Pokušaj upload na /api/upload (Firebase Storage)
+      // Ako ne uspije — spremi Base64 lokalno kao fallback
+      let urlIliBase64 = base64;
+      try {
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ base64, path: `putni-nalozi/${Date.now()}/racun` })
+        });
+        if (res.ok) {
+          const { url } = await res.json();
+          urlIliBase64 = url;
+        }
+      } catch(uploadErr) {
+        // Fallback: koristi Base64 lokalno
+        urlIliBase64 = base64;
+      }
+      pnRacuni.push(urlIliBase64);
+      pnRenderRacuni();
+    };
     reader.readAsDataURL(f);
   });
   input.value = '';
@@ -6705,68 +6755,26 @@ initMobileNav();
 </script>
 
 <script>
-// ========== FIREBASE REST API (no SDK needed) ==========
-const FB_PROJECT = "digitalni-tajnik";
-const FB_API_KEY = "AIzaSyDTIt2rsrREtD5AEj_Ilix8sddBFn8TdbM";
-const FB_BASE = `https://firestore.googleapis.com/v1/projects/${FB_PROJECT}/databases/(default)/documents`;
-
+// ========== FIREBASE REST API (via secure server proxy) ==========
+// SIGURNOST: Firebase API ključ je pohranjen u Vercel Environment Variables
+// Klijentski kod NIKADA ne pristupa Firebaseu direktno
 let fbEnabled = false;
-
-// Convert Firestore REST response to plain object
-function fbParse(doc) {
-  if (!doc.fields) return null;
-  const obj = {};
-  for (const [k, v] of Object.entries(doc.fields)) {
-    if (v.stringValue !== undefined) obj[k] = v.stringValue;
-    else if (v.integerValue !== undefined) obj[k] = parseInt(v.integerValue);
-    else if (v.doubleValue !== undefined) obj[k] = parseFloat(v.doubleValue);
-    else if (v.booleanValue !== undefined) obj[k] = v.booleanValue;
-    else if (v.nullValue !== undefined) obj[k] = null;
-    else if (v.arrayValue !== undefined) obj[k] = (v.arrayValue.values||[]).map(i => fbParseVal(i));
-    else if (v.mapValue !== undefined) obj[k] = fbParse(v.mapValue);
-    else obj[k] = null;
-  }
-  return obj;
-}
-
-function fbParseVal(v) {
-  if (v.stringValue !== undefined) return v.stringValue;
-  if (v.integerValue !== undefined) return parseInt(v.integerValue);
-  if (v.doubleValue !== undefined) return parseFloat(v.doubleValue);
-  if (v.booleanValue !== undefined) return v.booleanValue;
-  if (v.nullValue !== undefined) return null;
-  return null;
-}
-
-// Convert plain object to Firestore fields
-function fbFields(obj) {
-  const fields = {};
-  for (const [k, v] of Object.entries(obj)) {
-    if (v === null || v === undefined) fields[k] = { nullValue: null };
-    else if (typeof v === 'boolean') fields[k] = { booleanValue: v };
-    else if (typeof v === 'number') fields[k] = Number.isInteger(v) ? { integerValue: String(v) } : { doubleValue: v };
-    else if (typeof v === 'string') fields[k] = { stringValue: v };
-    else if (Array.isArray(v)) fields[k] = { arrayValue: { values: v.map(i => typeof i === 'string' ? { stringValue: i } : { integerValue: String(i) }) } };
-    else fields[k] = { stringValue: String(v) };
-  }
-  return { fields };
-}
 
 async function fbGet(collection) {
   try {
-    const r = await fetch(`${FB_BASE}/${collection}?key=${FB_API_KEY}`);
+    const r = await fetch(`/api/firebase?collection=${encodeURIComponent(collection)}`);
     if (!r.ok) return [];
     const data = await r.json();
-    return (data.documents || []).map(d => fbParse(d));
+    return data.documents || [];
   } catch(e) { return []; }
 }
 
 async function fbSet(collection, id, obj) {
   try {
-    const r = await fetch(`${FB_BASE}/${collection}/${id}?key=${FB_API_KEY}`, {
+    const r = await fetch('/api/firebase', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(fbFields(obj))
+      body: JSON.stringify({ collection, id, data: obj })
     });
     return r.ok;
   } catch(e) { return false; }
@@ -6774,151 +6782,145 @@ async function fbSet(collection, id, obj) {
 
 async function fbDelete(collection, id) {
   try {
-    await fetch(`${FB_BASE}/${collection}/${id}?key=${FB_API_KEY}`, { method: 'DELETE' });
+    await fetch('/api/firebase', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ collection, id })
+    });
   } catch(e) {}
 }
 
-let db = null;
-
 async function fbInit() {
   try {
-    // Test connection with a simple read
-    const r = await fetch(`${FB_BASE}?key=${FB_API_KEY}&pageSize=1`);
+    const r = await fetch('/api/firebase/health');
     if (r.ok) {
       fbEnabled = true;
       fbUpdateStatus(true);
       fbSyncAll();
     } else {
-      throw new Error('HTTP ' + r.status);
+      throw new Error('Firebase proxy nedostupan');
     }
   } catch(e) {
     fbEnabled = false;
-    fbUpdateStatus(false);
   }
 }
 
-function fbUpdateStatus(ok) {
-  const el = document.querySelector('.header-ai');
-  if (!el) return;
-  if (ok) {
-    el.innerHTML = el.innerHTML.replace('●', '<span style="color:#2ECC71">●</span>') + ' <span style="font-size:11px;color:#2ECC71">☁️ sync</span>';
+function fbUpdateStatus(ok) {}
+
+function fbParse(doc) {
+  if (!doc || !doc.fields) return doc || null;
+  const obj = {};
+  for (const [k, v] of Object.entries(doc.fields)) {
+    if (v.stringValue !== undefined) obj[k] = v.stringValue;
+    else if (v.integerValue !== undefined) obj[k] = parseInt(v.integerValue);
+    else if (v.doubleValue !== undefined) obj[k] = parseFloat(v.doubleValue);
+    else if (v.booleanValue !== undefined) obj[k] = v.booleanValue;
+    else if (v.nullValue !== undefined) obj[k] = null;
+    else obj[k] = null;
   }
+  return obj;
 }
 
-// ── ČLANOVI ──────────────────────────────────────
+// FIX 3: Upload slika na /api/upload → vraća URL string
+async function uploadSlika(base64Data, path) {
+  if (!base64Data || !base64Data.startsWith('data:')) return base64Data;
+  try {
+    const r = await fetch('/api/upload', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ base64: base64Data, path })
+    });
+    if (r.ok) {
+      const { url } = await r.json();
+      return url;
+    }
+  } catch(e) {}
+  return base64Data; // fallback: zadrži Base64 lokalno
+}
+
 async function fbSaveClanovi() {
   if (!fbEnabled) return;
   try {
     for (const c of state.clanovi) {
       const data = {...c};
-      delete data.foto; // Save space
+      // FIX 3: Slike → Firebase Storage URL umjesto Base64 u Firestoreu
+      if (data.foto && data.foto.startsWith('data:')) {
+        data.foto = await uploadSlika(data.foto, `clanovi/${c.id}/foto`);
+      }
       await fbSet('clanovi', String(c.id), data);
     }
-  } catch(e) { }
+  } catch(e) {}
 }
 
 async function fbLoadClanovi() {
   if (!fbEnabled) return;
   try {
     const remote = await fbGet('clanovi');
-    if (remote.length === 0) { await fbSaveClanovi(); return; }
-    // Merge - keep local foto
-    remote.forEach(rc => {
-      const local = state.clanovi.find(c => String(c.id) === String(rc.id));
-      if (local && local.foto) rc.foto = local.foto;
-    });
-    state.clanovi = remote.filter(c => c && c.id);
+    if (!remote || remote.length === 0) { await fbSaveClanovi(); return; }
+    const parsed = remote.map(d => d.fields ? fbParse(d) : d).filter(c => c && c.id);
+    state.clanovi = parsed;
     save();
     if (typeof renderClanovi === 'function') renderClanovi();
     updateStats();
-    toast('👥 ' + remote.length + ' članova sinkronizirano iz oblaka!');
-  } catch(e) { }
+    toast('👥 ' + parsed.length + ' članova sinkronizirano!');
+  } catch(e) {}
 }
 
-// ── TRENINZI ─────────────────────────────────────
 async function fbSaveTreninzi() {
   if (!fbEnabled) return;
   try {
     for (const t of dnTreninzi) {
       await fbSet('treninzi', String(t.id), t);
     }
-  } catch(e) { }
+  } catch(e) {}
 }
 
 async function fbLoadTreninzi() {
   if (!fbEnabled) return;
   try {
     const remote = await fbGet('treninzi');
-    if (remote.length > 0) {
-      dnTreninzi = remote.filter(t => t && t.id);
+    if (remote && remote.length > 0) {
+      dnTreninzi = remote.map(d => d.fields ? fbParse(d) : d).filter(t => t && t.id);
       localStorage.setItem('kk_treninzi', JSON.stringify(dnTreninzi));
     }
-  } catch(e) { }
+  } catch(e) {}
 }
 
-// ── FINANCIJE ────────────────────────────────────
 async function fbSaveFinancije() {
   if (!fbEnabled) return;
   try {
     for (const s of finStavke) {
       await fbSet('financije', String(s.id), s);
     }
-  } catch(e) { }
+  } catch(e) {}
 }
 
 async function fbLoadFinancije() {
   if (!fbEnabled) return;
   try {
     const remote = await fbGet('financije');
-    if (remote.length > 0) {
-      finStavke = remote.filter(s => s && s.id);
+    if (remote && remote.length > 0) {
+      finStavke = remote.map(d => d.fields ? fbParse(d) : d).filter(s => s && s.id);
       localStorage.setItem('kk_financije', JSON.stringify(finStavke));
     }
-  } catch(e) { }
+  } catch(e) {}
 }
 
-// ── SYNC ALL ──────────────────────────────────────
 async function fbSyncAll() {
   if (!fbEnabled) return;
   await fbLoadClanovi();
   await fbLoadTreninzi();
   await fbLoadFinancije();
-  toast('✅ Sinkronizacija završena!');
 }
 
-// ── HOOK INTO EXISTING SAVE FUNCTIONS ─────────────
-// Wrap save() to also push to Firebase
-const _origSave = window.save || save;
-window.save = function() {
-  _origSave();
-  if (fbEnabled) setTimeout(fbSaveClanovi, 300);
-};
+const _origSave = save;
+window.save = function() { _origSave(); if (fbEnabled) setTimeout(fbSaveClanovi, 300); };
+const _origDnSave = dnSave;
+window.dnSave = function() { _origDnSave(); if (fbEnabled) setTimeout(fbSaveTreninzi, 300); };
+const _origFinSave = finSave;
+window.finSave = function() { _origFinSave(); if (fbEnabled) setTimeout(fbSaveFinancije, 300); };
 
-// Wrap dnSave
-const _origDnSave = window.dnSave || dnSave;
-window.dnSave = function() {
-  _origDnSave();
-  if (fbEnabled) setTimeout(fbSaveTreninzi, 300);
-};
-
-// Wrap finSave
-const _origFinSave = window.finSave || finSave;
-window.finSave = function() {
-  _origFinSave();
-  if (fbEnabled) setTimeout(fbSaveFinancije, 300);
-};
-
-// Init Firebase after successful login
-document.addEventListener('fbLogin', () => fbInit());
-
-// Patch prijaviKorisnika to trigger Firebase
 const _origPrijavi = prijaviKorisnika;
-prijaviKorisnika = function() {
-  _origPrijavi();
-  setTimeout(fbInit, 500);
-};
+prijaviKorisnika = function() { _origPrijavi(); setTimeout(fbInit, 500); };
 
 </script>
-
-</body>
-</html>

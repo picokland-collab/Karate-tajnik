@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+daj mi reci iskreno o ovoj aplikaciji: <!DOCTYPE html>
 <html lang="hr">
 <head>
 <meta charset="UTF-8">
@@ -428,15 +428,8 @@
     display: flex;
     gap: 12px;
     max-width: 85%;
-    width: fit-content;
   }
-  .msg.user {
-    align-self: flex-end !important;
-    flex-direction: row !important;
-    margin-left: auto !important;
-    max-width: 85%;
-    width: fit-content;
-  }
+  .msg.user { align-self: flex-end !important; flex-direction: row-reverse !important; margin-left: auto !important; max-width: 85%; }
   .msg-avatar {
     width: 32px;
     height: 32px;
@@ -2720,7 +2713,7 @@ function initTheme() {
 
 // ========== API KEY MANAGEMENT ==========
 function anthropicHeaders() {
-  return { 'Content-Type': 'application/json' };
+  return { 'Content-Type': 'application/json', 'Authorization': 'Bearer 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' };
 }
 
 
@@ -2752,41 +2745,32 @@ function obrišiFoto() {
 
 
 // ========== PRIJAVA / ODJAVA ==========
-async function hashLozinka(lozinka) {
-  const data = new TextEncoder().encode(lozinka);
-  const buf = await crypto.subtle.digest('SHA-256', data);
-  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
-}
-// Lozinke su SHA-256 hashirane - nije plaintext
-const KORISNICI_HASH = {
-  'ivan':     { hash: 'eee334c1b3ad7ab7004bfa2f646d6645886df4f86539b8710c3babde4f1292ac',  ime: 'Ivan Juričić',              uloga: 'predsjednik', admin: true },
-  'jasminka': { hash: 'a363bb3ade9f25dbbb81f0d1d918ea142783aeac68efddf807b8e52590de0629',  ime: 'Jasminka Sinjeri Prevedan', uloga: 'tajnica',     admin: true },
-  'trener':   { hash: '008398a27c78e304d3f9dfe5aed76a0d069ffdb97fb75b8226ad87b4ab9ce4f7', ime: 'Trener',                    uloga: 'trener',      admin: false }
+const KORISNICI = {
+  'ivan':     { lozinka: 'karate2025',  ime: 'Ivan Juričić',         uloga: 'predsjednik', admin: true },
+  'jasminka': { lozinka: 'tajnik2025',  ime: 'Jasminka Sinjeri Prevedan', uloga: 'tajnica', admin: true },
+  'trener':   { lozinka: 'trening2025', ime: 'Trener',               uloga: 'trener',      admin: false }
 };
 
 let trenutniKorisnik = null;
 
-async function loginSubmit() {
+function loginSubmit() {
   const user = document.getElementById('loginUser').value.trim().toLowerCase();
   const pass = document.getElementById('loginPass').value;
   const err = document.getElementById('loginError');
-  
-  const k = KORISNICI_HASH[user];
-  if (!k) { err.textContent = 'Nepoznati korisnik.'; return; }
-  
-  const inputHash = await hashLozinka(pass);
-  if (inputHash !== k.hash) { err.textContent = 'Pogrešna lozinka.'; return; }
-  
-  state.korisnik = { korime: user, ime: k.ime, uloga: k.uloga, admin: k.admin };
-  err.textContent = '';
-  document.getElementById('loginScreen').style.display = 'none';
-  document.getElementById('app').style.display = 'flex';
-  updateStats();
-  updateDashDatum();
-  ucitajPraznike();
-  renderKalendar();
-  provjeriSesiju();
-  logActivity('🔐', k.ime + ' se prijavio/la');
+
+  const allK = getKorisnici();
+  const k = allK[user];
+  if (k && k.lozinka === pass) {
+    trenutniKorisnik = { ...k, username: user };
+    localStorage.setItem('kk_session', JSON.stringify({ username: user, vrijeme: Date.now() }));
+    document.getElementById('loginScreen').style.display = 'none';
+    prijaviKorisnika();
+    err.style.display = 'none';
+  } else {
+    err.style.display = 'block';
+    document.getElementById('loginPass').value = '';
+    document.getElementById('loginPass').focus();
+  }
 }
 
 function prijaviKorisnika() {
@@ -2847,9 +2831,9 @@ function getKorisnici() {
   } catch(e) {}
   // Default korisnici - first time
   return {
-    ivan:     { ime: 'Ivan Juričić', lozinka: 'eee334c1b3ad7ab7004bfa2f646d6645886df4f86539b8710c3babde4f1292ac', uloga: 'admin', napomena: 'Predsjednik' },
-    jasminka: { ime: 'Jasminka Sinjeri Prevedan', lozinka: 'a363bb3ade9f25dbbb81f0d1d918ea142783aeac68efddf807b8e52590de0629', uloga: 'tajnik', napomena: 'Tajnica' },
-    trener:   { ime: 'Trener', lozinka: '008398a27c78e304d3f9dfe5aed76a0d069ffdb97fb75b8226ad87b4ab9ce4f7', uloga: 'trener', napomena: '' }
+    ivan:     { ime: 'Ivan Juričić', lozinka: 'karate2025', uloga: 'admin', napomena: 'Predsjednik' },
+    jasminka: { ime: 'Jasminka Sinjeri Prevedan', lozinka: 'tajnik2025', uloga: 'tajnik', napomena: 'Tajnica' },
+    trener:   { ime: 'Trener', lozinka: 'trening2025', uloga: 'trener', napomena: '' }
   };
 }
 
@@ -3463,10 +3447,11 @@ Napiši formalnu odluku s:
 Budi koncizan i formalan. Koristi standardni format službenih dokumenata.`;
 
   try {
-    const resp = await fetch('/api/ai', {
+    const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: anthropicHeaders(),
       body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
         max_tokens: 1000,
         messages: [{ role: 'user', content: prompt }]
       })
@@ -3580,10 +3565,11 @@ Napiši uzbudljiv, pozitivan i informativan tekst na hrvatskom jeziku koji:
 - Završava s hashtagovima: #KarateKlubĐurđevac #KKĐurđevac #karate #Đurđevac`;
 
   try {
-    const resp = await fetch('/api/ai', {
+    const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: anthropicHeaders(),
       body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
         max_tokens: 1000,
         messages: [{ role: 'user', content: prompt }]
       })
@@ -3776,10 +3762,11 @@ Napiši kratku, jasnu obavijest koja:
 - Završava prijaznim pozdravom`;
 
   try {
-    const resp = await fetch('/api/ai', {
+    const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: anthropicHeaders(),
       body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
         max_tokens: 1000,
         messages: [{ role: 'user', content: prompt }]
       })
@@ -4198,10 +4185,11 @@ async function sendAI() {
   document.getElementById('btnSendAI').disabled = true;
   
   try {
-    const resp = await fetch('/api/ai', {
+    const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: anthropicHeaders(),
       body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
         max_tokens: 1000,
         messages: [{role:'system',content:SYSTEM_PROMPT}, ...chatHistory]
       })
@@ -4243,17 +4231,9 @@ function appendMsg(role, content) {
   const id = 'msg_' + Date.now();
   const msgs = document.getElementById('aiMessages');
   if (role === 'user') {
-    const userDiv = document.createElement('div');
-    userDiv.id = id;
-    userDiv.style.cssText = 'display:flex;flex-direction:row;justify-content:flex-end;gap:10px;width:100%;margin-bottom:12px;align-items:flex-end';
-    userDiv.innerHTML = `<div style="background:var(--red);color:white;padding:10px 14px;border-radius:12px 12px 4px 12px;font-size:14px;line-height:1.6;max-width:75%">${content}</div><div style="width:32px;height:32px;border-radius:50%;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">👤</div>`;
-    msgs.appendChild(userDiv);
+    msgs.insertAdjacentHTML('beforeend', `<div class="msg user" id="${id}" style="display:flex;flex-direction:row;justify-content:flex-end;gap:12px;width:100%"><div class="msg-bubble" style="background:var(--red);color:white;padding:12px 16px;border-radius:10px;font-size:14px;line-height:1.6;max-width:75%">${content}</div><div class="msg-avatar" style="width:32px;height:32px;border-radius:50%;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">👤</div></div>`);
   } else {
-    const aiDiv = document.createElement('div');
-    aiDiv.id = id;
-    aiDiv.style.cssText = 'display:flex;flex-direction:row;gap:10px;width:100%;margin-bottom:12px;align-items:flex-start';
-    aiDiv.innerHTML = `<div style="width:32px;height:32px;border-radius:50%;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">🥋</div><div class="msg-bubble" style="flex:1">${content}</div>`;
-    msgs.appendChild(aiDiv);
+    msgs.insertAdjacentHTML('beforeend', `<div class="msg assistant" id="${id}"><div class="msg-avatar">🥋</div><div class="msg-bubble">${content}</div></div>`);
   }
   msgs.scrollTop = msgs.scrollHeight;
   return id;
@@ -4262,8 +4242,7 @@ function appendMsg(role, content) {
 function updateMsg(id, content) {
   const el = document.getElementById(id);
   if (el) {
-    const bubble = el.querySelector('.msg-bubble') || el.querySelector('div:nth-child(2)');
-    if (bubble) bubble.innerHTML = content.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    el.querySelector('.msg-bubble').innerHTML = content.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
   }
   document.getElementById('aiMessages').scrollTop = 99999;
 }
@@ -4310,10 +4289,11 @@ Podaci kluba: KK Đurđevac, Ulica Andrije Hebranga 12, 48350 Đurđevac, OIB: 9
 Napiši kompletnu, formalnu izjavu s popunjenim podacima. Na kraju navedi mjesto za potpis roditelja/staratelja i predsjednika Ivana Juričića.`;
 
   try {
-    const resp = await fetch('/api/ai', {
+    const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: anthropicHeaders(),
       body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
         max_tokens: 1000,
         messages: [{ role: 'user', content: prompt }]
       })
@@ -4689,7 +4669,7 @@ async function planGenerirajAI() {
   const btn = event.currentTarget;
   btn.textContent = '⏳ Generira se...'; btn.disabled = true;
   try {
-    const resp = await fetch('/api/ai', {
+    const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: anthropicHeaders(),
       body: JSON.stringify({

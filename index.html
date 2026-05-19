@@ -933,9 +933,10 @@
       </div>
       <div class="ai-panel">
         <div class="ai-messages" id="aiMessages">
-          <div class="msg assistant">
-            <div class="msg-avatar">🥋</div>
-            <div class="msg-bubble">
+          <div style="display:flex;width:100%;margin-bottom:18px;justify-content:flex-start">
+            <div style="display:flex;flex-direction:row;align-items:flex-start;gap:8px;max-width:85%">
+              <div style="width:30px;height:30px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;margin-top:2px">🥋</div>
+              <div class="msg-bubble" style="background:var(--surface2);border:1px solid var(--border);padding:11px 16px;border-radius:18px 18px 18px 4px;font-size:14px;line-height:1.65;flex:1;word-break:break-word">
               Dobar dan! Ja sam digitalni tajnik <strong>KK Đurđevac</strong>. Mogu vam pomoći s:<br><br>
               📜 <strong>Pisanjem odluka</strong> – skupštinske, upravnog odbora<br>
               ✉️ <strong>Obavijestima roditeljima/trenerima</strong> – pozivi, obavijesti o treninzima, promjene<br>
@@ -944,8 +945,8 @@
               📋 <strong>Administrativnim poslovima</strong> – zahtjevi, dopisi, izjave<br><br>
               Što trebate danas?
             </div>
+            </div>
           </div>
-        </div>
         <div class="ai-input-area">
           <textarea id="aiInput" placeholder="Npr: Napiši poziv za roditeljski sastanak u petak u 18h..." rows="1"
             onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAI()}"
@@ -4297,10 +4298,13 @@ function appendMsg(role, content) {
 function updateMsg(id, content) {
   const el = document.getElementById(id);
   if (el) {
-    const bubble = el.querySelector('.msg-bubble') || el.querySelector('div:nth-child(2)');
-    if (bubble) bubble.innerHTML = content.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    const bubble = el.querySelector('.msg-bubble');
+    if (bubble) {
+      bubble.innerHTML = content.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    }
   }
-  document.getElementById('aiMessages').scrollTop = 99999;
+  const msgs = document.getElementById('aiMessages');
+  if (msgs) msgs.scrollTop = msgs.scrollHeight;
 }
 
 function clearChat() {

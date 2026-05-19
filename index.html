@@ -417,10 +417,14 @@
   .ai-messages {
     flex: 1;
     overflow-y: auto;
+    overflow-x: hidden;
     padding: 20px 24px;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 4px;
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
   }
   .ai-messages::-webkit-scrollbar { width: 4px; }
   .ai-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius:2px; }
@@ -431,11 +435,16 @@
     width: fit-content;
   }
   .msg.user {
-    align-self: flex-end !important;
-    flex-direction: row !important;
-    margin-left: auto !important;
-    max-width: 85%;
-    width: fit-content;
+    align-self: flex-end;
+    flex-direction: row-reverse;
+    margin-left: auto;
+    max-width: 80%;
+    width: auto;
+  }
+  .msg-bubble {
+    overflow-wrap: break-word;
+    word-break: break-word;
+    min-width: 0;
   }
   .msg-avatar {
     width: 32px;
@@ -4271,23 +4280,42 @@ function appendMsg(role, content) {
   const id = 'msg_' + Date.now();
   const msgs = document.getElementById('aiMessages');
 
-  // Separator između poruka
   const wrapper = document.createElement('div');
   wrapper.id = id;
-  wrapper.style.cssText = 'display:flex;width:100%;margin-bottom:18px;' + (role === 'user' ? 'justify-content:flex-end;' : 'justify-content:flex-start;');
+  wrapper.style.cssText = 'display:flex;width:100%;max-width:100%;box-sizing:border-box;margin-bottom:16px;' +
+    (role === 'user' ? 'justify-content:flex-end;' : 'justify-content:flex-start;');
 
   if (role === 'user') {
-    wrapper.innerHTML = `
-      <div style="display:flex;flex-direction:row;align-items:flex-end;gap:8px;max-width:78%">
-        <div style="background:var(--red);color:white;padding:11px 16px;border-radius:18px 18px 4px 18px;font-size:14px;line-height:1.65;word-break:break-word">${content}</div>
-        <div style="width:30px;height:30px;border-radius:50%;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;margin-bottom:2px">👤</div>
-      </div>`;
+    const inner = document.createElement('div');
+    inner.style.cssText = 'display:flex;flex-direction:row;align-items:flex-end;gap:8px;max-width:75%;min-width:0;';
+
+    const bubble = document.createElement('div');
+    bubble.style.cssText = 'background:var(--red);color:white;padding:10px 14px;border-radius:18px 18px 4px 18px;font-size:14px;line-height:1.6;overflow-wrap:break-word;word-break:break-word;min-width:0;flex:1;';
+    bubble.innerHTML = content;
+
+    const avatar = document.createElement('div');
+    avatar.style.cssText = 'width:28px;height:28px;border-radius:50%;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;';
+    avatar.textContent = '👤';
+
+    inner.appendChild(bubble);
+    inner.appendChild(avatar);
+    wrapper.appendChild(inner);
   } else {
-    wrapper.innerHTML = `
-      <div style="display:flex;flex-direction:row;align-items:flex-start;gap:8px;max-width:85%">
-        <div style="width:30px;height:30px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;margin-top:2px">🥋</div>
-        <div class="msg-bubble" style="background:var(--surface2);border:1px solid var(--border);padding:11px 16px;border-radius:18px 18px 18px 4px;font-size:14px;line-height:1.65;flex:1;word-break:break-word">${content}</div>
-      </div>`;
+    const inner = document.createElement('div');
+    inner.style.cssText = 'display:flex;flex-direction:row;align-items:flex-start;gap:8px;max-width:85%;min-width:0;';
+
+    const avatar = document.createElement('div');
+    avatar.style.cssText = 'width:28px;height:28px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;margin-top:2px;';
+    avatar.textContent = '🥋';
+
+    const bubble = document.createElement('div');
+    bubble.className = 'msg-bubble';
+    bubble.style.cssText = 'background:var(--surface2);border:1px solid var(--border);padding:10px 14px;border-radius:18px 18px 18px 4px;font-size:14px;line-height:1.6;overflow-wrap:break-word;word-break:break-word;min-width:0;flex:1;';
+    bubble.innerHTML = content;
+
+    inner.appendChild(avatar);
+    inner.appendChild(bubble);
+    wrapper.appendChild(inner);
   }
 
   msgs.appendChild(wrapper);

@@ -428,8 +428,15 @@
     display: flex;
     gap: 12px;
     max-width: 85%;
+    width: fit-content;
   }
-  .msg.user { align-self: flex-end !important; flex-direction: row-reverse !important; margin-left: auto !important; max-width: 85%; }
+  .msg.user {
+    align-self: flex-end !important;
+    flex-direction: row !important;
+    margin-left: auto !important;
+    max-width: 85%;
+    width: fit-content;
+  }
   .msg-avatar {
     width: 32px;
     height: 32px;
@@ -4236,9 +4243,17 @@ function appendMsg(role, content) {
   const id = 'msg_' + Date.now();
   const msgs = document.getElementById('aiMessages');
   if (role === 'user') {
-    msgs.insertAdjacentHTML('beforeend', `<div class="msg user" id="${id}" style="display:flex;flex-direction:row;justify-content:flex-end;gap:12px;width:100%"><div class="msg-bubble" style="background:var(--red);color:white;padding:12px 16px;border-radius:10px;font-size:14px;line-height:1.6;max-width:75%">${content}</div><div class="msg-avatar" style="width:32px;height:32px;border-radius:50%;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">👤</div></div>`);
+    const userDiv = document.createElement('div');
+    userDiv.id = id;
+    userDiv.style.cssText = 'display:flex;flex-direction:row;justify-content:flex-end;gap:10px;width:100%;margin-bottom:12px;align-items:flex-end';
+    userDiv.innerHTML = `<div style="background:var(--red);color:white;padding:10px 14px;border-radius:12px 12px 4px 12px;font-size:14px;line-height:1.6;max-width:75%">${content}</div><div style="width:32px;height:32px;border-radius:50%;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">👤</div>`;
+    msgs.appendChild(userDiv);
   } else {
-    msgs.insertAdjacentHTML('beforeend', `<div class="msg assistant" id="${id}"><div class="msg-avatar">🥋</div><div class="msg-bubble">${content}</div></div>`);
+    const aiDiv = document.createElement('div');
+    aiDiv.id = id;
+    aiDiv.style.cssText = 'display:flex;flex-direction:row;gap:10px;width:100%;margin-bottom:12px;align-items:flex-start';
+    aiDiv.innerHTML = `<div style="width:32px;height:32px;border-radius:50%;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">🥋</div><div class="msg-bubble" style="flex:1">${content}</div>`;
+    msgs.appendChild(aiDiv);
   }
   msgs.scrollTop = msgs.scrollHeight;
   return id;
@@ -4247,7 +4262,8 @@ function appendMsg(role, content) {
 function updateMsg(id, content) {
   const el = document.getElementById(id);
   if (el) {
-    el.querySelector('.msg-bubble').innerHTML = content.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    const bubble = el.querySelector('.msg-bubble') || el.querySelector('div:nth-child(2)');
+    if (bubble) bubble.innerHTML = content.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
   }
   document.getElementById('aiMessages').scrollTop = 99999;
 }

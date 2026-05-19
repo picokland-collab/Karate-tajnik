@@ -2762,7 +2762,7 @@ let trenutniKorisnik = null;
 async function loginSubmit() {
   const user = document.getElementById('loginUser').value.trim().toLowerCase();
   const pass = document.getElementById('loginPass').value;
-  const err = document.getElementById('loginErr');
+  const err = document.getElementById('loginError');
   
   const k = KORISNICI_HASH[user];
   if (!k) { err.textContent = 'Nepoznati korisnik.'; return; }

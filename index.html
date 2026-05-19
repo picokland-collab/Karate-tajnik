@@ -421,30 +421,62 @@
     padding: 20px 24px;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 12px;
     box-sizing: border-box;
     width: 100%;
-    min-width: 0;
   }
   .ai-messages::-webkit-scrollbar { width: 4px; }
   .ai-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius:2px; }
   .msg {
     display: flex;
-    gap: 12px;
-    max-width: 85%;
+    gap: 10px;
+    max-width: 80%;
     width: fit-content;
+    align-self: flex-start;
   }
   .msg.user {
     align-self: flex-end;
     flex-direction: row-reverse;
     margin-left: auto;
-    max-width: 80%;
-    width: auto;
   }
   .msg-bubble {
+    padding: 10px 14px;
+    border-radius: 16px;
+    font-size: 14px;
+    line-height: 1.6;
     overflow-wrap: break-word;
     word-break: break-word;
-    min-width: 0;
+    max-width: 100%;
+  }
+  .msg.user .msg-bubble {
+    background: var(--red);
+    color: white;
+    border-radius: 16px 16px 4px 16px;
+  }
+  .msg.assistant .msg-bubble {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 16px 16px 16px 4px;
+  }
+  .msg-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    align-self: flex-end;
+  }
+  .msg.assistant .msg-avatar {
+    background: var(--red);
+    align-self: flex-start;
+    margin-top: 2px;
+  }
+  .msg.user .msg-avatar {
+    background: var(--surface2);
+    border: 1px solid var(--border);
   }
   .msg-avatar {
     width: 32px;
@@ -4279,46 +4311,10 @@ async function sendAI() {
 function appendMsg(role, content) {
   const id = 'msg_' + Date.now();
   const msgs = document.getElementById('aiMessages');
-
-  const wrapper = document.createElement('div');
-  wrapper.id = id;
-  wrapper.style.cssText = 'display:flex;width:100%;max-width:100%;box-sizing:border-box;margin-bottom:16px;' +
-    (role === 'user' ? 'justify-content:flex-end;' : 'justify-content:flex-start;');
-
-  if (role === 'user') {
-    const inner = document.createElement('div');
-    inner.style.cssText = 'display:flex;flex-direction:row;align-items:flex-end;gap:8px;max-width:75%;min-width:0;';
-
-    const bubble = document.createElement('div');
-    bubble.style.cssText = 'background:var(--red);color:white;padding:10px 14px;border-radius:18px 18px 4px 18px;font-size:14px;line-height:1.6;overflow-wrap:break-word;word-break:break-word;min-width:0;flex:1;';
-    bubble.innerHTML = content;
-
-    const avatar = document.createElement('div');
-    avatar.style.cssText = 'width:28px;height:28px;border-radius:50%;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;';
-    avatar.textContent = '👤';
-
-    inner.appendChild(bubble);
-    inner.appendChild(avatar);
-    wrapper.appendChild(inner);
-  } else {
-    const inner = document.createElement('div');
-    inner.style.cssText = 'display:flex;flex-direction:row;align-items:flex-start;gap:8px;max-width:85%;min-width:0;';
-
-    const avatar = document.createElement('div');
-    avatar.style.cssText = 'width:28px;height:28px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;margin-top:2px;';
-    avatar.textContent = '🥋';
-
-    const bubble = document.createElement('div');
-    bubble.className = 'msg-bubble';
-    bubble.style.cssText = 'background:var(--surface2);border:1px solid var(--border);padding:10px 14px;border-radius:18px 18px 18px 4px;font-size:14px;line-height:1.6;overflow-wrap:break-word;word-break:break-word;min-width:0;flex:1;';
-    bubble.innerHTML = content;
-
-    inner.appendChild(avatar);
-    inner.appendChild(bubble);
-    wrapper.appendChild(inner);
-  }
-
-  msgs.appendChild(wrapper);
+  msgs.insertAdjacentHTML('beforeend', role === 'user'
+    ? `<div class="msg user" id="${id}"><div class="msg-avatar">👤</div><div class="msg-bubble">${content}</div></div>`
+    : `<div class="msg assistant" id="${id}"><div class="msg-avatar">🥋</div><div class="msg-bubble">${content}</div></div>`
+  );
   msgs.scrollTop = msgs.scrollHeight;
   return id;
 }
@@ -4326,10 +4322,8 @@ function appendMsg(role, content) {
 function updateMsg(id, content) {
   const el = document.getElementById(id);
   if (el) {
-    const bubble = el.querySelector('.msg-bubble') || el.querySelector('div div div:last-child') || el.querySelector('div div');
-    if (bubble) {
-      bubble.innerHTML = content.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    }
+    const bubble = el.querySelector('.msg-bubble');
+    if (bubble) bubble.innerHTML = content.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
   }
   const msgs = document.getElementById('aiMessages');
   if (msgs) msgs.scrollTop = msgs.scrollHeight;

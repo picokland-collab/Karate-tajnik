@@ -2773,8 +2773,7 @@ async function loginSubmit() {
   err.textContent = '';
 
   if (!user || !pass) {
-    err.textContent = 'Unesite korisničko ime i lozinku.';
-    err.style.display = 'block';
+    if (err) { err.textContent = 'Unesite korisničko ime i lozinku.'; err.style.display = 'block'; }
     return;
   }
 
@@ -2793,9 +2792,8 @@ async function loginSubmit() {
   }
 
   if (!k) {
-    err.textContent = 'Pogrešno korisničko ime ili lozinka.';
-    err.style.display = 'block';
-    await new Promise(r => setTimeout(r, 600)); // Anti brute-force
+    if (err) { err.textContent = 'Pogrešno korisničko ime ili lozinka.'; err.style.display = 'block'; }
+    await new Promise(r => setTimeout(r, 600));
     return;
   }
 
@@ -2803,7 +2801,7 @@ async function loginSubmit() {
   trenutniKorisnik = k;
   localStorage.setItem('kk_session', JSON.stringify({ username: user, vrijeme: Date.now() }));
 
-  err.textContent = '';
+  if (err) err.textContent = '';
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
   prijaviKorisnika();

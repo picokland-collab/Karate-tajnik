@@ -428,15 +428,8 @@
     display: flex;
     gap: 12px;
     max-width: 85%;
-    width: fit-content;
   }
-  .msg.user {
-    align-self: flex-end !important;
-    flex-direction: row !important;
-    margin-left: auto !important;
-    max-width: 85%;
-    width: fit-content;
-  }
+  .msg.user { align-self: flex-end; flex-direction: row-reverse; }
   .msg-avatar {
     width: 32px;
     height: 32px;
@@ -456,7 +449,7 @@
     line-height: 1.6;
   }
   .msg.assistant .msg-bubble { background: var(--surface2); border: 1px solid var(--border); }
-  .msg.user .msg-bubble { background: var(--red); color: white !important; }
+  .msg.user .msg-bubble { background: var(--red); color: white; }
   .ai-input-area {
     padding: 16px 24px;
     border-top: 1px solid var(--border);
@@ -664,7 +657,6 @@
   }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.0.4/tesseract.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 </head>
 <body>
 
@@ -727,8 +719,6 @@
     <button onclick="showSection('lijecnicki')"><span class="icon">🏥</span><span>Liječnički</span></button>
     <div class="section-label">Komunikacija</div>
     <button onclick="showSection('obavijesti2')"><span class="icon">📢</span><span>Obavijesti</span></button>
-    <div class="section-label">Sustav</div>
-    <button onclick="showSection('postavke')"><span class="icon">⚙️</span><span>Postavke</span></button>
     <div class="section-label">AI Asistent</div>
     <button onclick="showSection('ai')"><span class="icon">🤖</span><span>Tajnik AI</span></button>
   </nav>
@@ -748,19 +738,6 @@
         <!-- ALERT PANEL -->
         <div id="alertPanel" style="margin-bottom:16px"></div>
 
-        <!-- DATUM I BRZE RADNJE -->
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
-          <div>
-            <div id="dashDatum" style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;color:var(--gold)"></div>
-            <div id="dashPozdrav" style="font-size:13px;color:var(--muted);margin-top:2px"></div>
-          </div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button class="btn btn-primary btn-sm" onclick="openModal('modalDodajClana')">👤 Novi član</button>
-            <button class="btn btn-secondary btn-sm" onclick="openModal('modalOdluka')">📜 Nova odluka</button>
-            <button class="btn btn-secondary btn-sm" onclick="showSection('emailovi')">📧 Obavijest</button>
-          </div>
-        </div>
-
         <!-- ALERT PANEL -->
         <div id="alertPanel" style="margin-bottom:18px"></div>
 
@@ -779,7 +756,7 @@
           </div>
         </div>
 
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px"><h3 style="font-family:'Bebas Neue',sans-serif;letter-spacing:1px;font-size:18px;color:var(--muted)">NEDAVNE AKTIVNOSTI</h3><button class="btn btn-secondary btn-sm" onclick="obrisiSveAktivnosti()">🗑 Obriši sve</button></div>
+        <h3 style="font-family:'Bebas Neue',sans-serif;letter-spacing:1px;font-size:18px;margin-bottom:12px;color:var(--muted)">NEDAVNE AKTIVNOSTI</h3>
         <div id="recentActivity">
           <div class="empty-state"><div class="icon">📋</div><p>Još nema aktivnosti. Dodajte prve članove!</p></div>
         </div>
@@ -789,7 +766,7 @@
         <div style="display:flex;gap:10px;flex-wrap:wrap;">
           <button class="btn btn-primary" onclick="openModal('modalDodajClana')">+ Novi član</button>
           <button class="btn btn-secondary" onclick="openModal('modalOdluka')">📜 Nova odluka</button>
-          <button class="btn btn-secondary" onclick="noviIzvjestaj()">🏆 Novi izvještaj</button>
+          <button class="btn btn-secondary" onclick="openModal('modalIzvjestaj')">🏆 Novi izvještaj</button>
           <button class="btn btn-secondary" onclick="openModal('modalKomunikacija')">✉️ Pošalji obavijest</button>
         </div>
       </div>
@@ -810,16 +787,11 @@
       </div>
       <div class="content">
         <div class="search-bar">
-          <input type="text" id="searchClan" placeholder="Pretraži po imenu, OIB-u..." oninput="renderClanovi()"><span id="clanCount" style="font-size:12px;color:var(--muted);white-space:nowrap;align-self:center"></span>
+          <input type="text" id="searchClan" placeholder="Pretraži po imenu, OIB-u..." oninput="renderClanovi()">
           <select id="filterStatus" onchange="renderClanovi()">
             <option value="">Svi statusi</option>
             <option value="aktivan">Aktivni</option>
             <option value="neaktivan">Neaktivni</option>
-          </select>
-          <select id="filterClanarina" onchange="renderClanovi()">
-            <option value="">Sve članarine</option>
-            <option value="da">Plaćena</option>
-            <option value="ne">Neplaćena</option>
           </select>
           <select id="filterKategorija" onchange="renderClanovi()">
             <option value="">Sve kategorije</option>
@@ -860,16 +832,7 @@
         <button class="btn btn-primary" onclick="openModal('modalOdluka')">+ Nova odluka</button>
       </div>
       <div class="content">
-        <div class="search-bar" style="margin-bottom:16px">
-        <input type="text" id="searchOdluka" placeholder="Pretraži odluke..." oninput="renderOdluke()">
-        <select id="filterOdlukaStatus" onchange="renderOdluke()">
-          <option value="">Svi statusi</option>
-          <option value="u provedbi">U provedbi</option>
-          <option value="provedeno">Provedeno</option>
-          <option value="arhivirano">Arhivirano</option>
-        </select>
-      </div>
-      <div id="listaOdluka">
+        <div id="listaOdluka">
           <div class="empty-state"><div class="icon">📜</div><p>Nema zapisanih odluka.</p></div>
         </div>
       </div>
@@ -882,8 +845,7 @@
           <h2>Izvještaji s natjecanja</h2>
           <p>Rezultati i sportski nastupi</p>
         </div>
-        <button class="btn btn-secondary" onclick="renderRanglistaModal();openModal('modalRanglista')">🏆 Ranglista</button>
-          <button class="btn btn-primary" onclick="noviIzvjestaj()">+ Novi izvještaj</button>
+        <button class="btn btn-primary" onclick="openModal('modalIzvjestaj')">+ Novi izvještaj</button>
       </div>
       <div class="content">
         <div id="listaIzvjestaja">
@@ -892,36 +854,6 @@
       </div>
     </div>
 
-    <div id="postavke" class="section">
-      <div class="page-header"><div><h2>Postavke kluba</h2><p>Podaci kluba i EmailJS</p></div><button class="btn btn-primary" onclick="spremiPostavke()">💾 Spremi</button></div>
-      <div class="content">
-        <div class="card"><div style="font-family:'Bebas Neue',sans-serif;letter-spacing:1px;font-size:15px;margin-bottom:14px;color:var(--muted)">PODACI KLUBA</div>
-          <div class="form-grid">
-            <div class="form-group full"><label>Naziv kluba</label><input type="text" id="p-naziv"></div>
-            <div class="form-group"><label>OIB</label><input type="text" id="p-oib" maxlength="11"></div>
-            <div class="form-group"><label>Matični broj</label><input type="text" id="p-mb"></div>
-            <div class="form-group full"><label>Adresa</label><input type="text" id="p-adresa"></div>
-            <div class="form-group"><label>Telefon</label><input type="text" id="p-tel"></div>
-            <div class="form-group"><label>E-mail kluba</label><input type="email" id="p-email"></div>
-            <div class="form-group full"><label>IBAN</label><input type="text" id="p-iban"></div>
-            <div class="form-group"><label>Predsjednik</label><input type="text" id="p-predsjednik"></div>
-            <div class="form-group"><label>Tajnik</label><input type="text" id="p-tajnik"></div>
-            <div class="form-group"><label>Članarina 1 dijete (€)</label><input type="number" id="p-clan1" value="25"></div>
-            <div class="form-group"><label>Članarina 2 djece (€)</label><input type="number" id="p-clan2" value="40"></div>
-          </div>
-        </div>
-        <div class="card"><div style="font-family:'Bebas Neue',sans-serif;letter-spacing:1px;font-size:15px;margin-bottom:14px;color:var(--muted)">EMAILJS</div>
-          <div style="font-size:12px;color:var(--gold);margin-bottom:12px">Registrirajte se besplatno na emailjs.com.</div>
-          <div class="form-grid">
-            <div class="form-group"><label>Service ID</label><input type="text" id="p-ejs-service" placeholder="service_..."></div>
-            <div class="form-group"><label>Template ID</label><input type="text" id="p-ejs-template" placeholder="template_..."></div>
-            <div class="form-group full"><label>Public Key</label><input type="text" id="p-ejs-public"></div>
-          </div>
-          <button class="btn btn-secondary" style="margin-top:10px" onclick="testirajEmailJS()">🧪 Testiraj EmailJS</button>
-        </div>
-        <button class="btn btn-primary" style="width:100%;margin-bottom:20px" onclick="spremiPostavke()">💾 Spremi sve postavke</button>
-      </div>
-    </div>
     <!-- AI TAJNIK -->
     <div id="ai" class="section">
       <div class="page-header">
@@ -1297,13 +1229,7 @@
             <div style="font-size:10px;color:#aaa;padding:4px;color:var(--gold)">Sub</div>
             <div style="font-size:10px;color:#aaa;padding:4px;color:#ff5a70">Ned</div>
           </div>
-          <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;font-size:12px;color:var(--muted)">
-  <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#C8102E;margin-right:4px"></span>Trening</span>
-  <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#F0A500;margin-right:4px"></span>Natjecanje</span>
-  <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#3b82f6;margin-right:4px"></span>Sastanak</span>
-  <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#888;margin-right:4px"></span>Ostalo</span>
-</div>
-        <div id="kal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px"></div>
+          <div id="kal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px"></div>
         </div>
 
         <!-- Događaji odabranog dana -->
@@ -1413,36 +1339,13 @@
       <div class="page-header">
         <div><h2>Email adrese</h2><p>Brzi unos za slanje uplatnica</p></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-secondary" onclick="posaljiSvimaMail()">📧 Pošalji svima</button>
           <button class="btn btn-primary" onclick="spremiEmailove()">💾 Spremi sve</button>
         </div>
       </div>
       <div class="content">
         <div style="background:rgba(240,165,0,0.1);border:1px solid var(--gold);border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:13px;color:var(--gold)">
           💡 Unesite email adrese roditelja. Koristit će se za slanje uplatnica. Jedan email po članu.
-        </div>
-        <div class="card" style="margin-bottom:16px">
-        <div style="font-family:'Bebas Neue',sans-serif;letter-spacing:1px;font-size:15px;margin-bottom:12px;color:var(--muted)">BRZI PREDLOŠCI</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn btn-secondary btn-sm" onclick="ucitajPredlozak('trening')">🥋 Otkazivanje treninga</button>
-          <button class="btn btn-secondary btn-sm" onclick="ucitajPredlozak('natjecanje')">🏆 Poziv na natjecanje</button>
-          <button class="btn btn-secondary btn-sm" onclick="ucitajPredlozak('clanarina')">💶 Podsjetnik članarine</button>
-          <button class="btn btn-secondary btn-sm" onclick="ucitajPredlozak('cestitka')">🎉 Čestitka</button>
-        </div>
-      </div>
-        <div class="card" style="margin-bottom:16px">
-          <div style="font-family:'Bebas Neue',sans-serif;letter-spacing:1px;font-size:15px;margin-bottom:14px;color:var(--muted)">POŠALJI SVIMA</div>
-          <div class="form-grid">
-            <div class="form-group full"><label>Naslov maila</label><input type="text" id="mail-svima-subject" placeholder="npr. Obavijest o treningu"></div>
-            <div class="form-group full"><label>Tekst maila</label><textarea id="mail-svima-body" style="min-height:120px" placeholder="Unesite tekst ili zalijepite iz AI Tajnika..."></textarea></div>
-          </div>
-          <div class="form-group" style="margin-top:10px"><label>Pošalji grupi</label><select id="mail-svima-grupa">
-            <option value="svi">Svi aktivni članovi</option>
-            <option value="kadeti">Samo kadeti</option>
-            <option value="juniori">Samo juniori</option>
-            <option value="seniori">Samo seniori</option>
-            <option value="neplaceni">Samo neplaćeni</option>
-          </select></div>
-          <button class="btn btn-gold" style="margin-top:10px;width:100%" onclick="posaljiGrupiMail()">📧 Pošalji odabranoj grupi</button>
         </div>
         <div id="email-lista-forma"></div>
         <div style="margin-top:16px;padding-bottom:20px">
@@ -1497,7 +1400,7 @@
       <div class="page-header">
         <div><h2>Natjecanja i rezultati</h2><p>Evidencija natjecanja i plasmana</p></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn btn-secondary" onclick="noviIzvjestaj()">📰 Izvještaj za portale</button>
+          <button class="btn btn-secondary" onclick="openModal('modalIzvjestaj')">📰 Izvještaj za portale</button>
           <button class="btn btn-primary" onclick="openModal('modalNoviRezultat')">+ Dodaj rezultat</button>
         </div>
       </div>
@@ -1768,14 +1671,14 @@
         </div>
       </div>
       <div style="margin-top:12px;">
-        <button class="btn btn-gold btn-sm" onclick="generirajOdluku(this)">🤖 Generiraj s AI</button>
+        <button class="btn btn-gold btn-sm" onclick="generirajOdluku()">🤖 Generiraj s AI</button>
         <span style="font-size:12px;color:var(--muted);margin-left:8px">AI će napisati formalnu odluku prema statutu</span>
       </div>
       <div id="odlukaOutput" style="display:none;margin-top:14px;">
         <pre id="odlukaText"></pre>
         <div class="doc-output-actions">
           <button class="btn btn-secondary btn-sm" onclick="copyText('odlukaText')">📋 Kopiraj</button>
-          <button class="btn btn-primary btn-sm" onclick="posaljiObavijestMailom(document.getElementById('odlukaText').textContent,document.getElementById('oPredmet').value,this)">📧 Pošalji mailom</button><button class="btn btn-primary btn-sm" onclick="spremiOdluku()">💾 Spremi odluku</button>
+          <button class="btn btn-primary btn-sm" onclick="spremiOdluku()">💾 Spremi odluku</button>
         </div>
       </div>
     </div>
@@ -1830,7 +1733,7 @@
         </div>
       </div>
       <div style="margin-top:12px;">
-        <button class="btn btn-gold btn-sm" onclick="generirajIzvjestaj(this)">🤖 Generiraj izvještaj za portale</button>
+        <button class="btn btn-gold btn-sm" onclick="generirajIzvjestaj()">🤖 Generiraj izvještaj za portale</button>
         <span style="font-size:12px;color:var(--muted);margin-left:8px">Priprema tekst za objavu na webu/Facebooku</span>
       </div>
       <div style="margin-top:10px">
@@ -1847,7 +1750,7 @@
         <pre id="izvjestajText"></pre>
         <div class="doc-output-actions">
           <button class="btn btn-secondary btn-sm" onclick="copyText('izvjestajText')">📋 Kopiraj za portal</button>
-          <button class="btn btn-primary btn-sm" onclick="posaljiObavijestMailom(document.getElementById('izvjestajText').textContent,document.getElementById('iNaziv').value,this)">📧 Pošalji mailom</button><button class="btn btn-primary btn-sm" onclick="spremiIzvjestaj()">💾 Spremi izvještaj</button>
+          <button class="btn btn-primary btn-sm" onclick="spremiIzvjestaj()">💾 Spremi izvještaj</button>
         </div>
       </div>
     </div>
@@ -1896,13 +1799,13 @@
         </div>
       </div>
       <div style="margin-top:12px;">
-        <button class="btn btn-gold btn-sm" onclick="generirajObavijest(this)">🤖 Generiraj obavijest s AI</button>
+        <button class="btn btn-gold btn-sm" onclick="generirajObavijest()">🤖 Generiraj obavijest s AI</button>
       </div>
       <div id="obavijestOutput" style="display:none;margin-top:14px;">
         <pre id="obavijestText"></pre>
         <div class="doc-output-actions">
           <button class="btn btn-secondary btn-sm" onclick="copyText('obavijestText')">📋 Kopiraj</button>
-          <button class="btn btn-primary btn-sm" onclick="posaljiObavijestMailom(document.getElementById('obavijestText').textContent,document.getElementById('kVrsta').value,this)">📧 Pošalji mailom</button><button class="btn btn-primary btn-sm" onclick="spremiObavijest()">💾 Spremi obavijest</button>
+          <button class="btn btn-primary btn-sm" onclick="spremiObavijest()">💾 Spremi obavijest</button>
         </div>
       </div>
     </div>
@@ -2577,87 +2480,6 @@
   </div>
 </div>
 
-
-<div class="modal-overlay" id="modalOdlukaView">
-  <div class="modal" style="max-width:700px">
-    <div class="modal-header">
-      <div><h3 id="odlukaViewNaslov"></h3><div id="odlukaViewDatum" style="font-size:12px;color:#aaa;margin-top:4px"></div></div>
-      <button class="modal-close" onclick="closeModal('modalOdlukaView')">✕</button>
-    </div>
-    <div class="modal-body">
-      <pre id="odlukaViewTekst" style="white-space:pre-wrap;font-size:13px;line-height:1.7"></pre>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeModal('modalOdlukaView')">Zatvori</button>
-      <button class="btn btn-secondary" onclick="navigator.clipboard.writeText(document.getElementById('odlukaViewTekst').textContent);toast('Kopirano!')">📋 Kopiraj</button>
-      <button class="btn btn-gold" onclick="posaljiObavijestMailom(document.getElementById('odlukaViewTekst').textContent,document.getElementById('odlukaViewNaslov').textContent,this)">📧 Pošalji mailom</button>
-    </div>
-  </div>
-</div>
-
-<div class="modal-overlay" id="modalUrediOdluku">
-  <div class="modal" style="max-width:700px">
-    <div class="modal-header">
-      <h3>Uredi odluku</h3>
-      <button class="modal-close" onclick="closeModal('modalUrediOdluku')">✕</button>
-    </div>
-    <div class="modal-body">
-      <input type="hidden" id="urediOdlukaId">
-      <div class="form-grid">
-        <div class="form-group full"><label>Predmet</label><input type="text" id="urediOdlukaPredmet"></div>
-        <div class="form-group"><label>Status</label><select id="urediOdlukaStatus">
-          <option value="">— bez statusa —</option>
-          <option value="u provedbi">U provedbi</option>
-          <option value="provedeno">Provedeno</option>
-          <option value="arhivirano">Arhivirano</option>
-        </select></div>
-        <div class="form-group"><label>Vrsta</label><select id="urediOdlukaVrsta">
-          <option>Odluka Upravnog odbora</option>
-          <option>Odluka Skupštine</option>
-          <option>Zaključak</option>
-          <option>Pravilnik</option>
-        </select></div>
-        <div class="form-group"><label>Datum</label><input type="date" id="urediOdlukaDatum"></div>
-        <div class="form-group full"><label>Sadržaj</label><textarea id="urediOdlukaSadrzaj" style="min-height:300px"></textarea></div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeModal('modalUrediOdluku')">Odustani</button>
-      <button class="btn btn-primary" onclick="spremiUrediOdluku()">💾 Spremi izmjene</button>
-    </div>
-  </div>
-</div>
-
-<div class="modal-overlay" id="modalRanglista">
-  <div class="modal" style="max-width:600px">
-    <div class="modal-header"><h3>🏆 Ranglista natjecatelja</h3><button class="modal-close" onclick="closeModal('modalRanglista')">✕</button></div>
-    <div class="modal-body"><div id="ranglistaContent"></div></div>
-    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('modalRanglista')">Zatvori</button></div>
-  </div>
-</div>
-
-<div class="modal-overlay" id="modalUrediIzvjestaj">
-  <div class="modal" style="max-width:700px">
-    <div class="modal-header">
-      <h3>Uredi izvještaj</h3>
-      <button class="modal-close" onclick="closeModal('modalUrediIzvjestaj')">✕</button>
-    </div>
-    <div class="modal-body">
-      <input type="hidden" id="urediIzvjestajId">
-      <div class="form-grid">
-        <div class="form-group full"><label>Naziv natjecanja</label><input type="text" id="urediIzvjestajNaziv"></div>
-        <div class="form-group"><label>Datum</label><input type="date" id="urediIzvjestajDatum"></div>
-        <div class="form-group"><label>Mjesto</label><input type="text" id="urediIzvjestajMjesto"></div>
-        <div class="form-group"><label>Medalje</label><input type="text" id="urediIzvjestajMedalje"></div>
-        <div class="form-group full"><label>Tekst izvještaja</label><textarea id="urediIzvjestajTekst" style="min-height:250px"></textarea></div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeModal('modalUrediIzvjestaj')">Odustani</button>
-      <button class="btn btn-primary" onclick="spremiUrediIzvjestaj()">💾 Spremi izmjene</button>
-    </div>
-  </div>
-</div>
 <div id="toast"></div>
 
 <script>
@@ -2720,7 +2542,7 @@ function initTheme() {
 
 // ========== API KEY MANAGEMENT ==========
 function anthropicHeaders() {
-  return { 'Content-Type': 'application/json' };
+  return { 'Content-Type': 'application/json', 'anthropic-dangerous-direct-browser-access': 'true' };
 }
 
 
@@ -2752,66 +2574,32 @@ function obrišiFoto() {
 
 
 // ========== PRIJAVA / ODJAVA ==========
-async function hashLozinka(lozinka) {
-  const data = new TextEncoder().encode(lozinka);
-  const buf = await crypto.subtle.digest('SHA-256', data);
-  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
-}
-// Lozinke su SHA-256 hashirane - nije plaintext
-const KORISNICI_HASH = {
-  'ivan':     { hash: 'eee334c1b3ad7ab7004bfa2f646d6645886df4f86539b8710c3babde4f1292ac',  ime: 'Ivan Juričić',              uloga: 'predsjednik', admin: true },
-  'jasminka': { hash: 'a363bb3ade9f25dbbb81f0d1d918ea142783aeac68efddf807b8e52590de0629',  ime: 'Jasminka Sinjeri Prevedan', uloga: 'tajnica',     admin: true },
-  'trener':   { hash: '008398a27c78e304d3f9dfe5aed76a0d069ffdb97fb75b8226ad87b4ab9ce4f7', ime: 'Trener',                    uloga: 'trener',      admin: false }
+const KORISNICI = {
+  'ivan':     { lozinka: 'karate2025',  ime: 'Ivan Juričić',         uloga: 'predsjednik', admin: true },
+  'jasminka': { lozinka: 'tajnik2025',  ime: 'Jasminka Sinjeri Prevedan', uloga: 'tajnica', admin: true },
+  'trener':   { lozinka: 'trening2025', ime: 'Trener',               uloga: 'trener',      admin: false }
 };
 
 let trenutniKorisnik = null;
 
-async function loginSubmit() {
+function loginSubmit() {
   const user = document.getElementById('loginUser').value.trim().toLowerCase();
   const pass = document.getElementById('loginPass').value;
   const err = document.getElementById('loginError');
-  err.textContent = '';
 
-  if (!user || !pass) {
-    err.textContent = 'Unesite korisničko ime i lozinku.';
+  const allK = getKorisnici();
+  const k = allK[user];
+  if (k && k.lozinka === pass) {
+    trenutniKorisnik = { ...k, username: user };
+    localStorage.setItem('kk_session', JSON.stringify({ username: user, vrijeme: Date.now() }));
+    document.getElementById('loginScreen').style.display = 'none';
+    prijaviKorisnika();
+    err.style.display = 'none';
+  } else {
     err.style.display = 'block';
-    return;
+    document.getElementById('loginPass').value = '';
+    document.getElementById('loginPass').focus();
   }
-
-  const inputHash = await hashLozinka(pass);
-
-  // Provjeri ugrađene korisnike (KORISNICI_HASH)
-  const builtinK = KORISNICI_HASH[user];
-  // FIX 2: Provjeri i dinamički dodane korisnike (lozinke su sada hashirane)
-  const dinamicniK = getKorisnici()[user];
-
-  let k = null;
-  if (builtinK && inputHash === builtinK.hash) {
-    k = { korime: user, ime: builtinK.ime, uloga: builtinK.uloga, admin: builtinK.admin };
-  } else if (dinamicniK && inputHash === dinamicniK.lozinka) {
-    k = { korime: user, ime: dinamicniK.ime, uloga: dinamicniK.uloga, admin: dinamicniK.uloga === 'admin' };
-  }
-
-  if (!k) {
-    err.textContent = 'Pogrešno korisničko ime ili lozinka.';
-    err.style.display = 'block';
-    await new Promise(r => setTimeout(r, 600)); // Anti brute-force
-    return;
-  }
-
-  state.korisnik = k;
-  trenutniKorisnik = k;
-  localStorage.setItem('kk_session', JSON.stringify({ username: user, vrijeme: Date.now() }));
-
-  err.textContent = '';
-  document.getElementById('loginScreen').style.display = 'none';
-  document.getElementById('app').style.display = 'flex';
-  prijaviKorisnika();
-  updateStats();
-  updateDashDatum();
-  ucitajPraznike();
-  renderKalendar();
-  logActivity('🔐', k.ime + ' se prijavio/la');
 }
 
 function prijaviKorisnika() {
@@ -2872,9 +2660,9 @@ function getKorisnici() {
   } catch(e) {}
   // Default korisnici - first time
   return {
-    ivan:     { ime: 'Ivan Juričić', lozinka: 'eee334c1b3ad7ab7004bfa2f646d6645886df4f86539b8710c3babde4f1292ac', uloga: 'admin', napomena: 'Predsjednik' },
-    jasminka: { ime: 'Jasminka Sinjeri Prevedan', lozinka: 'a363bb3ade9f25dbbb81f0d1d918ea142783aeac68efddf807b8e52590de0629', uloga: 'tajnik', napomena: 'Tajnica' },
-    trener:   { ime: 'Trener', lozinka: '008398a27c78e304d3f9dfe5aed76a0d069ffdb97fb75b8226ad87b4ab9ce4f7', uloga: 'trener', napomena: '' }
+    ivan:     { ime: 'Ivan Juričić', lozinka: 'karate2025', uloga: 'admin', napomena: 'Predsjednik' },
+    jasminka: { ime: 'Jasminka Sinjeri Prevedan', lozinka: 'tajnik2025', uloga: 'tajnik', napomena: 'Tajnica' },
+    trener:   { ime: 'Trener', lozinka: 'trening2025', uloga: 'trener', napomena: '' }
   };
 }
 
@@ -2904,7 +2692,7 @@ function korisnikRenderLista() {
     </div>`).join('');
 }
 
-async function spremiKorisnika() {
+function spremiKorisnika() {
   const ime = document.getElementById('ku-ime').value.trim();
   const username = document.getElementById('ku-username').value.trim().toLowerCase().replace(/[^a-z0-9]/g,'');
   const lozinka = document.getElementById('ku-lozinka').value;
@@ -2917,24 +2705,20 @@ async function spremiKorisnika() {
   const k = getKorisnici();
 
   if (korisnikEditUsername) {
+    // Edit existing
     if (!k[korisnikEditUsername]) { toast('Korisnik nije pronađen!', 'err'); return; }
     k[korisnikEditUsername].ime = ime;
-    if (lozinka && lozinka.length >= 6) {
-      // FIX 2: Lozinka se hashira SHA-256 prije pohrane
-      k[korisnikEditUsername].lozinka = await hashLozinka(lozinka);
-    } else if (lozinka && lozinka.length > 0 && lozinka.length < 6) {
-      toast('Lozinka mora imati najmanje 6 znakova!', 'err'); return;
-    }
+    if (lozinka && lozinka.length >= 6) k[korisnikEditUsername].lozinka = lozinka;
+    else if (lozinka && lozinka.length < 6) { toast('Lozinka mora imati najmanje 6 znakova!', 'err'); return; }
     k[korisnikEditUsername].uloga = uloga;
     k[korisnikEditUsername].napomena = napomena;
     toast('Korisnik ažuriran!');
   } else {
+    // New user
     if (!username) { toast('Unesite korisničko ime!', 'err'); return; }
     if (k[username]) { toast('Korisničko ime već postoji!', 'err'); return; }
     if (!lozinka || lozinka.length < 6) { toast('Lozinka mora imati najmanje 6 znakova!', 'err'); return; }
-    // FIX 2: SHA-256 hash lozinke — NE sprema se plain text
-    const lozinkaHash = await hashLozinka(lozinka);
-    k[username] = { ime, lozinka: lozinkaHash, uloga, napomena };
+    k[username] = { ime, lozinka, uloga, napomena };
     toast('Korisnik ' + ime + ' dodan!');
   }
 
@@ -3089,17 +2873,21 @@ let state = {
 };
 
 // Load from storage — v2 forces re-import of members with OIB+pojas
-const DATA_VERSION = 3;
+const DATA_VERSION = 2;
 try {
   const saved = localStorage.getItem('kk_djurdjevac');
   if (saved) {
     const parsed = JSON.parse(saved);
-    // Uvijek učitaj sve podatke
-    state = {...state, ...parsed};
-    // Osiguraj da sva polja postoje
-    if (!Array.isArray(state.izvjestaji)) state.izvjestaji = [];
-    if (!Array.isArray(state.odluke)) state.odluke = [];
-    if (!Array.isArray(state.aktivnosti)) state.aktivnosti = [];
+    if ((parsed.version || 1) < DATA_VERSION) {
+      // Stari podaci — zadrži odluke/izvještaje/obavijesti, resetiraj članove
+      state.odluke = parsed.odluke || [];
+      state.izvjestaji = parsed.izvjestaji || [];
+      state.obavijesti = parsed.obavijesti || [];
+      state.aktivnosti = parsed.aktivnosti || [];
+      // clanovi se osvježavaju iz hksClanovi niže
+    } else {
+      state = {...state, ...parsed};
+    }
   }
 } catch(e){}
 
@@ -3147,7 +2935,6 @@ function showSection(id) {
   if (id === 'kalendar') { renderKalendar(); }
   if (id === 'lijecnicki') { ljRenderLista(); const s=document.getElementById('lj-clan-sel'); if(s){ s.innerHTML='<option value="">— Odaberite člana —</option>'+state.clanovi.filter(c=>c.status==='aktivan').map(c=>`<option value="${c.id}">${c.ime} ${c.prezime}</option>`).join(''); } }
   if (id === 'obavijesti2') { ob2RenderLista(); }
-  if (id === 'postavke') { ucitajPostavke(); }
   if (id === 'putni') { pnRenderLista(); document.getElementById('putniForma').style.display='none'; document.getElementById('putniDetalji').style.display='none'; document.getElementById('putniLista').style.display='block'; }
 }
 
@@ -3187,31 +2974,17 @@ function updateStats() {
   if (state.aktivnosti.length === 0) {
     ra.innerHTML = '<div class="empty-state"><div class="icon">📋</div><p>Još nema aktivnosti. Dodajte prve članove!</p></div>';
   } else {
-    ra.innerHTML = state.aktivnosti.slice().reverse().map((a, i) => {
-      const realIdx = state.aktivnosti.length - 1 - i;
-      return `<div class="card" style="margin-bottom:8px;padding:12px 16px;">
+    ra.innerHTML = state.aktivnosti.slice(-5).reverse().map(a =>
+      `<div class="card" style="margin-bottom:8px;padding:12px 16px;">
         <div style="display:flex;align-items:center;gap:10px;">
           <span style="font-size:18px">${a.icon}</span>
-          <div style="flex:1"><div style="font-size:13px">${a.text}</div><div style="font-size:11px;color:var(--muted);margin-top:2px">${a.datum}</div></div>
-          <button onclick="obrisiAktivnost(${realIdx})" style="background:none;border:none;color:#555;cursor:pointer;font-size:16px;padding:4px 8px" title="Obriši">✕</button>
+          <div><div style="font-size:13px">${a.text}</div><div style="font-size:11px;color:var(--muted);margin-top:2px">${a.datum}</div></div>
         </div>
-      </div>`;
-    }).join('');
+      </div>`
+    ).join('');
   }
 }
 
-function obrisiAktivnost(idx) {
-  state.aktivnosti.splice(idx, 1);
-  save();
-  updateStats();
-}
-function obrisiSveAktivnosti() {
-  if (!confirm('Obrisati sve aktivnosti?')) return;
-  state.aktivnosti = [];
-  save();
-  updateStats();
-  toast('✅ Aktivnosti obrisane!');
-}
 function logActivity(icon, text) {
   state.aktivnosti.push({ icon, text, datum: new Date().toLocaleString('hr-HR') });
   save();
@@ -3269,19 +3042,15 @@ function renderClanovi() {
   const fs = document.getElementById('filterStatus')?.value || '';
   const fk = document.getElementById('filterKategorija')?.value || '';
   
-  const fc = document.getElementById('filterClanarina')?.value || '';
   let lista = state.clanovi.filter(c => {
     const match = (c.ime + ' ' + c.prezime + ' ' + (c.oib||'')).toLowerCase().includes(q);
     const st = !fs || c.status === fs;
     const kat = !fk || c.kategorija === fk;
-    const cl = !fc || c.clanarina === fc;
     const npl = !window._filterNeplaceni || c.clanarina === 'ne';
-    return match && st && kat && cl && npl;
+    return match && st && kat && npl;
   });
   
   const el = document.getElementById('tableClanovi');
-  const counter = document.getElementById('clanCount');
-  if (counter) counter.textContent = lista.length + ' članova';
   if (lista.length === 0) {
     el.innerHTML = '<div class="empty-state"><div class="icon">👥</div><p>Nema pronađenih članova.</p></div>';
     return;
@@ -3454,7 +3223,7 @@ function renderIzvjFotke() {
 function izvjObrišiFotku(i) { izvjFotke.splice(i,1); renderIzvjFotke(); }
 
 // ========== ODLUKE ==========
-async function generirajOdluku(btnEl) {
+async function generirajOdluku() {
   const vrsta = document.getElementById('oVrsta').value;
   const predmet = document.getElementById('oPredmet').value;
   const sadrzaj = document.getElementById('oSadrzaj').value;
@@ -3462,7 +3231,7 @@ async function generirajOdluku(btnEl) {
   
   if (!predmet) { toast('Unesite predmet odluke!', 'err'); return; }
   
-  const btn = btnEl || event.currentTarget;
+  const btn = event.currentTarget;
   btn.textContent = '⏳ Generira se...';
   btn.disabled = true;
   
@@ -3492,16 +3261,17 @@ Napiši formalnu odluku s:
 Budi koncizan i formalan. Koristi standardni format službenih dokumenata.`;
 
   try {
-    const resp = await fetch('/api/ai', {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: anthropicHeaders(),
       body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
         max_tokens: 1000,
         messages: [{ role: 'user', content: prompt }]
       })
     });
     const data = await resp.json();
-    const text = data.choices?.[0]?.message?.content || 'Greška pri generiranju.';
+    const text = data.content?.map(b => b.text || '').join('') || 'Greška pri generiranju.';
     document.getElementById('odlukaText').textContent = text;
     document.getElementById('odlukaOutput').style.display = 'block';
   } catch(e) {
@@ -3530,29 +3300,19 @@ function spremiOdluku() {
 
 function renderOdluke() {
   const el = document.getElementById('listaOdluka');
-  const q = (document.getElementById('searchOdluka')?.value||'').toLowerCase();
-  const fs = document.getElementById('filterOdlukaStatus')?.value||'';
-  let lista = state.odluke.filter(o => {
-    const match = (o.predmet+' '+(o.sadrzaj||'')).toLowerCase().includes(q);
-    const st = !fs || (o.status||'') === fs;
-    return match && st;
-  });
-  if (lista.length === 0) {
-    el.innerHTML = '<div class="empty-state"><div class="icon">📜</div><p>Nema pronađenih odluka.</p></div>';
+  if (state.odluke.length === 0) {
+    el.innerHTML = '<div class="empty-state"><div class="icon">📜</div><p>Nema zapisanih odluka.</p></div>';
     return;
   }
-  // Auto-number if missing
-  lista.forEach((o,i) => { if (!o.broj) o.broj = String(state.odluke.indexOf(o)+1).padStart(2,'0') + '/' + (o.datum||new Date().getFullYear()).toString().slice(0,4); });
-  el.innerHTML = lista.slice().reverse().map(o => `
+  el.innerHTML = state.odluke.slice().reverse().map(o => `
     <div class="card">
       <div class="card-row">
         <div>
           <div style="font-weight:500">${o.predmet}</div>
-          <div style="font-size:12px;color:var(--muted);margin-top:3px">${o.vrsta} · ${o.datum || '—'} · <span style="color:var(--gold)">#${o.broj||'—'}</span>${o.status ? ' · <span style="color:#3b82f6">'+o.status+'</span>' : ''}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:3px">${o.vrsta} · ${o.datum || '—'}</div>
         </div>
         <div class="card-actions">
           <button class="btn btn-secondary btn-sm" onclick="prikaziOdluku(${o.id})">Prikaži</button>
-          <button class="btn btn-secondary btn-sm" onclick="urediOdluku(${o.id})">✏️ Uredi</button>
           <button class="btn btn-sm" style="background:rgba(200,16,46,0.15);color:#ff5a70;border:1px solid rgba(200,16,46,0.2)" onclick="obrisiOdluku(${o.id})">✕</button>
         </div>
       </div>
@@ -3562,10 +3322,7 @@ function renderOdluke() {
 function prikaziOdluku(id) {
   const o = state.odluke.find(x => x.id === id);
   if (!o) return;
-  document.getElementById('odlukaViewNaslov').textContent = o.predmet;
-  document.getElementById('odlukaViewTekst').textContent = o.sadrzaj;
-  document.getElementById('odlukaViewDatum').textContent = o.vrsta + ' · ' + (o.datum||'—');
-  openModal('modalOdlukaView');
+  alert(o.sadrzaj);
 }
 
 function obrisiOdluku(id) {
@@ -3575,7 +3332,7 @@ function obrisiOdluku(id) {
 }
 
 // ========== IZVJEŠTAJI ==========
-async function generirajIzvjestaj(btnEl) {
+async function generirajIzvjestaj() {
   const naziv = document.getElementById('iNaziv').value;
   const datum = document.getElementById('iDatum').value;
   const mjesto = document.getElementById('iMjesto').value;
@@ -3586,7 +3343,7 @@ async function generirajIzvjestaj(btnEl) {
   
   if (!naziv) { toast('Unesite naziv natjecanja!', 'err'); return; }
   
-  const btn = btnEl || event.currentTarget;
+  const btn = event.currentTarget;
   btn.textContent = '⏳ Generira se...';
   btn.disabled = true;
   
@@ -3609,31 +3366,19 @@ Napiši uzbudljiv, pozitivan i informativan tekst na hrvatskom jeziku koji:
 - Završava s hashtagovima: #KarateKlubĐurđevac #KKĐurđevac #karate #Đurđevac`;
 
   try {
-    const resp = await fetch('/api/ai', {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: anthropicHeaders(),
       body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
         max_tokens: 1000,
         messages: [{ role: 'user', content: prompt }]
       })
     });
     const data = await resp.json();
-    const text = data.choices?.[0]?.message?.content || 'Greška.';
+    const text = data.content?.map(b => b.text || '').join('') || 'Greška.';
     document.getElementById('izvjestajText').textContent = text;
     document.getElementById('izvjestajOutput').style.display = 'block';
-    // Automatski spremi u listu
-    if (!Array.isArray(state.izvjestaji)) state.izvjestaji = [];
-    state.izvjestaji.push({
-      id: Date.now(),
-      naziv: naziv,
-      datum: datum,
-      mjesto: mjesto,
-      medalje: medalje,
-      tekst: text,
-      fotke: []
-    });
-    save();
-    renderIzvjestaji();
   } catch(e) {
     toast('Greška pri generiranju.', 'err');
   }
@@ -3642,104 +3387,25 @@ Napiši uzbudljiv, pozitivan i informativan tekst na hrvatskom jeziku koji:
   btn.disabled = false;
 }
 
-function dijelijNaDrustveneMreze(id) {
-  const izv = state.izvjestaji.find(x => x.id === id);
-  if (!izv) return;
-  const tekst = izv.sadrzaj || (izv.naziv + "\n\n" + (izv.rezultati||''));
-  navigator.clipboard.writeText(tekst);
-  toast('✅ Tekst kopiran za Facebook/Instagram!');
-}
-
-function renderRanglistaModal() {
-  const medalje = {};
-  state.izvjestaji.forEach(izv => {
-    if (!izv.rezultati) return;
-    state.clanovi.forEach(c => {
-      const ime = c.ime + ' ' + c.prezime;
-      if (izv.rezultati.includes(ime)) {
-        if (!medalje[ime]) medalje[ime] = { zlato:0, srebro:0, bronca:0 };
-        if (izv.rezultati.toLowerCase().includes('zlato') || izv.rezultati.includes('1.')) medalje[ime].zlato++;
-        if (izv.rezultati.toLowerCase().includes('srebro') || izv.rezultati.includes('2.')) medalje[ime].srebro++;
-        if (izv.rezultati.toLowerCase().includes('bronca') || izv.rezultati.includes('3.')) medalje[ime].bronca++;
-      }
-    });
-  });
-  const sorted = Object.entries(medalje).sort((a,b) => (b[1].zlato*3+b[1].srebro*2+b[1].bronca) - (a[1].zlato*3+a[1].srebro*2+a[1].bronca));
-  const el = document.getElementById('ranglistaContent');
-  if (!el) return;
-  if (!sorted.length) { el.innerHTML = '<p style="color:#aaa">Nema podataka o medaljama.</p>'; return; }
-  el.innerHTML = sorted.map((([ime, m], i) => `<div class="card" style="padding:10px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px">
-    <div style="font-size:18px;font-weight:bold;color:var(--gold);width:24px">${i+1}.</div>
-    <div style="flex:1"><strong>${ime}</strong></div>
-    <div style="display:flex;gap:8px;font-size:13px">
-      <span title="Zlato">🥇 ${m.zlato}</span>
-      <span title="Srebro">🥈 ${m.srebro}</span>
-      <span title="Bronca">🥉 ${m.bronca}</span>
-    </div>
-  </div>`)).join('');
-}
-
-
-
-function urediIzvjestaj(id) {
-  const iz = state.izvjestaji.find(x => x.id === id);
-  if (!iz) return;
-  document.getElementById('urediIzvjestajId').value = id;
-  document.getElementById('urediIzvjestajNaziv').value = iz.naziv || '';
-  document.getElementById('urediIzvjestajDatum').value = iz.datum || '';
-  document.getElementById('urediIzvjestajMjesto').value = iz.mjesto || '';
-  document.getElementById('urediIzvjestajMedalje').value = iz.medalje || '';
-  document.getElementById('urediIzvjestajTekst').value = iz.tekst || '';
-  openModal('modalUrediIzvjestaj');
-}
-
-function spremiUrediIzvjestaj() {
-  const id = parseInt(document.getElementById('urediIzvjestajId').value);
-  const iz = state.izvjestaji.find(x => x.id === id);
-  if (!iz) return;
-  iz.naziv = document.getElementById('urediIzvjestajNaziv').value;
-  iz.datum = document.getElementById('urediIzvjestajDatum').value;
-  iz.mjesto = document.getElementById('urediIzvjestajMjesto').value;
-  iz.medalje = document.getElementById('urediIzvjestajMedalje').value;
-  iz.tekst = document.getElementById('urediIzvjestajTekst').value;
-  save();
-  renderIzvjestaji();
-  closeModal('modalUrediIzvjestaj');
-  toast('✅ Izvještaj ažuriran!');
-}
-
-function noviIzvjestaj() {
-  const polja = ['iNaziv','iDatum','iMjesto','iNatjecatelji','iMedalje','iRezultati','iNapomene'];
-  polja.forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
-  const out = document.getElementById('izvjestajOutput');
-  if (out) out.style.display = 'none';
-  const tekst = document.getElementById('izvjestajText');
-  if (tekst) tekst.textContent = '';
-  izvjFotke = [];
-  if (typeof renderIzvjFotke === 'function') renderIzvjFotke();
-  openModal('modalIzvjestaj');
-}
-
 function spremiIzvjestaj() {
   const iz = {
     id: Date.now(),
-    naziv: document.getElementById('iNaziv')?.value || 'Izvještaj',
-    datum: document.getElementById('iDatum')?.value || new Date().toISOString().split('T')[0],
-    mjesto: document.getElementById('iMjesto')?.value || '',
-    medalje: document.getElementById('iMedalje')?.value || '0',
-    tekst: document.getElementById('izvjestajText')?.textContent || '',
-    fotke: Array.isArray(izvjFotke) ? [...izvjFotke] : []
+    naziv: document.getElementById('iNaziv').value,
+    datum: document.getElementById('iDatum').value,
+    mjesto: document.getElementById('iMjesto').value,
+    medalje: document.getElementById('iMedalje').value,
+    tekst: document.getElementById('izvjestajText').textContent,
+    fotke: [...izvjFotke]
   };
   izvjFotke = [];
-  if (typeof renderIzvjFotke === 'function') renderIzvjFotke();
-  if (!Array.isArray(state.izvjestaji)) state.izvjestaji = [];
+  renderIzvjFotke();
   state.izvjestaji.push(iz);
-  try { localStorage.setItem('kk_djurdjevac', JSON.stringify({...state, version: DATA_VERSION})); } catch(e){}
+  save();
   closeModal('modalIzvjestaj');
-  logActivity('🏆', 'Natjecanje: ' + iz.naziv + ' (' + iz.medalje + ' medalja)');
+  renderIzvjestaji();
+  logActivity('🏆', `Natjecanje: ${iz.naziv} (${iz.medalje} medalja)`);
   updateStats();
-  toast('✅ Izvještaj pohranjen!');
-  setTimeout(() => { showSection('izvjestaji'); }, 300);
+  toast('Izvještaj pohranjen!');
 }
 
 function renderIzvjestaji() {
@@ -3755,7 +3421,6 @@ function renderIzvjestaji() {
       ${iz.fotke && iz.fotke.length > 0 ? `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:8px">${iz.fotke.slice(0,4).map(s => `<div style="aspect-ratio:1;border-radius:4px;overflow:hidden"><img src="${s}" style="width:100%;height:100%;object-fit:cover"></div>`).join('')}</div>` : ''}
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn btn-secondary btn-sm" onclick="copyText2('${encodeURIComponent(iz.tekst)}')">📋 Kopiraj tekst</button>
-        <button class="btn btn-secondary btn-sm" onclick="urediIzvjestaj(${iz.id})">✏️ Uredi</button>
         <button class="btn btn-sm" style="background:rgba(200,16,46,0.15);color:#ff5a70;border:1px solid rgba(200,16,46,0.2)" onclick="obrisiIzvjestaj(${iz.id})">✕</button>
       </div>
     </div>`).join('');
@@ -3773,7 +3438,7 @@ function copyText2(encoded) {
 }
 
 // ========== KOMUNIKACIJA ==========
-async function generirajObavijest(btnEl) {
+async function generirajObavijest() {
   const vrsta = document.getElementById('kVrsta').value;
   const opis = document.getElementById('kOpis').value;
   const datum = document.getElementById('kDatum').value;
@@ -3781,7 +3446,7 @@ async function generirajObavijest(btnEl) {
   
   if (!opis) { toast('Unesite opis situacije!', 'err'); return; }
   
-  const btn = btnEl || event.currentTarget;
+  const btn = event.currentTarget;
   btn.textContent = '⏳ Generira se...';
   btn.disabled = true;
   
@@ -3805,16 +3470,17 @@ Napiši kratku, jasnu obavijest koja:
 - Završava prijaznim pozdravom`;
 
   try {
-    const resp = await fetch('/api/ai', {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: anthropicHeaders(),
       body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
         max_tokens: 1000,
         messages: [{ role: 'user', content: prompt }]
       })
     });
     const data = await resp.json();
-    const text = data.choices?.[0]?.message?.content || 'Greška.';
+    const text = data.content?.map(b => b.text || '').join('') || 'Greška.';
     document.getElementById('obavijestText').textContent = text;
     document.getElementById('obavijestOutput').style.display = 'block';
   } catch(e) {
@@ -4184,28 +3850,139 @@ function stopMic() {
 // ========== AI CHAT ==========
 const today = new Date();
 const todayStr = today.toLocaleDateString('hr-HR', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
-const SYSTEM_PROMPT = `Ti si DIGITALNI TAJNIK sportskog kluba. Podaci kluba su dostupni putem funkcije getPostavke(). Koristi ih u dokumentima automatski — ne traži ih od korisnika. Ti si pametan, prijateljan i pouzdan asistent. Komuniciraš na hrvatskom jeziku, prirodno i bez krutosti.
+const SYSTEM_PROMPT = `Ti si DIGITALNI TAJNIK Karate kluba Đurđevac (KK Đurđevac). 
+Odgovaraš ISKLJUČIVO na hrvatskom jeziku.
+NIKADA ne govori da ne možeš nešto napraviti.
+NIKADA ne spominji da nemaš pristup internetu, email računu ili sustavima.
+NIKADA ne davaj upute korisniku kako da sam nešto napravi.
+NIKADA ne objašnjavaj svoja ograničenja.
+Kad korisnik kaže "pošalji mail svima" — napiši tekst maila i reci "Mail je pripremljen — kliknite gumb Pošalji svima u Email adrese sekciji."
+Kad korisnik kaže "generiraj uplatnicu" — reci "Idite na Uplatnice sekciju."
+Uvijek budi kratki i konkretan.
+Danas je ${todayStr}.
+Tvoja uloga je pomagati tajniku i predsjedniku kluba s administrativnim poslovima.
 
-KARAKTER:
-- Prijateljan i topao, kao iskusan kolega koji dobro poznaje posao
-- Na jednostavna pitanja (pozdrav, kako si, hvala) odgovaraš kratko i opušteno — bez formalnosti
-- Na stručna pitanja daješ jasne i korisne odgovore
-- Možeš biti duhovit kad je prikladna situacija
-- Nikad nisi robotski, ukočen ni dosadan
+Kad te pitaju za slanje mailova — odmah napiši gotov tekst maila, bez uvoda.
+Kad te pitaju za odluke — odmah napiši gotovu odluku prema statutu, bez uvoda.
+Kad te pitaju za obavijesti — odmah napiši gotovu obavijest, bez uvoda.
+Kad te pitaju za izvještaje — odmah napiši gotov izvještaj, bez uvoda.
+UVIJEK počni direktno s dokumentom, bez objašnjavanja što ćeš napraviti.
+Nikad ne pitaj za datum jer ga već znaš.
 
-PISANJE DOKUMENATA (odluke, obavijesti, izvještaji, dopisi):
-- Piši profesionalno, precizno i u skladu s hrvatskim pravopisom
-- Koristiti pravilnu terminologiju: "treneri" su osobe, "treninzi" su događaji
-- Nikad ne izmišljaj podatke — koristi samo ono što ti korisnik kaže
-- Dokumenti trebaju biti gotovi za upotrebu — bez placeholder teksta poput [DATUM] osim ako korisnik nije dao podatke
+PODACI O KLUBU:
+- Naziv: Karate klub "Đurđevac" / KK Đurđevac
+- Adresa: Ulica Andrije Hebranga 12, 48350 Đurđevac
+- OIB: 98308789784 | MB: 01076485
+- IBAN: HR8823600001102289908 (Zagrebačka banka)
+- Predsjednik: Ivan Juričić (mandat: 30.03.2025–30.03.2029)
+- Tajnica: Jasminka Sinjeri Prevedan (mandat: 30.03.2025–30.03.2029)
+- Likvidator: Slavko Aušperger
+- Tel: 098/805-555, 098/9078-738
+- E-mail: karate.djurdjevac@gmail.com
+- Facebook: facebook.com/KarateKlubDurdevac
+- Registriran: 03.04.1998. (osnovan 31.03.1995.)
+- Registarski broj: 06000441
 
-VAŽNA PRAVILA:
-- Nikad ne govori da ne možeš nešto napraviti ili da imaš ograničenja
-- Nikad ne spominji AI, model, treniranje ni tehničke detalje
-- Kad korisnik traži slanje maila — napiši tekst i reci: "Zalijepite tekst u polje u sekciji Email adrese i kliknite Pošalji svima."
-- Budi sažet — jedna rečenica kad je dovoljna, ne piši eseje
+STATUT KK ĐURĐEVAC (donesen 30.03.2025.):
 
-Danas je ${new Date().toLocaleDateString('hr-HR')}.`
+OSNOVE: Klub je osnovan temeljem Zakona o udrugama (NN 74/14, 70/17, 98/19, 151/22) i Zakona o sportu (NN 141/22). Neprofitna je pravna osoba, upisana u Registar neprofitnih organizacija.
+
+CILJEVI I DJELATNOSTI (čl. 7-8): Promicanje, razvitak i unapređenje karate sporta. Djelatnosti: organiziranje treninga, poduka djece i mladeži, sudjelovanje na natjecanjima, suradnja s HKS-om i HOO-om, skrb o zdravlju sportaša, edukacija o anti-dopingu, sprječavanje nasilja u sportu.
+
+ČLANSTVO (čl. 10-16):
+- Član može postati svaki državljanin RH i stranac sukladno propisima HKS-a
+- Odluku o prijemu donosi Izvršni odbor
+- Popis članova vodi tajnik elektronički (ime, OIB, datum rođenja, datum pristupanja, adresa, telefon)
+- Prava članova: pravo glasa, pravo biranja i biti biran, sudjelovanje u aktivnostima
+- Obveze članova: plaćanje članarine, bavljenje sportom, čuvanje ugleda kluba
+- Članstvo prestaje: dobrovoljnim istupom, neplaćanjem članarine, isključenjem
+- Isključenje: odlučuje Izvršni odbor, žalba Skupštini u roku 15 dana
+
+TIJELA KLUBA (čl. 18-35):
+1. SKUPŠTINA - najviše tijelo, sačinjavaju svi punoljetni članovi
+   - Redovita (jednom godišnje), izborna (svake 4 godine), izvanredna
+   - Kvorum: natpolovična većina, odluke većinom glasova
+   - Nadležnost: usvaja Statut, program rada, financijski plan, bira predsjednika i tajnika
+   - Saziva predsjednik ili na zahtjev 1/3 članova
+   - Može zasjedati elektronički u hitnim slučajevima
+
+2. PREDSJEDNIK (čl. 26) - bira Skupština na 4 godine
+   - Zastupa i predstavlja Klub
+   - Rukovodi Izvršnim odborom i Skupštinom
+   - Skrbi o izvršenju odluka
+
+3. TAJNIK (čl. 27) - bira Skupština na 4 godine
+   - Zastupa Klub zajedno s predsjednikom
+   - Vodi popis članova
+   - Organizira i koordinira rad Kluba
+   - Zaključuje pravne poslove
+
+4. IZVRŠNI ODBOR (čl. 28-32) - 5 članova, mandat 4 godine
+   - Izvršno i operativno tijelo
+   - Utvrđuje prijedlog programa i financijskog plana
+   - Upravlja imovinom Kluba
+   - Sjednice najmanje jednom u 3 mjeseca
+   - Odluke većinom glasova svih članova
+
+5. STEGOVNA KOMISIJA (čl. 33-34) - 3 člana, mandat 4 godine
+   - Provodi stegovni postupak
+   - Mjere: opomena ili isključenje
+   - Žalba Skupštini u roku 15 dana
+
+IMOVINA (čl. 37-39): Članarine, dobrovoljni prilozi, dotacije iz proračuna, sponzorstva, prihodi od sportskih djelatnosti. Imovina se može koristiti isključivo za ciljeve Kluba.
+
+PRESTANAK RADA (čl. 40-41): Odlukom Skupštine dvotrećinskom većinom. Imovina pripada udruzi sličnih ciljeva.
+
+ČLANARINA: Plaća se mjesečno, iznos određuje Izvršni odbor. Za 1 dijete: 25€, za 2 djece istog prezimena: 40€ (25+15), za 3+ djece: 40€ (treće gratis). Novi član - prvi mjesec besplatno. Rok plaćanja: do 20. u mjesecu.
+
+Možeš pomoći s:
+1. Pisanjem formalnih odluka (Upravni odbor/Izvršni odbor, Skupština)
+2. Obavijestima za roditelje i trenere
+3. Izvještajima s natjecanja za portale i Facebook
+4. Pitanjima o pravilima, statutu i procedurama
+5. Administrativnim dopisima, zahtjevima, izjavama
+6. Putnim nalozima i financijskim dokumentima
+7. Godišnjim izvještajima i planovima
+
+Uvijek si profesionalan, koncizan i koristan. Kad pišeš formalne dokumente, koristi standardni format s datumom, brojem, pravnom osnovom i potpisima.
+
+PODACI O KLUBU:
+- Naziv: Karate klub Đurđevac (KK Đurđevac)
+- Adresa: Ulica Andrije Hebranga 12, 48350 Đurđevac
+- OIB: 98308789784 | MB: 01076485
+- IBAN: HR8823600001102289908
+- Predsjednik: Ivan Juričić (mandat: 30.03.2025–30.03.2029)
+- Tajnica: Jasminka Sinjeri Prevedan (mandat: 30.03.2025–30.03.2029)
+- Tel: 098/805-555, 098/9078-738
+- E-mail: karate.djurdjevac@gmail.com
+- Facebook: facebook.com/KarateKlubDurdevac
+- Registriran: 03.04.1998. (osnovan 31.03.1995.)
+- Likvidator: Slavko Aušperger
+
+STATUT I PRAVNI OKVIR:
+- Udruga djeluje prema Zakonu o udrugama (NN 74/14, 70/17, 98/19, 151/22)
+- Zadnji statut donesen: 30.03.2025.
+- Zadnja skupština: 30.03.2025. (izborna i redovna)
+- Članstvo: za djecu mlađe od 14 god. roditelj/staratelj potpisuje "Izjavu o učlanjenju"; za maloljetne 14-18 god. potpisuje "Izjavu o suglasnosti"
+- Članarina: plaća se svaki mjesec, iznos određuje Upravni odbor
+- Prekid članstva: samo na kraju mjeseca, pismenim zahtjevom, nakon podmirenja svih obveza
+- Klub ne snosi odgovornost za povrede na treninzima/natjecanjima
+- Klub ima pravo koristiti osobne podatke i vizualni materijal za promociju
+- Cilj: promicanje, razvitak i unapređenje karate sporta
+- Ciljana skupina: djeca, opća populacija
+- Sport: karate (1.4.1)
+
+Možeš pomoći s:
+1. Pisanjem formalnih odluka (Upravni odbor, Skupština)
+2. Obavijestima za roditelje i trenere
+3. Izvještajima s natjecanja za portale i Facebook
+4. Pitanjima o pravilima, statutu i procedurama
+5. Administrativnim dopisima i zahtjevima
+6. Prijavama za natjecanja
+7. Godišnjim izvještajima i planovima
+8. Svim ostalim zadacima tajnika sportskog kluba
+
+Uvijek si profesionalan, koncizan i koristan. Kada pišeš formalne dokumente, koristii standardni format s datumom, brojem, pravnom osnovom i potpisima.`;
 
 let chatHistory = [];
 
@@ -4227,35 +4004,20 @@ async function sendAI() {
   document.getElementById('btnSendAI').disabled = true;
   
   try {
-    const resp = await fetch('/api/ai', {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: anthropicHeaders(),
       body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
         max_tokens: 1000,
-        messages: [{role:'system',content:SYSTEM_PROMPT}, ...chatHistory]
+        system: SYSTEM_PROMPT,
+        messages: chatHistory
       })
     });
     const data = await resp.json();
-    const text = data.choices?.[0]?.message?.content || 'Greška pri komunikaciji.';
+    const text = data.content?.map(b => b.text || '').join('') || 'Greška pri komunikaciji.';
     
-    const lowerText = text.toLowerCase();
-    const isOdluka = lowerText.includes('odluka') || lowerText.includes('klasa:') || lowerText.includes('ur.broj') || lowerText.includes('zaključak');
-    const isObavijest = !isOdluka && (lowerText.includes('obavijest') || lowerText.includes('dragi') || lowerText.includes('poštovani') || lowerText.includes('srdačan pozdrav'));
-    const isIzvjestaj = !isOdluka && (lowerText.includes('izvještaj') || lowerText.includes('natjecanje') || lowerText.includes('rezultati'));
-    const isDoc = isOdluka || isObavijest || isIzvjestaj;
-    const spremiBtn = isOdluka
-      ? `<button class="btn btn-gold btn-sm" onclick="spremiAiOdlukuBtn(this)">💾 Spremi u Odluke</button>`
-      : isObavijest
-      ? `<button class="btn btn-gold btn-sm" onclick="spremiAiObavijestBtn(this)">💾 Spremi u Obavijesti</button>`
-      : isIzvjestaj
-      ? `<button class="btn btn-gold btn-sm" onclick="spremiAiIzvjestajBtn(this)">💾 Spremi u Izvještaje</button>`
-      : '';
-    const extraBtns = isDoc ? `<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
-      ${spremiBtn}
-      <button class="btn btn-secondary btn-sm" onclick="navigator.clipboard.writeText(this.closest('.msg').querySelector('.msg-bubble').innerText.split('💾')[0].trim());toast('Kopirano!')">📋 Kopiraj</button>
-    </div>` : '';
-    
-    updateMsg(loadId, text.replace(/\n/g,'<br>') + extraBtns);
+    updateMsg(loadId, text);
     chatHistory.push({ role: 'assistant', content: text });
     
     // Keep history manageable
@@ -4272,17 +4034,17 @@ function appendMsg(role, content) {
   const id = 'msg_' + Date.now();
   const msgs = document.getElementById('aiMessages');
   if (role === 'user') {
-    const userDiv = document.createElement('div');
-    userDiv.id = id;
-    userDiv.style.cssText = 'display:flex;flex-direction:row;justify-content:flex-end;gap:10px;width:100%;margin-bottom:12px;align-items:flex-end';
-    userDiv.innerHTML = `<div style="background:var(--red);color:white;padding:10px 14px;border-radius:12px 12px 4px 12px;font-size:14px;line-height:1.6;max-width:75%">${content}</div><div style="width:32px;height:32px;border-radius:50%;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">👤</div>`;
-    msgs.appendChild(userDiv);
+    msgs.insertAdjacentHTML('beforeend', `
+      <div class="msg ${role}" id="${id}" style="flex-direction:row-reverse">
+        <div class="msg-avatar">👤</div>
+        <div class="msg-bubble" style="background:rgba(200,16,46,0.2);border:1px solid rgba(200,16,46,0.4);color:#EDEDED">${content}</div>
+      </div>`);
   } else {
-    const aiDiv = document.createElement('div');
-    aiDiv.id = id;
-    aiDiv.style.cssText = 'display:flex;flex-direction:row;gap:10px;width:100%;margin-bottom:12px;align-items:flex-start';
-    aiDiv.innerHTML = `<div style="width:32px;height:32px;border-radius:50%;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">🥋</div><div class="msg-bubble" style="flex:1">${content}</div>`;
-    msgs.appendChild(aiDiv);
+    msgs.insertAdjacentHTML('beforeend', `
+      <div class="msg ${role}" id="${id}">
+        <div class="msg-avatar">🥋</div>
+        <div class="msg-bubble">${content}</div>
+      </div>`);
   }
   msgs.scrollTop = msgs.scrollHeight;
   return id;
@@ -4291,8 +4053,7 @@ function appendMsg(role, content) {
 function updateMsg(id, content) {
   const el = document.getElementById(id);
   if (el) {
-    const bubble = el.querySelector('.msg-bubble') || el.querySelector('div:nth-child(2)');
-    if (bubble) bubble.innerHTML = content.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    el.querySelector('.msg-bubble').innerHTML = content.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
   }
   document.getElementById('aiMessages').scrollTop = 99999;
 }
@@ -4339,16 +4100,17 @@ Podaci kluba: KK Đurđevac, Ulica Andrije Hebranga 12, 48350 Đurđevac, OIB: 9
 Napiši kompletnu, formalnu izjavu s popunjenim podacima. Na kraju navedi mjesto za potpis roditelja/staratelja i predsjednika Ivana Juričića.`;
 
   try {
-    const resp = await fetch('/api/ai', {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: anthropicHeaders(),
       body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
         max_tokens: 1000,
         messages: [{ role: 'user', content: prompt }]
       })
     });
     const data = await resp.json();
-    const text = data.choices?.[0]?.message?.content || 'Greška.';
+    const text = data.content?.map(b => b.text || '').join('') || 'Greška.';
     alert(text);
     navigator.clipboard.writeText(text);
     toast('Izjava generirana i kopirana!');
@@ -4718,16 +4480,16 @@ async function planGenerirajAI() {
   const btn = event.currentTarget;
   btn.textContent = '⏳ Generira se...'; btn.disabled = true;
   try {
-    const resp = await fetch('/api/ai', {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: anthropicHeaders(),
       body: JSON.stringify({
-        model: 'meta-llama/llama-4-scout-17b-16e-instruct', max_tokens: 1000,
+        model: 'claude-sonnet-4-20250514', max_tokens: 1000,
         messages: [{ role: 'user', content: `Napiši ${PLAN_VRSTA_LABEL[vrsta]} za Karate klub Đurđevac za ${god}. godinu. Klub ima ~60 članova, djeca i mladi, karate sport. Temelji se na statutu kluba i Zakonu o udrugama. Budi koncizan i konkretan.` }]
       })
     });
     const data = await resp.json();
-    const text = data.choices?.[0]?.message?.content || 'Greška.';
+    const text = data.content?.map(b => b.text||'').join('') || 'Greška.';
     document.getElementById('plan-ai-tekst').textContent = text;
     document.getElementById('plan-ai-output').style.display = 'block';
     document.getElementById('plan-ciljevi').value = text.substring(0, 500);
@@ -5227,18 +4989,25 @@ function gdprOznaci(id) {
 }
 
 
-async function posaljiSvimaMail(subject, body) {
-  const primatelji = state.clanovi.filter(c=>c.status==='aktivan'&&c.email&&c.email.trim());
-  if(!primatelji.length) { toast('Nema e-mail adresa!','err'); showSection('emailovi'); return; }
-  const subj = subject || 'Obavijest — '+klub('naziv');
-  const msg = body || 'Poštovani,\n\nSrdačan pozdrav,\n'+klub('naziv');
-  if(!confirm('Poslati na '+primatelji.length+' adresa?')) return;
-  let ok=0;
-  for(const c of primatelji) {
-    if(await ejsSend({to_email:c.email.trim(),to_name:c.roditelji||(c.ime+' '+c.prezime),subject:subj,message:msg})) ok++;
-    await new Promise(r=>setTimeout(r,450));
+function posaljiSvimaMail(subject, body) {
+  const emailovi = state.clanovi
+    .filter(c => c.status === 'aktivan' && c.email && c.email.trim())
+    .map(c => c.email.trim());
+  
+  if (emailovi.length === 0) {
+    toast('Nema unesenih email adresa! Unesite ih u Email adrese sekciji.', 'err');
+    showSection('emailovi');
+    return;
   }
-  toast('✅ Poslano na '+ok+'/'+primatelji.length+' adresa!');
+
+  const subj = encodeURIComponent(subject || 'Obavijest — Karate klub Đurđevac');
+  const bod = encodeURIComponent(body || 'Poštovani,\n\n\n\nSrdačan pozdrav,\nKarate klub Đurđevac');
+  const bcc = encodeURIComponent(emailovi.join(','));
+  
+  // Open Gmail compose directly in browser
+  const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=karate.djurdjevac@gmail.com&bcc=${bcc}&su=${subj}&body=${bod}`;
+  window.open(gmailUrl, '_blank');
+  toast('✅ Otvara se Gmail s ' + emailovi.length + ' primatelja!');
 }
 
 // ========== BRZI UNOS EMAILOVA ==========
@@ -5533,16 +5302,6 @@ function kalOdaberiDan(datum) {
   const naslov = document.getElementById('kal-dan-naslov');
   const lista = document.getElementById('kal-dan-lista');
   naslov.textContent = new Date(datum + 'T12:00:00').toLocaleDateString('hr-HR', {weekday:'long', day:'numeric', month:'long'});
-  // Add quick-add button
-  const addBtn = document.getElementById('kal-brzi-dodaj');
-  if (addBtn) {
-    addBtn.onclick = () => {
-      document.getElementById('kalDatum').value = datum;
-      document.getElementById('kalNaslov').value = '';
-      openModal('modalKalendar');
-    };
-  }
-
   if (dogadaji.length === 0) {
     lista.innerHTML = '<div style="font-size:13px;color:#666;padding:8px 0">Nema događaja ovaj dan.</div>';
   } else {
@@ -5673,7 +5432,7 @@ function ljRenderLista() {
         <div style="text-align:right">
           <span style="font-size:12px;color:${boja};font-weight:600">${status}</span>
           <div style="margin-top:4px">
-            <button onclick="posaljiPodsjetnikLijecnicki(ljPregledi.find(x=>x.id==='${p.id}'))" style="background:none;border:1px solid #333;border-radius:6px;padding:3px 8px;cursor:pointer;font-size:11px;color:#aaa">📧 Podsjetnik</button> <button onclick="ljObrisi('${p.id}')" style="background:none;border:none;color:#666;cursor:pointer;font-size:12px">✕ Obriši</button>
+            <button onclick="ljObrisi('${p.id}')" style="background:none;border:none;color:#666;cursor:pointer;font-size:12px">✕ Obriši</button>
           </div>
         </div>
       </div>
@@ -5867,28 +5626,7 @@ function pnDodajRacun(input) {
   const files = Array.from(input.files);
   files.forEach(f => {
     const reader = new FileReader();
-    reader.onload = async (e) => {
-      const base64 = e.target.result;
-      // FIX 3: Pokušaj upload na /api/upload (Firebase Storage)
-      // Ako ne uspije — spremi Base64 lokalno kao fallback
-      let urlIliBase64 = base64;
-      try {
-        const res = await fetch('/api/upload', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ base64, path: `putni-nalozi/${Date.now()}/racun` })
-        });
-        if (res.ok) {
-          const { url } = await res.json();
-          urlIliBase64 = url;
-        }
-      } catch(uploadErr) {
-        // Fallback: koristi Base64 lokalno
-        urlIliBase64 = base64;
-      }
-      pnRacuni.push(urlIliBase64);
-      pnRenderRacuni();
-    };
+    reader.onload = e => { pnRacuni.push(e.target.result); pnRenderRacuni(); };
     reader.readAsDataURL(f);
   });
   input.value = '';
@@ -6011,7 +5749,7 @@ function pnPrikaziDetalje(id) {
   `;
 }
 
-async function odobriPutniNalog() {
+function odobriPutniNalog() {
   const n = pnNalozi.find(x => x.id === pnCurrentId);
   if (!n) return;
   n.status = 'odobreno';
@@ -6019,7 +5757,6 @@ async function odobriPutniNalog() {
   pnPrikaziDetalje(pnCurrentId);
   logActivity('✅', 'Odobren putni nalog: ' + n.ime);
   toast('Putni nalog odobren!');
-  await posaljiPotvrduNaloga(n);
 }
 
 function obrisiPutniNalog() {
@@ -6338,24 +6075,17 @@ function posaljiMailObj(u) {
   document.body.removeChild(a);
 }
 
-async function posaljiSveMailove() {
+function posaljiSveMailove() {
   const lista = window._zadnjeUplatnice;
-  if(!lista||!lista.length) { toast('Najprije generirajte uplatnice!','err'); return; }
-  if(!confirm('Poslati '+lista.length+' mailova putem EmailJS?')) return;
-  const btn = document.querySelector('[onclick="posaljiSveMailove()"]');
-  if(btn) { btn.disabled=true; btn.textContent='⏳ 0/'+lista.length+'...'; }
-  let ok=0;
-  for(let i=0;i<lista.length;i++) {
-    const u=lista[i];
-    const p=getPostavke();
-    const rok=u.rok?new Date(u.rok+'T12:00:00').toLocaleDateString('hr-HR'):'20. u mjesecu';
-    const msg='PODACI ZA UPLATU ČLANARINE\nPrimatelj: '+p.naziv+'\nIBAN: '+p.iban+'\nIznos: '+u.iznos+',00 EUR\nOpis: Članarina '+u.mjesec+' '+u.godina+'\nNapomena: '+u.ime+' '+u.prezime+'\nRok: '+rok+'\n\nHvala!\n'+p.naziv;
-    if(await ejsSend({to_email:u.email,to_name:u.roditelji||(u.ime+' '+u.prezime),subject:p.naziv+' — Članarina '+u.mjesec+' '+u.godina+' — '+u.ime+' '+u.prezime,message:msg})) ok++;
-    if(btn) btn.textContent='⏳ '+ok+'/'+(i+1)+'...';
-    await new Promise(r=>setTimeout(r,450));
-  }
-  if(btn) { btn.disabled=false; btn.textContent='📧 Pošalji sve mailove odjednom'; }
-  toast('✅ Poslano: '+ok+'/'+lista.length);
+  if (!lista || lista.length === 0) { toast('Najprije generirajte uplatnice!', 'err'); return; }
+  const bezMaila = (window._zadnjeUplatnice_svi || []).filter(u => u.iznos > 0 && !u.email);
+  if (!confirm(`Otvorit će se ${lista.length} mail prozora (samo oni koji imaju e-mail adresu).${bezMaila.length > 0 ? ' ' + bezMaila.length + ' članova nema e-mail.' : ''} Nastaviti?`)) return;
+  lista.forEach((u, i) => {
+    setTimeout(() => {
+      posaljiMailObj(u);
+    }, i * 800);
+  });
+  toast(`Šalje se ${lista.length} mailova...`);
 }
 
 function prikaziUplatnicuIdx(idx) {
@@ -6458,469 +6188,25 @@ function filterNeplaceni() {
   }, 50);
 }
 
-
-// ========== POSTAVKE KLUBA ==========
-const POSTAVKE_KEY = 'kk_postavke';
-function getPostavke() {
-  try { const s = JSON.parse(localStorage.getItem(POSTAVKE_KEY)||'null'); if(s) return s; } catch(e){}
-  return { naziv:'Karate klub Đurđevac', oib:'98308789784', mb:'01076485', adresa:'Ulica Andrije Hebranga 12, 48350 Đurđevac', tel:'098/805-555', email:'karate.djurdjevac@gmail.com', iban:'HR8823600001102289908', predsjednik:'Ivan Juričić', tajnik:'Jasminka Sinjeri Prevedan', clan1:25, clan2:40, ejsService:'service_hg62jsr', ejsTemplate:'template_2oq38d8', ejsPublic:'HtsQTuabxo_LG6_cX' };
-}
-function spremiPostavke() {
-  const p = { naziv:document.getElementById('p-naziv').value, oib:document.getElementById('p-oib').value, mb:document.getElementById('p-mb').value, adresa:document.getElementById('p-adresa').value, tel:document.getElementById('p-tel').value, email:document.getElementById('p-email').value, iban:document.getElementById('p-iban').value, predsjednik:document.getElementById('p-predsjednik').value, tajnik:document.getElementById('p-tajnik').value, clan1:parseFloat(document.getElementById('p-clan1').value)||25, clan2:parseFloat(document.getElementById('p-clan2').value)||40, ejsService:document.getElementById('p-ejs-service').value, ejsTemplate:document.getElementById('p-ejs-template').value, ejsPublic:document.getElementById('p-ejs-public').value };
-  localStorage.setItem(POSTAVKE_KEY, JSON.stringify(p));
-  ejsReinit();
-  toast('✅ Postavke spremljene!');
-}
-function ucitajPostavke() {
-  const p = getPostavke();
-  const set = (id,val) => { const el=document.getElementById(id); if(el) el.value=val||''; };
-  set('p-naziv',p.naziv); set('p-oib',p.oib); set('p-mb',p.mb); set('p-adresa',p.adresa);
-  set('p-tel',p.tel); set('p-email',p.email); set('p-iban',p.iban);
-  set('p-predsjednik',p.predsjednik); set('p-tajnik',p.tajnik);
-  set('p-clan1',p.clan1); set('p-clan2',p.clan2);
-  set('p-ejs-service',p.ejsService); set('p-ejs-template',p.ejsTemplate); set('p-ejs-public',p.ejsPublic);
-}
-function klub(key) { return getPostavke()[key] || ''; }
-
-// ========== EMAILJS ==========
-function ejsReinit() {
-  const p = getPostavke();
-  if(typeof emailjs !== 'undefined' && p.ejsPublic) { emailjs.init(p.ejsPublic); }
-  else { setTimeout(ejsReinit, 800); }
-}
-ejsReinit();
-async function ejsSend({to_email,to_name,subject,message}) {
-  const p = getPostavke();
-  if(!p.ejsService||!p.ejsTemplate||!p.ejsPublic) { toast('Postavite EmailJS podatke u Postavkama kluba!','err'); return false; }
-  if(typeof emailjs==='undefined') { toast('EmailJS nije učitan.','err'); return false; }
-  try {
-    await emailjs.send(p.ejsService, p.ejsTemplate, { to_email, to_name:to_name||to_email, subject, message, email:p.email||'', name:p.naziv||'' });
-    return true;
-  } catch(e) { toast('Greška: '+(e&&(e.text||e.message)||'EmailJS greška'),'err'); return false; }
-}
-async function testirajEmailJS() {
-  const p = getPostavke();
-  if(!p.ejsPublic) { toast('Unesite EmailJS podatke!','err'); return; }
-  toast('⏳ Testiranje...');
-  const ok = await ejsSend({ to_email:p.email, to_name:p.naziv, subject:'Test - '+p.naziv, message:'EmailJS radi!' });
-  if(ok) toast('✅ EmailJS radi! Provjerite inbox.');
-}
-async function posaljiObavijestMailom(tekst, naslov, btnEl) {
-  const primatelji = state.clanovi.filter(c=>c.status==='aktivan'&&c.email&&c.email.trim());
-  if(!primatelji.length) { toast('Nema e-mail adresa!','err'); return; }
-  if(!confirm('Poslati na '+primatelji.length+' adresa?')) return;
-  if(btnEl) { btnEl.disabled=true; btnEl.textContent='⏳ Šalje se...'; }
-  let ok=0;
-  for(const c of primatelji) {
-    if(await ejsSend({to_email:c.email.trim(),to_name:c.roditelji||(c.ime+' '+c.prezime),subject:klub('naziv')+' — '+naslov,message:tekst})) ok++;
-    await new Promise(r=>setTimeout(r,450));
-  }
-  if(btnEl) { btnEl.disabled=false; btnEl.textContent='📧 Pošalji mailom'; }
-  toast('✅ Poslano na '+ok+'/'+primatelji.length+' adresa!');
-  logActivity('📧','Mailom: "'+naslov+'" → '+ok+' primatelja');
-}
-async function posaljiPodsjetnikLijecnicki(p) {
-  if(!p) return;
-  const clan=state.clanovi.find(c=>c.id==p.clanId);
-  if(!clan||!clan.email) { toast('Nema e-mail adrese!','err'); return; }
-  const vd=new Date(p.vrijedi+'T12:00:00').toLocaleDateString('hr-HR');
-  const d=Math.ceil((new Date(p.vrijedi)-new Date())/86400000);
-  if(await ejsSend({to_email:clan.email,to_name:clan.roditelji||(clan.ime+' '+clan.prezime),subject:klub('naziv')+' — Podsjetnik: liječnički pregled ističe',message:'Pregled za '+clan.ime+' '+clan.prezime+' ističe '+vd+(d>0?' (za '+d+' dana)':' (istekao!)')+'.'+'\n\n'+klub('naziv')}))
-    toast('✅ Podsjetnik poslan: '+clan.ime+' '+clan.prezime);
-}
-async function posaljiPotvrduNaloga(n) {
-  const c=state.clanovi.find(x=>(x.ime+' '+x.prezime).toLowerCase()===n.ime.toLowerCase());
-  if(!c||!c.email) return;
-  await ejsSend({to_email:c.email,to_name:n.ime,subject:klub('naziv')+' — Putni nalog odobren',message:'Putni nalog odobren.\nRelacija: '+n.polaziste+' → '+n.odrediste+'\nIznos: '+n.ukupno+' EUR\n\n'+klub('naziv')});
-}
-
-
-function spremiAiObavijestBtn(btnEl) {
-  const bubble = btnEl.closest('.msg').querySelector('.msg-bubble');
-  const tekst = bubble.innerText.split('💾')[0].trim();
-  const danas = new Date().toISOString().split('T')[0];
-  const obavijest = { id: Date.now(), vrsta: 'Obavijest', naslov: tekst.split('\n')[0].substring(0,60) || 'Obavijest AI', sadrzaj: tekst, datum: danas, autor: state.korisnik?.ime || 'AI Tajnik' };
-  ob2Lista.unshift(obavijest);
-  ob2Save();
-  if (typeof ob2RenderLista === 'function') ob2RenderLista();
-  logActivity('📢', 'AI Obavijest: ' + obavijest.naslov);
-  toast('✅ Obavijest spremljena! Idite na Obavijesti za pregled.');
-  btnEl.textContent = '✅ Spremljeno';
-  btnEl.disabled = true;
-}
-
-function spremiAiIzvjestajBtn(btnEl) {
-  const bubble = btnEl.closest('.msg').querySelector('.msg-bubble');
-  const tekst = bubble.innerText.split('💾')[0].trim();
-  const danas = new Date().toISOString().split('T')[0];
-  const prvaLinija = tekst.split('\n').find(l => l.trim().length > 3) || 'Izvještaj AI';
-  const izvjestaj = { id: Date.now(), naziv: prvaLinija.substring(0,60), datum: danas, mjesto: 'AI Tajnik', medalje: '0', tekst: tekst, fotke: [] };
-  if (!Array.isArray(state.izvjestaji)) state.izvjestaji = [];
-  state.izvjestaji.push(izvjestaj);
-  save();
-  if (typeof renderIzvjestaji === 'function') renderIzvjestaji();
-  updateStats();
-  logActivity('🏆', 'AI Izvještaj: ' + izvjestaj.naziv);
-  toast('✅ Izvještaj spremljen! Idite na Natjecanja za pregled.');
-  btnEl.textContent = '✅ Spremljeno';
-  btnEl.disabled = true;
-}
-
-function spremiAiOdlukuBtn(btnEl) {
-  const bubble = btnEl.closest('.msg').querySelector('.msg-bubble');
-  const tekst = bubble.innerText.split('💾')[0].trim();
-  const danas = new Date().toISOString().split('T')[0];
-  const predmet = tekst.split('\n')[0].replace(/^(ODLUKA|Odluka):?/i,'').trim().substring(0,60) || 'Odluka AI';
-  const odluka = { id: Date.now(), vrsta: 'Odluka Upravnog odbora', predmet, sadrzaj: tekst, datum: danas, autor: state.korisnik?.ime || 'AI Tajnik' };
-  state.odluke = state.odluke || [];
-  state.odluke.unshift(odluka);
-  save();
-  renderOdluke && renderOdluke();
-  toast('✅ Odluka spremljena!');
-  btnEl.textContent = '✅ Spremljeno';
-  btnEl.disabled = true;
-}
-function spremiAiOdluku(btnEl) {
-  const bubble = btnEl.closest('.msg-bubble');
-  const tekst = bubble.innerText.replace('💾 Spremi u Odluke','').replace('📋 Kopiraj','').trim();
-  const danas = new Date().toISOString().split('T')[0];
-  const predmet = tekst.split('\n')[0].replace(/^(ODLUKA|Odluka):?/i,'').trim().substring(0,60) || 'Odluka';
-  const odluka = { id: Date.now(), vrsta: 'Odluka Upravnog odbora', predmet, sadrzaj: tekst, datum: danas, autor: state.korisnik?.ime || 'AI Tajnik' };
-  state.odluke = state.odluke || [];
-  state.odluke.unshift(odluka);
-  save();
-  toast('✅ Odluka spremljena u Odluke i akti!');
-  btnEl.textContent = '✅ Spremljeno';
-  btnEl.disabled = true;
-}
-
-function urediOdluku(id) {
-  const o = state.odluke.find(x => x.id === id);
-  if (!o) return;
-  document.getElementById('urediOdlukaId').value = id;
-  document.getElementById('urediOdlukaPredmet').value = o.predmet || '';
-  document.getElementById('urediOdlukaVrsta').value = o.vrsta || 'Odluka Upravnog odbora';
-  document.getElementById('urediOdlukaStatus').value = o.status || '';
-  document.getElementById('urediOdlukaDatum').value = o.datum || '';
-  document.getElementById('urediOdlukaSadrzaj').value = o.sadrzaj || '';
-  openModal('modalUrediOdluku');
-}
-function spremiUrediOdluku() {
-  const id = parseInt(document.getElementById('urediOdlukaId').value);
-  const o = state.odluke.find(x => x.id === id);
-  if (!o) return;
-  o.predmet = document.getElementById('urediOdlukaPredmet').value;
-  o.vrsta = document.getElementById('urediOdlukaVrsta').value;
-  o.status = document.getElementById('urediOdlukaStatus').value;
-  o.datum = document.getElementById('urediOdlukaDatum').value;
-  o.sadrzaj = document.getElementById('urediOdlukaSadrzaj').value;
-  save();
-  renderOdluke();
-  closeModal('modalUrediOdluku');
-  toast('✅ Odluka ažurirana!');
-}
-
-
-function updateDashDatum() {
-  const el = document.getElementById('dashDatum');
-  const elP = document.getElementById('dashPozdrav');
-  if (!el) return;
-  const now = new Date();
-  const dani = ['nedjelja','ponedjeljak','utorak','srijeda','četvrtak','petak','subota'];
-  const mjeseci = ['siječnja','veljače','ožujka','travnja','svibnja','lipnja','srpnja','kolovoza','rujna','listopada','studenog','prosinca'];
-  el.textContent = dani[now.getDay()].toUpperCase() + ', ' + now.getDate() + '. ' + mjeseci[now.getMonth()] + ' ' + now.getFullYear() + '.';
-  const h = now.getHours();
-  const ime = state.korisnik?.ime?.split(' ')[0] || '';
-  const pozdrav = h < 12 ? 'Dobro jutro' : h < 18 ? 'Dobar dan' : 'Dobra večer';
-  if (elP) elP.textContent = pozdrav + (ime ? ', ' + ime + '!' : '!');
-}
-
-
-function ucitajPraznike() {
-  const god = new Date().getFullYear();
-  const praznici = [
-    { datum: god+'-01-01', naziv: 'Nova godina' },
-    { datum: god+'-01-06', naziv: 'Sveta tri kralja' },
-    { datum: god+'-05-01', naziv: 'Praznik rada' },
-    { datum: god+'-05-30', naziv: 'Dan državnosti' },
-    { datum: god+'-06-22', naziv: 'Dan antifašističke borbe' },
-    { datum: god+'-08-05', naziv: 'Dan pobjede i domovinske zahvalnosti' },
-    { datum: god+'-08-15', naziv: 'Velika Gospa' },
-    { datum: god+'-11-01', naziv: 'Svi sveti' },
-    { datum: god+'-11-18', naziv: 'Dan sjećanja na žrtve Domovinskog rata' },
-    { datum: god+'-12-25', naziv: 'Božić' },
-    { datum: god+'-12-26', naziv: 'Sveti Stjepan' },
-  ];
-  // Uskrs (algoritam za izračun)
-  const a = god % 19, b = Math.floor(god/100), c = god % 100;
-  const d = Math.floor(b/4), e = b % 4, f = Math.floor((b+8)/25);
-  const g = Math.floor((b-f+1)/3), h = (19*a+b-d-g+15) % 30;
-  const i = Math.floor(c/4), k = c % 4;
-  const l = (32+2*e+2*i-h-k) % 7;
-  const m = Math.floor((a+11*h+22*l)/451);
-  const month = Math.floor((h+l-7*m+114)/31);
-  const day = ((h+l-7*m+114) % 31) + 1;
-  const uskrs = new Date(god, month-1, day);
-  const uskrsPon = new Date(uskrs); uskrsPon.setDate(uskrs.getDate()+1);
-  const tijelovoPon = new Date(uskrs); tijelovoPon.setDate(uskrs.getDate()+60);
-  const fmt = d => d.toISOString().split('T')[0];
-  praznici.push({ datum: fmt(uskrs), naziv: 'Uskrs' });
-  praznici.push({ datum: fmt(uskrsPon), naziv: 'Uskrsni ponedjeljak' });
-  praznici.push({ datum: fmt(tijelovoPon), naziv: 'Tijelovo' });
-
-  // Add to calendar if not already there
-  let changed = false;
-  praznici.forEach(p => {
-    const exists = kalDogadaji.find(e => e.datum === p.datum && e.naslov === p.naziv);
-    if (!exists) {
-      kalDogadaji.push({ id: 'praznik_'+p.datum, datum: p.datum, naslov: p.naziv, vrsta: 'ostalo', opis: '🇭🇷 Hrvatski državni praznik' });
-      changed = true;
-    }
-  });
-  if (changed) { kalSave(); renderKalendar(); }
-}
-
-
-// ========== PREDLOŠCI ==========
-function ucitajPredlozak(tip) {
-  const p = getPostavke();
-  const predlosci = {
-    trening: { sub: 'Otkazivanje treninga — '+p.naziv, body: 'Dragi roditelji i članovi,\n\nobavještavamo vas da je trening zakazan za [DATUM] otkazan zbog [RAZLOG].\n\nSljedeći trening održat će se [DATUM].\n\nIspričavamo se na neugodnosti.\n\nSrdačan pozdrav,\n'+p.naziv },
-    natjecanje: { sub: 'Poziv na natjecanje — '+p.naziv, body: 'Dragi roditelji i članovi,\n\nobavještavamo vas da se [NAZIV NATJECANJA] održava [DATUM] u [MJESTO].\n\nMolimo sve natjecatelje da se jave treneru do [ROK].\n\nSrdačan pozdrav,\n'+p.naziv },
-    clanarina: { sub: 'Podsjetnik: članarina — '+p.naziv, body: 'Dragi roditelji,\n\npodsjećamo vas da je rok za plaćanje članarine za [MJESEC] [DAN]. u mjesecu.\n\nIBAN: '+p.iban+'\nPrimatelj: '+p.naziv+'\n\nHvala na razumijevanju!\n'+p.naziv },
-    cestitka: { sub: 'Čestitka — '+p.naziv, body: 'Dragi članovi i roditelji,\n\nčestitamo vam [PRIGODA] i želimo vam sve najbolje!\n\nSrdačan pozdrav,\n'+p.naziv }
-  };
-  const pred = predlosci[tip];
-  if (!pred) return;
-  document.getElementById('mail-svima-subject').value = pred.sub;
-  document.getElementById('mail-svima-body').value = pred.body;
-  toast('✅ Predložak učitan!');
-}
-
-// ========== GRUPE PRIMATELJA ==========
-async function posaljiGrupiMail() {
-  const grupa = document.getElementById('mail-svima-grupa')?.value || 'svi';
-  const subject = document.getElementById('mail-svima-subject').value;
-  const body = document.getElementById('mail-svima-body').value;
-  if (!subject || !body) { toast('Unesite naslov i tekst!', 'err'); return; }
-  let primatelji = state.clanovi.filter(c => c.status === 'aktivan' && c.email);
-  if (grupa === 'kadeti') primatelji = primatelji.filter(c => c.kategorija === 'kadet');
-  else if (grupa === 'juniori') primatelji = primatelji.filter(c => c.kategorija === 'junior');
-  else if (grupa === 'seniori') primatelji = primatelji.filter(c => c.kategorija === 'senior');
-  else if (grupa === 'neplaceni') primatelji = primatelji.filter(c => c.clanarina === 'ne');
-  if (!primatelji.length) { toast('Nema primatelja u odabranoj grupi!', 'err'); return; }
-  if (!confirm('Poslati na '+primatelji.length+' adresa?')) return;
-  const btn = document.querySelector('[onclick="posaljiGrupiMail()"]');
-  if (btn) { btn.disabled = true; btn.textContent = '⏳ Šalje se...'; }
-  let ok = 0;
-  for (const c of primatelji) {
-    if (await ejsSend({ to_email: c.email.trim(), to_name: c.roditelji||(c.ime+' '+c.prezime), subject, message: body })) ok++;
-    await new Promise(r => setTimeout(r, 450));
-  }
-  if (btn) { btn.disabled = false; btn.textContent = '📧 Pošalji odabranoj grupi'; }
-  toast('✅ Poslano na '+ok+'/'+primatelji.length+' adresa!');
-  logActivity('📧', 'Grupni mail ('+grupa+'): "'+subject+'" → '+ok+' primatelja');
-}
-
-// ========== PODSJETNICI ČLANARINE ==========
-async function posaljiPodsjetnikeClanarina() {
-  const neplaceni = state.clanovi.filter(c => c.status === 'aktivan' && c.clanarina === 'ne' && c.email);
-  if (!neplaceni.length) { toast('Nema neplaćenih s email adresom!', 'err'); return; }
-  if (!confirm('Poslati podsjetnik na '+neplaceni.length+' adresa?')) return;
-  const p = getPostavke();
-  const rok = document.getElementById('upl-rok-dan')?.value || 20;
-  let ok = 0;
-  for (const c of neplaceni) {
-    const msg = 'Dragi '+( c.roditelji||(c.ime+' '+c.prezime))+',\n\npodsjećamo vas da je rok za plaćanje članarine '+rok+'. u mjesecu.\n\nIBAN: '+p.iban+'\nPrimatelj: '+p.naziv+'\n\nHvala!\n'+p.naziv;
-    if (await ejsSend({ to_email: c.email, to_name: c.roditelji||(c.ime+' '+c.prezime), subject: p.naziv+' — Podsjetnik: članarina', message: msg })) ok++;
-    await new Promise(r => setTimeout(r, 450));
-  }
-  toast('✅ Poslano '+ok+'/'+neplaceni.length+' podsjetnika!');
-}
-
-// ========== BRZI AI UPIT ==========
-function brziAiUpit(tekst) {
-  const input = document.getElementById('aiInput');
-  if (input) { input.value = tekst; input.focus(); }
-}
-
-
 // Init
 updateStats();
-updateDashDatum();
-ucitajPraznike();
 renderKalendar();
 provjeriSesiju();
 initMobileNav();
 </script>
 
 <script>
-// ========== FIREBASE REST API (via secure server proxy) ==========
-// SIGURNOST: Firebase API ključ je pohranjen u Vercel Environment Variables
-// Klijentski kod NIKADA ne pristupa Firebaseu direktno
+// Firebase - onemogućen, sve radi lokalno
 let fbEnabled = false;
-
-async function fbGet(collection) {
-  try {
-    const r = await fetch(`/api/firebase?collection=${encodeURIComponent(collection)}`);
-    if (!r.ok) return [];
-    const data = await r.json();
-    return data.documents || [];
-  } catch(e) { return []; }
-}
-
-async function fbSet(collection, id, obj) {
-  try {
-    const r = await fetch('/api/firebase', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ collection, id, data: obj })
-    });
-    return r.ok;
-  } catch(e) { return false; }
-}
-
-async function fbDelete(collection, id) {
-  try {
-    await fetch('/api/firebase', {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ collection, id })
-    });
-  } catch(e) {}
-}
-
-async function fbInit() {
-  try {
-    const r = await fetch('/api/firebase/health');
-    if (r.ok) {
-      fbEnabled = true;
-      fbUpdateStatus(true);
-      fbSyncAll();
-    } else {
-      throw new Error('Firebase proxy nedostupan');
-    }
-  } catch(e) {
-    fbEnabled = false;
-  }
-}
-
-function fbUpdateStatus(ok) {}
-
-function fbParse(doc) {
-  if (!doc || !doc.fields) return doc || null;
-  const obj = {};
-  for (const [k, v] of Object.entries(doc.fields)) {
-    if (v.stringValue !== undefined) obj[k] = v.stringValue;
-    else if (v.integerValue !== undefined) obj[k] = parseInt(v.integerValue);
-    else if (v.doubleValue !== undefined) obj[k] = parseFloat(v.doubleValue);
-    else if (v.booleanValue !== undefined) obj[k] = v.booleanValue;
-    else if (v.nullValue !== undefined) obj[k] = null;
-    else obj[k] = null;
-  }
-  return obj;
-}
-
-// FIX 3: Upload slika na /api/upload → vraća URL string
-async function uploadSlika(base64Data, path) {
-  if (!base64Data || !base64Data.startsWith('data:')) return base64Data;
-  try {
-    const r = await fetch('/api/upload', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ base64: base64Data, path })
-    });
-    if (r.ok) {
-      const { url } = await r.json();
-      return url;
-    }
-  } catch(e) {}
-  return base64Data; // fallback: zadrži Base64 lokalno
-}
-
-async function fbSaveClanovi() {
-  if (!fbEnabled) return;
-  try {
-    for (const c of state.clanovi) {
-      const data = {...c};
-      // FIX 3: Slike → Firebase Storage URL umjesto Base64 u Firestoreu
-      if (data.foto && data.foto.startsWith('data:')) {
-        data.foto = await uploadSlika(data.foto, `clanovi/${c.id}/foto`);
-      }
-      await fbSet('clanovi', String(c.id), data);
-    }
-  } catch(e) {}
-}
-
-async function fbLoadClanovi() {
-  if (!fbEnabled) return;
-  try {
-    const remote = await fbGet('clanovi');
-    if (!remote || remote.length === 0) { await fbSaveClanovi(); return; }
-    const parsed = remote.map(d => d.fields ? fbParse(d) : d).filter(c => c && c.id);
-    state.clanovi = parsed;
-    save();
-    if (typeof renderClanovi === 'function') renderClanovi();
-    updateStats();
-    toast('👥 ' + parsed.length + ' članova sinkronizirano!');
-  } catch(e) {}
-}
-
-async function fbSaveTreninzi() {
-  if (!fbEnabled) return;
-  try {
-    for (const t of dnTreninzi) {
-      await fbSet('treninzi', String(t.id), t);
-    }
-  } catch(e) {}
-}
-
-async function fbLoadTreninzi() {
-  if (!fbEnabled) return;
-  try {
-    const remote = await fbGet('treninzi');
-    if (remote && remote.length > 0) {
-      dnTreninzi = remote.map(d => d.fields ? fbParse(d) : d).filter(t => t && t.id);
-      localStorage.setItem('kk_treninzi', JSON.stringify(dnTreninzi));
-    }
-  } catch(e) {}
-}
-
-async function fbSaveFinancije() {
-  if (!fbEnabled) return;
-  try {
-    for (const s of finStavke) {
-      await fbSet('financije', String(s.id), s);
-    }
-  } catch(e) {}
-}
-
-async function fbLoadFinancije() {
-  if (!fbEnabled) return;
-  try {
-    const remote = await fbGet('financije');
-    if (remote && remote.length > 0) {
-      finStavke = remote.map(d => d.fields ? fbParse(d) : d).filter(s => s && s.id);
-      localStorage.setItem('kk_financije', JSON.stringify(finStavke));
-    }
-  } catch(e) {}
-}
-
-async function fbSyncAll() {
-  if (!fbEnabled) return;
-  await fbLoadClanovi();
-  await fbLoadTreninzi();
-  await fbLoadFinancije();
-}
-
-const _origSave = save;
-window.save = function() { _origSave(); if (fbEnabled) setTimeout(fbSaveClanovi, 300); };
-const _origDnSave = dnSave;
-window.dnSave = function() { _origDnSave(); if (fbEnabled) setTimeout(fbSaveTreninzi, 300); };
-const _origFinSave = finSave;
-window.finSave = function() { _origFinSave(); if (fbEnabled) setTimeout(fbSaveFinancije, 300); };
-
-const _origPrijavi = prijaviKorisnika;
-prijaviKorisnika = function() { _origPrijavi(); setTimeout(fbInit, 500); };
-
+function fbInit() {}
+function fbSyncAll() {}
+function fbSaveClanovi() {}
+function fbLoadClanovi() {}
+function fbSaveTreninzi() {}
+function fbLoadTreninzi() {}
+function fbSaveFinancije() {}
+function fbLoadFinancije() {}
 </script>
+
+</body>
+</html>

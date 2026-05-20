@@ -6091,33 +6091,31 @@ function importHksClanovi() {
   logActivity('📥', `Uvoz iz HKS: ${dodano} novih članova`);
 }
 
-// Auto-import ako je baza prazna ili nema OIB-ove
-if (state.clanovi.length === 0 || !state.clanovi[0].oib) {
+// Auto-import HKS članova - SAMO za KK Đurđevac i samo ako nema podataka
+// Za ostale klubove - ne importamo automatski
+(function autoImportHKS() {
+  const session = JSON.parse(localStorage.getItem('kk_session') || 'null');
+  const jeDefaultKlub = !session?.klub_id || session?.klub_id === '00000000-0000-0000-0000-000000000001';
+  if (!jeDefaultKlub) return; // drugi klubovi ne dobivaju auto-import
+  if (state.clanovi.length > 0 && state.clanovi[0].oib) return; // već ima podatke
+  
   hksClanovi.forEach(c => {
+    const postoji = state.clanovi.find(x => x.ime === c.ime && x.prezime === c.prezime);
+    if (postoji) return;
     const god = new Date().getFullYear() - new Date(c.datRod).getFullYear();
     state.clanovi.push({
       id: Date.now() + Math.random(),
-      ime: c.ime,
-      prezime: c.prezime,
-      datRod: c.datRod,
-      oib: c.oib || '',
-      adresa: '',
-      roditelji: '',
-      mobitel: '',
-      email: '',
-      pojas: c.pojas || 'Bijeli pojas',
-      status: 'aktivan',
-      bolest: '',
-      datUclan: '',
-      izjava: 'ne',
-      clanarina: 'ne',
+      ime: c.ime, prezime: c.prezime, datRod: c.datRod,
+      oib: c.oib || '', adresa: '', roditelji: '', mobitel: '', email: '',
+      pojas: c.pojas || 'Bijeli pojas', status: 'aktivan', bolest: '',
+      datUclan: '', izjava: 'ne', clanarina: 'ne',
       kategorija: god < 14 ? 'kadet' : god < 18 ? 'junior' : 'senior',
       sifra: c.sifra
     });
   });
   save();
   logActivity('📥', `Početni uvoz: ${hksClanovi.length} članova iz HKS registra`);
-}
+})();
 
 
 

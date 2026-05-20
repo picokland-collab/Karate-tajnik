@@ -2793,10 +2793,10 @@ function provjeriSesiju() {
         } else {
           const lokalni = getKorisnici()[sess.username];
           if (lokalni) {
-            trenutniKorisnik = { ...lokalni, username: sess.username, klub_id: sess.klub_id || KLUB_ID };
+            trenutniKorisnik = { ...lokalni, username: sess.username, klub_id: sess.klub_id || '00000000-0000-0000-0000-000000000001' };
           } else {
             // Korisnik iz Supabase - osnovna rekonstrukcija
-            trenutniKorisnik = { username: sess.username, ime: sess.username, uloga: 'tajnik', admin: false, klub_id: sess.klub_id || KLUB_ID };
+            trenutniKorisnik = { username: sess.username, ime: sess.username, uloga: 'tajnik', admin: false, klub_id: sess.klub_id || '00000000-0000-0000-0000-000000000001' };
           }
         }
         document.getElementById('loginScreen').style.display = 'none';

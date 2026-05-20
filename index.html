@@ -414,50 +414,18 @@
     flex-direction: column;
     height: 100%;
   }
-  .ai-messages {
-    flex: 1;
-    overflow-y: auto;
-    padding: 20px 24px;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
+  .ai-messages { flex: 1; overflow-y: auto; padding: 20px 24px; display: flex; flex-direction: column; gap: 16px; }
   .ai-messages::-webkit-scrollbar { width: 4px; }
   .ai-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius:2px; }
-  .msg {
-    display: flex;
-    gap: 12px;
-    max-width: 85%;
-    width: fit-content;
-  }
-  .msg.user {
-    align-self: flex-end !important;
-    flex-direction: row !important;
-    margin-left: auto !important;
-    max-width: 85%;
-    width: fit-content;
-  }
-  .msg-avatar {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-  }
+  .msg { display: flex; gap: 12px; max-width: 85%; }
+  .msg.user { align-self: flex-end; flex-direction: row-reverse; }
+  .msg-avatar { width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 14px; }
   .msg.assistant .msg-avatar { background: var(--red); }
   .msg.user .msg-avatar { background: var(--surface2); border: 1px solid var(--border); }
-  .msg-bubble {
-    padding: 12px 16px;
-    border-radius: 10px;
-    font-size: 14px;
-    line-height: 1.6;
-  }
+  .msg-bubble { padding: 12px 16px; border-radius: 10px; font-size: 14px; line-height: 1.6; max-width: 100%; word-break: break-word; overflow-wrap: break-word; }
   .msg.assistant .msg-bubble { background: var(--surface2); border: 1px solid var(--border); }
-  .msg.user .msg-bubble { background: var(--red); color: white !important; }
-  .ai-input-area {
+  .msg.user .msg-bubble { background: var(--red); color: white; }
+    .ai-input-area {
     padding: 16px 24px;
     border-top: 1px solid var(--border);
     display: flex;
@@ -702,7 +670,7 @@
   <div class="header-ai">AI Tajnik aktivan</div>
 </header>
 
-<div class="app">
+<div class="app" id="app" style="display:none">
   <nav>
     <div class="section-label">Upravljanje</div>
     <button class="active" onclick="showSection('dashboard')"><span class="icon">📊</span><span>Pregled</span></button>
@@ -933,9 +901,10 @@
       </div>
       <div class="ai-panel">
         <div class="ai-messages" id="aiMessages">
-          <div class="msg assistant">
-            <div class="msg-avatar">🥋</div>
-            <div class="msg-bubble">
+          <div style="display:flex;width:100%;margin-bottom:18px;justify-content:flex-start">
+            <div style="display:flex;flex-direction:row;align-items:flex-start;gap:8px;max-width:85%">
+              <div style="width:30px;height:30px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;margin-top:2px">🥋</div>
+              <div class="msg-bubble" style="background:var(--surface2);border:1px solid var(--border);padding:11px 16px;border-radius:18px 18px 18px 4px;font-size:14px;line-height:1.65;flex:1;word-break:break-word">
               Dobar dan! Ja sam digitalni tajnik <strong>KK Đurđevac</strong>. Mogu vam pomoći s:<br><br>
               📜 <strong>Pisanjem odluka</strong> – skupštinske, upravnog odbora<br>
               ✉️ <strong>Obavijestima roditeljima/trenerima</strong> – pozivi, obavijesti o treninzima, promjene<br>
@@ -944,8 +913,8 @@
               📋 <strong>Administrativnim poslovima</strong> – zahtjevi, dopisi, izjave<br><br>
               Što trebate danas?
             </div>
+            </div>
           </div>
-        </div>
         <div class="ai-input-area">
           <textarea id="aiInput" placeholder="Npr: Napiši poziv za roditeljski sastanak u petak u 18h..." rows="1"
             onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAI()}"
@@ -2770,22 +2739,45 @@ async function loginSubmit() {
   const user = document.getElementById('loginUser').value.trim().toLowerCase();
   const pass = document.getElementById('loginPass').value;
   const err = document.getElementById('loginError');
-  
-  const k = KORISNICI_HASH[user];
-  if (!k) { err.textContent = 'Nepoznati korisnik.'; return; }
-  
-  const inputHash = await hashLozinka(pass);
-  if (inputHash !== k.hash) { err.textContent = 'Pogrešna lozinka.'; return; }
-  
-  state.korisnik = { korime: user, ime: k.ime, uloga: k.uloga, admin: k.admin };
   err.textContent = '';
+
+  if (!user || !pass) {
+    if (err) { err.textContent = 'Unesite korisničko ime i lozinku.'; err.style.display = 'block'; }
+    return;
+  }
+
+  const inputHash = await hashLozinka(pass);
+
+  // Provjeri ugrađene korisnike (KORISNICI_HASH)
+  const builtinK = KORISNICI_HASH[user];
+  // FIX 2: Provjeri i dinamički dodane korisnike (lozinke su sada hashirane)
+  const dinamicniK = getKorisnici()[user];
+
+  let k = null;
+  if (builtinK && inputHash === builtinK.hash) {
+    k = { korime: user, ime: builtinK.ime, uloga: builtinK.uloga, admin: builtinK.admin };
+  } else if (dinamicniK && inputHash === dinamicniK.lozinka) {
+    k = { korime: user, ime: dinamicniK.ime, uloga: dinamicniK.uloga, admin: dinamicniK.uloga === 'admin' };
+  }
+
+  if (!k) {
+    if (err) { err.textContent = 'Pogrešno korisničko ime ili lozinka.'; err.style.display = 'block'; }
+    await new Promise(r => setTimeout(r, 600));
+    return;
+  }
+
+  state.korisnik = k;
+  trenutniKorisnik = k;
+  localStorage.setItem('kk_session', JSON.stringify({ username: user, vrijeme: Date.now() }));
+
+  if (err) err.textContent = '';
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
+  prijaviKorisnika();
   updateStats();
   updateDashDatum();
   ucitajPraznike();
   renderKalendar();
-  provjeriSesiju();
   logActivity('🔐', k.ime + ' se prijavio/la');
 }
 
@@ -2826,6 +2818,7 @@ function provjeriSesiju() {
       if (Date.now() - sess.vrijeme < 24 * 60 * 60 * 1000) {
         trenutniKorisnik = { ...getKorisnici()[sess.username], username: sess.username };
         document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('app').style.display = 'flex';
         prijaviKorisnika();
         return;
       }
@@ -2879,7 +2872,7 @@ function korisnikRenderLista() {
     </div>`).join('');
 }
 
-function spremiKorisnika() {
+async function spremiKorisnika() {
   const ime = document.getElementById('ku-ime').value.trim();
   const username = document.getElementById('ku-username').value.trim().toLowerCase().replace(/[^a-z0-9]/g,'');
   const lozinka = document.getElementById('ku-lozinka').value;
@@ -2892,20 +2885,24 @@ function spremiKorisnika() {
   const k = getKorisnici();
 
   if (korisnikEditUsername) {
-    // Edit existing
     if (!k[korisnikEditUsername]) { toast('Korisnik nije pronađen!', 'err'); return; }
     k[korisnikEditUsername].ime = ime;
-    if (lozinka && lozinka.length >= 6) k[korisnikEditUsername].lozinka = lozinka;
-    else if (lozinka && lozinka.length < 6) { toast('Lozinka mora imati najmanje 6 znakova!', 'err'); return; }
+    if (lozinka && lozinka.length >= 6) {
+      // FIX 2: Lozinka se hashira SHA-256 prije pohrane
+      k[korisnikEditUsername].lozinka = await hashLozinka(lozinka);
+    } else if (lozinka && lozinka.length > 0 && lozinka.length < 6) {
+      toast('Lozinka mora imati najmanje 6 znakova!', 'err'); return;
+    }
     k[korisnikEditUsername].uloga = uloga;
     k[korisnikEditUsername].napomena = napomena;
     toast('Korisnik ažuriran!');
   } else {
-    // New user
     if (!username) { toast('Unesite korisničko ime!', 'err'); return; }
     if (k[username]) { toast('Korisničko ime već postoji!', 'err'); return; }
     if (!lozinka || lozinka.length < 6) { toast('Lozinka mora imati najmanje 6 znakova!', 'err'); return; }
-    k[username] = { ime, lozinka, uloga, napomena };
+    // FIX 2: SHA-256 hash lozinke — NE sprema se plain text
+    const lozinkaHash = await hashLozinka(lozinka);
+    k[username] = { ime, lozinka: lozinkaHash, uloga, napomena };
     toast('Korisnik ' + ime + ' dodan!');
   }
 
@@ -4243,17 +4240,9 @@ function appendMsg(role, content) {
   const id = 'msg_' + Date.now();
   const msgs = document.getElementById('aiMessages');
   if (role === 'user') {
-    const userDiv = document.createElement('div');
-    userDiv.id = id;
-    userDiv.style.cssText = 'display:flex;flex-direction:row;justify-content:flex-end;gap:10px;width:100%;margin-bottom:12px;align-items:flex-end';
-    userDiv.innerHTML = `<div style="background:var(--red);color:white;padding:10px 14px;border-radius:12px 12px 4px 12px;font-size:14px;line-height:1.6;max-width:75%">${content}</div><div style="width:32px;height:32px;border-radius:50%;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">👤</div>`;
-    msgs.appendChild(userDiv);
+    msgs.insertAdjacentHTML('beforeend', `<div class="msg user" id="${id}"><div class="msg-avatar">👤</div><div class="msg-bubble">${content}</div></div>`);
   } else {
-    const aiDiv = document.createElement('div');
-    aiDiv.id = id;
-    aiDiv.style.cssText = 'display:flex;flex-direction:row;gap:10px;width:100%;margin-bottom:12px;align-items:flex-start';
-    aiDiv.innerHTML = `<div style="width:32px;height:32px;border-radius:50%;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">🥋</div><div class="msg-bubble" style="flex:1">${content}</div>`;
-    msgs.appendChild(aiDiv);
+    msgs.insertAdjacentHTML('beforeend', `<div class="msg assistant" id="${id}"><div class="msg-avatar">🥋</div><div class="msg-bubble">${content}</div></div>`);
   }
   msgs.scrollTop = msgs.scrollHeight;
   return id;
@@ -4261,10 +4250,7 @@ function appendMsg(role, content) {
 
 function updateMsg(id, content) {
   const el = document.getElementById(id);
-  if (el) {
-    const bubble = el.querySelector('.msg-bubble') || el.querySelector('div:nth-child(2)');
-    if (bubble) bubble.innerHTML = content.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-  }
+  if (el) el.querySelector('.msg-bubble').innerHTML = content.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
   document.getElementById('aiMessages').scrollTop = 99999;
 }
 
@@ -5838,7 +5824,28 @@ function pnDodajRacun(input) {
   const files = Array.from(input.files);
   files.forEach(f => {
     const reader = new FileReader();
-    reader.onload = e => { pnRacuni.push(e.target.result); pnRenderRacuni(); };
+    reader.onload = async (e) => {
+      const base64 = e.target.result;
+      // FIX 3: Pokušaj upload na /api/upload (Firebase Storage)
+      // Ako ne uspije — spremi Base64 lokalno kao fallback
+      let urlIliBase64 = base64;
+      try {
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ base64, path: `putni-nalozi/${Date.now()}/racun` })
+        });
+        if (res.ok) {
+          const { url } = await res.json();
+          urlIliBase64 = url;
+        }
+      } catch(uploadErr) {
+        // Fallback: koristi Base64 lokalno
+        urlIliBase64 = base64;
+      }
+      pnRacuni.push(urlIliBase64);
+      pnRenderRacuni();
+    };
     reader.readAsDataURL(f);
   });
   input.value = '';
@@ -6705,220 +6712,20 @@ initMobileNav();
 </script>
 
 <script>
-// ========== FIREBASE REST API (no SDK needed) ==========
-const FB_PROJECT = "digitalni-tajnik";
-const FB_API_KEY = "AIzaSyDTIt2rsrREtD5AEj_Ilix8sddBFn8TdbM";
-const FB_BASE = `https://firestore.googleapis.com/v1/projects/${FB_PROJECT}/databases/(default)/documents`;
-
+// Firebase - DISABLED, sve radi lokalno
+// Stub funkcije za kompatibilnost
 let fbEnabled = false;
-
-// Convert Firestore REST response to plain object
-function fbParse(doc) {
-  if (!doc.fields) return null;
-  const obj = {};
-  for (const [k, v] of Object.entries(doc.fields)) {
-    if (v.stringValue !== undefined) obj[k] = v.stringValue;
-    else if (v.integerValue !== undefined) obj[k] = parseInt(v.integerValue);
-    else if (v.doubleValue !== undefined) obj[k] = parseFloat(v.doubleValue);
-    else if (v.booleanValue !== undefined) obj[k] = v.booleanValue;
-    else if (v.nullValue !== undefined) obj[k] = null;
-    else if (v.arrayValue !== undefined) obj[k] = (v.arrayValue.values||[]).map(i => fbParseVal(i));
-    else if (v.mapValue !== undefined) obj[k] = fbParse(v.mapValue);
-    else obj[k] = null;
-  }
-  return obj;
-}
-
-function fbParseVal(v) {
-  if (v.stringValue !== undefined) return v.stringValue;
-  if (v.integerValue !== undefined) return parseInt(v.integerValue);
-  if (v.doubleValue !== undefined) return parseFloat(v.doubleValue);
-  if (v.booleanValue !== undefined) return v.booleanValue;
-  if (v.nullValue !== undefined) return null;
-  return null;
-}
-
-// Convert plain object to Firestore fields
-function fbFields(obj) {
-  const fields = {};
-  for (const [k, v] of Object.entries(obj)) {
-    if (v === null || v === undefined) fields[k] = { nullValue: null };
-    else if (typeof v === 'boolean') fields[k] = { booleanValue: v };
-    else if (typeof v === 'number') fields[k] = Number.isInteger(v) ? { integerValue: String(v) } : { doubleValue: v };
-    else if (typeof v === 'string') fields[k] = { stringValue: v };
-    else if (Array.isArray(v)) fields[k] = { arrayValue: { values: v.map(i => typeof i === 'string' ? { stringValue: i } : { integerValue: String(i) }) } };
-    else fields[k] = { stringValue: String(v) };
-  }
-  return { fields };
-}
-
-async function fbGet(collection) {
-  try {
-    const r = await fetch(`${FB_BASE}/${collection}?key=${FB_API_KEY}`);
-    if (!r.ok) return [];
-    const data = await r.json();
-    return (data.documents || []).map(d => fbParse(d));
-  } catch(e) { return []; }
-}
-
-async function fbSet(collection, id, obj) {
-  try {
-    const r = await fetch(`${FB_BASE}/${collection}/${id}?key=${FB_API_KEY}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(fbFields(obj))
-    });
-    return r.ok;
-  } catch(e) { return false; }
-}
-
-async function fbDelete(collection, id) {
-  try {
-    await fetch(`${FB_BASE}/${collection}/${id}?key=${FB_API_KEY}`, { method: 'DELETE' });
-  } catch(e) {}
-}
-
-let db = null;
-
-async function fbInit() {
-  try {
-    // Test connection with a simple read
-    const r = await fetch(`${FB_BASE}?key=${FB_API_KEY}&pageSize=1`);
-    if (r.ok) {
-      fbEnabled = true;
-      fbUpdateStatus(true);
-      fbSyncAll();
-    } else {
-      throw new Error('HTTP ' + r.status);
-    }
-  } catch(e) {
-    fbEnabled = false;
-    fbUpdateStatus(false);
-  }
-}
-
-function fbUpdateStatus(ok) {
-  const el = document.querySelector('.header-ai');
-  if (!el) return;
-  if (ok) {
-    el.innerHTML = el.innerHTML.replace('●', '<span style="color:#2ECC71">●</span>') + ' <span style="font-size:11px;color:#2ECC71">☁️ sync</span>';
-  }
-}
-
-// ── ČLANOVI ──────────────────────────────────────
-async function fbSaveClanovi() {
-  if (!fbEnabled) return;
-  try {
-    for (const c of state.clanovi) {
-      const data = {...c};
-      delete data.foto; // Save space
-      await fbSet('clanovi', String(c.id), data);
-    }
-  } catch(e) { }
-}
-
-async function fbLoadClanovi() {
-  if (!fbEnabled) return;
-  try {
-    const remote = await fbGet('clanovi');
-    if (remote.length === 0) { await fbSaveClanovi(); return; }
-    // Merge - keep local foto
-    remote.forEach(rc => {
-      const local = state.clanovi.find(c => String(c.id) === String(rc.id));
-      if (local && local.foto) rc.foto = local.foto;
-    });
-    state.clanovi = remote.filter(c => c && c.id);
-    save();
-    if (typeof renderClanovi === 'function') renderClanovi();
-    updateStats();
-    toast('👥 ' + remote.length + ' članova sinkronizirano iz oblaka!');
-  } catch(e) { }
-}
-
-// ── TRENINZI ─────────────────────────────────────
-async function fbSaveTreninzi() {
-  if (!fbEnabled) return;
-  try {
-    for (const t of dnTreninzi) {
-      await fbSet('treninzi', String(t.id), t);
-    }
-  } catch(e) { }
-}
-
-async function fbLoadTreninzi() {
-  if (!fbEnabled) return;
-  try {
-    const remote = await fbGet('treninzi');
-    if (remote.length > 0) {
-      dnTreninzi = remote.filter(t => t && t.id);
-      localStorage.setItem('kk_treninzi', JSON.stringify(dnTreninzi));
-    }
-  } catch(e) { }
-}
-
-// ── FINANCIJE ────────────────────────────────────
-async function fbSaveFinancije() {
-  if (!fbEnabled) return;
-  try {
-    for (const s of finStavke) {
-      await fbSet('financije', String(s.id), s);
-    }
-  } catch(e) { }
-}
-
-async function fbLoadFinancije() {
-  if (!fbEnabled) return;
-  try {
-    const remote = await fbGet('financije');
-    if (remote.length > 0) {
-      finStavke = remote.filter(s => s && s.id);
-      localStorage.setItem('kk_financije', JSON.stringify(finStavke));
-    }
-  } catch(e) { }
-}
-
-// ── SYNC ALL ──────────────────────────────────────
-async function fbSyncAll() {
-  if (!fbEnabled) return;
-  await fbLoadClanovi();
-  await fbLoadTreninzi();
-  await fbLoadFinancije();
-  toast('✅ Sinkronizacija završena!');
-}
-
-// ── HOOK INTO EXISTING SAVE FUNCTIONS ─────────────
-// Wrap save() to also push to Firebase
-const _origSave = window.save || save;
-window.save = function() {
-  _origSave();
-  if (fbEnabled) setTimeout(fbSaveClanovi, 300);
-};
-
-// Wrap dnSave
-const _origDnSave = window.dnSave || dnSave;
-window.dnSave = function() {
-  _origDnSave();
-  if (fbEnabled) setTimeout(fbSaveTreninzi, 300);
-};
-
-// Wrap finSave
-const _origFinSave = window.finSave || finSave;
-window.finSave = function() {
-  _origFinSave();
-  if (fbEnabled) setTimeout(fbSaveFinancije, 300);
-};
-
-// Init Firebase after successful login
-document.addEventListener('fbLogin', () => fbInit());
-
-// Patch prijaviKorisnika to trigger Firebase
-const _origPrijavi = prijaviKorisnika;
-prijaviKorisnika = function() {
-  _origPrijavi();
-  setTimeout(fbInit, 500);
-};
-
+function fbInit() {}
+function fbSyncAll() {}
+function fbSaveClanovi() {}
+function fbLoadClanovi() {}
+function fbSaveTreninzi() {}
+function fbLoadTreninzi() {}
+function fbSaveFinancije() {}
+function fbLoadFinancije() {}
+function fbGet() { return Promise.resolve(null); }
+function fbSet() { return Promise.resolve(null); }
+function fbDelete() { return Promise.resolve(null); }
+function fbUpdateStatus() {}
+function fbParse(doc) { return doc; }
 </script>
-
-</body>
-</html>

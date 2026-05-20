@@ -2894,6 +2894,10 @@ try {
 
 function save() {
   try { localStorage.setItem('kk_djurdjevac', JSON.stringify({...state, version: DATA_VERSION})); } catch(e){}
+  if (typeof sbEnabled !== 'undefined' && sbEnabled) {
+    clearTimeout(window._syncTimer);
+    window._syncTimer = setTimeout(sbSaveClanovi, 1500);
+  }
 }
 
 function toast(msg, type='success') {
@@ -4398,7 +4402,13 @@ function toggleRezIzvjestaji() {
 // ========== GODIŠNJI PLAN RADA ==========
 let planLista = [];
 try { planLista = JSON.parse(localStorage.getItem('kk_planovi') || '[]'); } catch(e){}
-function planSave() { localStorage.setItem('kk_planovi', JSON.stringify(planLista)); }
+function planSave() {
+  localStorage.setItem('kk_planovi', JSON.stringify(planLista));
+  if (typeof sbEnabled !== 'undefined' && sbEnabled) {
+    clearTimeout(window._syncPlanTimer);
+    window._syncPlanTimer = setTimeout(sbSavePlanove, 1500);
+  }
+}
 
 const PLAN_VRSTA_LABEL = {
   plan: '📋 Plan rada', izvjesce: '📄 Izvješće o radu',
@@ -4501,7 +4511,13 @@ async function planGenerirajAI() {
 // ========== FINANCIJSKO IZVJEŠĆE ==========
 let finStavke = [];
 try { finStavke = JSON.parse(localStorage.getItem('kk_financije') || '[]'); } catch(e){}
-function finSave() { localStorage.setItem('kk_financije', JSON.stringify(finStavke)); }
+function finSave() {
+  localStorage.setItem('kk_financije', JSON.stringify(finStavke));
+  if (typeof sbEnabled !== 'undefined' && sbEnabled) {
+    clearTimeout(window._syncFinTimer);
+    window._syncFinTimer = setTimeout(sbSaveFinancije, 1500);
+  }
+}
 
 const FIN_KAT_LABELS = {
   clanarina:'Članarina', dotacija:'Dotacija', sponzorstvo:'Sponzorstvo',
@@ -4652,7 +4668,13 @@ Ivan Juričić — predsjednik`;
 // ========== SPORTSKI REZULTATI ==========
 let rezLista = [];
 try { rezLista = JSON.parse(localStorage.getItem('kk_rezultati') || '[]'); } catch(e){}
-function rezSave() { localStorage.setItem('kk_rezultati', JSON.stringify(rezLista)); }
+function rezSave() {
+  localStorage.setItem('kk_rezultati', JSON.stringify(rezLista));
+  if (typeof sbEnabled !== 'undefined' && sbEnabled) {
+    clearTimeout(window._syncRezTimer);
+    window._syncRezTimer = setTimeout(sbSaveRezultate, 1500);
+  }
+}
 
 const REZ_MEDALJA = { '1':'🥇', '2':'🥈', '3':'🥉', '4':'4.', '5':'5-8.', '0':'—' };
 const REZ_BOJA = { '1':'#FFD700', '2':'#C0C0C0', '3':'#CD7F32', '4':'#EDEDED', '5':'#888', '0':'#666' };
@@ -4754,7 +4776,13 @@ function obrisiRezultat(id) {
 let trenerList = [];
 let trenerEditId = null;
 try { trenerList = JSON.parse(localStorage.getItem('kk_treneri') || '[]'); } catch(e){}
-function trSave() { localStorage.setItem('kk_treneri', JSON.stringify(trenerList)); }
+function trSave() {
+  localStorage.setItem('kk_treneri', JSON.stringify(trenerList));
+  if (typeof sbEnabled !== 'undefined' && sbEnabled) {
+    clearTimeout(window._syncTrTimer);
+    window._syncTrTimer = setTimeout(sbSaveTrenere, 1500);
+  }
+}
 
 function trRenderLista() {
   const danas = new Date();
@@ -5078,6 +5106,10 @@ function dnLoad() {
 dnLoad();
 function dnSave() {
   localStorage.setItem('kk_treninzi', JSON.stringify(dnTreninzi));
+  if (typeof sbEnabled !== 'undefined' && sbEnabled) {
+    clearTimeout(window._syncDnTimer);
+    window._syncDnTimer = setTimeout(sbSaveTreninzi, 1500);
+  }
 }
 
 function noviTrening() {
@@ -5254,7 +5286,13 @@ let kalDogadaji = [];
 let kalDatum = new Date();
 let kalOdabranDan = null;
 try { kalDogadaji = JSON.parse(localStorage.getItem('kk_kalendar') || '[]'); } catch(e){}
-function kalSave() { localStorage.setItem('kk_kalendar', JSON.stringify(kalDogadaji)); }
+function kalSave() {
+  localStorage.setItem('kk_kalendar', JSON.stringify(kalDogadaji));
+  if (typeof sbEnabled !== 'undefined' && sbEnabled) {
+    clearTimeout(window._syncKalTimer);
+    window._syncKalTimer = setTimeout(sbSaveKalendar, 1500);
+  }
+}
 
 const KAL_BOJE = { trening:'#C8102E', natjecanje:'#F0A500', sastanak:'#3b82f6', ostalo:'#888' };
 const KAL_EMOJI = { trening:'🥋', natjecanje:'🏆', sastanak:'👥', ostalo:'📌' };
@@ -5386,7 +5424,13 @@ function kalObrisi(id) {
 // ========== MODUL 4: LIJEČNIČKI PREGLEDI ==========
 let ljPregledi = [];
 try { ljPregledi = JSON.parse(localStorage.getItem('kk_lijecnicki') || '[]'); } catch(e){}
-function ljSave() { localStorage.setItem('kk_lijecnicki', JSON.stringify(ljPregledi)); }
+function ljSave() {
+  localStorage.setItem('kk_lijecnicki', JSON.stringify(ljPregledi));
+  if (typeof sbEnabled !== 'undefined' && sbEnabled) {
+    clearTimeout(window._syncLjTimer);
+    window._syncLjTimer = setTimeout(sbSaveLijecnicki, 1500);
+  }
+}
 
 function ljRenderLista() {
   const danas = new Date();
@@ -5479,7 +5523,13 @@ function ljObrisi(id) {
 // ========== MODUL 5: OBAVIJESTI HUB ==========
 let ob2Lista = [];
 try { ob2Lista = JSON.parse(localStorage.getItem('kk_obavijesti2') || '[]'); } catch(e){}
-function ob2Save() { localStorage.setItem('kk_obavijesti2', JSON.stringify(ob2Lista)); }
+function ob2Save() {
+  localStorage.setItem('kk_obavijesti2', JSON.stringify(ob2Lista));
+  if (typeof sbEnabled !== 'undefined' && sbEnabled) {
+    clearTimeout(window._syncOb2Timer);
+    window._syncOb2Timer = setTimeout(sbSaveObavijesti, 1500);
+  }
+}
 
 const OB2_EMOJI = { info:'ℹ️', hitno:'🔴', trening:'🥋', natjecanje:'🏆', placanje:'💶' };
 
@@ -5539,7 +5589,13 @@ let pnCurrentId = null;
 
 try { pnNalozi = JSON.parse(localStorage.getItem(PN_KEY) || '[]'); } catch(e){}
 
-function pnSave() { localStorage.setItem(PN_KEY, JSON.stringify(pnNalozi)); }
+function pnSave() {
+  localStorage.setItem(PN_KEY, JSON.stringify(pnNalozi));
+  if (typeof sbEnabled !== 'undefined' && sbEnabled) {
+    clearTimeout(window._syncPnTimer);
+    window._syncPnTimer = setTimeout(sbSavePutneNaloge, 1500);
+  }
+}
 
 const PN_KM_CIJENA = 0.30;
 const PN_DNEVNICA_CIJELA = 26.54;
@@ -6615,11 +6671,7 @@ async function manualSyncAll() {
 
 // ========== HOOK U POSTOJEĆE SAVE FUNKCIJE ==========
 // Svaki put kad se lokalno spremi - syncira i u Supabase
-const _origSave = window.save || function(){};
-window.save = function() {
-  _origSave();
-  if (sbEnabled) setTimeout(sbSaveClanovi, 500);
-};
+// Auto-sync je integriran direktno u save funkcije
 
 // ========== INIT NAKON PRIJAVE ==========
 const _origPrijavi = prijaviKorisnika;

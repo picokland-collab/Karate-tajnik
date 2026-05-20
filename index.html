@@ -2623,6 +2623,7 @@ async function loginSubmit() {
     // Provjeri super admin prvo
     if (user === 'superadmin') {
       if (!sb) sbInit();
+      console.log('Tražim superadmin, sb:', !!sb, 'sbEnabled:', sbEnabled);
       const { data: saArr, error: saError } = await sb
         .from('super_admini')
         .select('*')
@@ -2630,7 +2631,9 @@ async function loginSubmit() {
         .eq('lozinka', pass)
         .limit(1);
 
+      console.log('superadmin rezultat:', saArr, 'greška:', saError);
       const saData = saArr && saArr.length > 0 ? saArr[0] : null;
+      console.log('saData:', saData);
       if (saData && !saError) {
         trenutniKorisnik = { 
           username: 'superadmin', 

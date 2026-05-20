@@ -657,6 +657,7 @@
   }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.0.4/tesseract.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -732,7 +733,7 @@
           <h2>Pregled kluba</h2>
           <p>KK Đurđevac — sezona 2025/2026</p>
         </div>
-        <button class="btn btn-gold" onclick="showSection('ai')">🤖 Pitaj AI tajnika</button>
+        <button class="btn btn-secondary btn-sm" onclick="manualSyncAll()" id="btnSync" style="margin-right:8px">☁️ Sync u oblak</button><button class="btn btn-gold" onclick="showSection('ai')">🤖 Pitaj AI tajnika</button>
       </div>
       <div class="content">
         <!-- ALERT PANEL -->
@@ -6196,16 +6197,444 @@ initMobileNav();
 </script>
 
 <script>
-// Firebase - onemogućen, sve radi lokalno
-let fbEnabled = false;
-function fbInit() {}
-function fbSyncAll() {}
-function fbSaveClanovi() {}
-function fbLoadClanovi() {}
-function fbSaveTreninzi() {}
-function fbLoadTreninzi() {}
-function fbSaveFinancije() {}
-function fbLoadFinancije() {}
+// ========== SUPABASE INTEGRACIJA ==========
+const SUPABASE_URL = 'https://hpdnevnfgrwrkqgoohcv.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_vj1fn6UISchRJHo6q_j1QA__2f07mkh';
+const KLUB_ID = '00000000-0000-0000-0000-000000000001';
+
+// Inicijaliziraj Supabase klijent
+let sb = null;
+let sbEnabled = false;
+
+function sbInit() {
+  try {
+    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    sbEnabled = true;
+    console.log('✅ Supabase inicijaliziran');
+    return true;
+  } catch(e) {
+    console.error('Supabase init error:', e);
+    sbEnabled = false;
+    return false;
+  }
+}
+
+// ========== SYNC FUNKCIJE ==========
+
+async function sbSaveClanovi() {
+  if (!sbEnabled || !sb) return;
+  try {
+    const rows = state.clanovi.map(c => ({
+      id: c.id,
+      klub_id: KLUB_ID,
+      ime: c.ime || '',
+      prezime: c.prezime || '',
+      dat_rod: c.datRod || null,
+      oib: c.oib || null,
+      adresa: c.adresa || null,
+      roditelji: c.roditelji || null,
+      mobitel: c.mobitel || null,
+      email: c.email || null,
+      pojas: c.pojas || 'Bijeli pojas',
+      kyu: c.kyu || null,
+      status: c.status || 'aktivan',
+      bolest: c.bolest || null,
+      dat_uclan: c.datUclan || null,
+      izjava: c.izjava || 'ne',
+      clanarina: c.clanarina || 'ne',
+      kategorija: c.kategorija || null,
+      sifra: c.sifra || null,
+      gdpr: c.gdpr || 'ne',
+      foto: c.foto && c.foto.startsWith('data:') ? null : c.foto
+    }));
+    const { error } = await sb.from('clanovi').upsert(rows, { onConflict: 'id' });
+    if (error) console.error('sbSaveClanovi error:', error);
+    else console.log('✅ Članovi syncirani:', rows.length);
+  } catch(e) { console.error('sbSaveClanovi:', e); }
+}
+
+async function sbLoadClanovi() {
+  if (!sbEnabled || !sb) return false;
+  try {
+    const { data, error } = await sb.from('clanovi')
+      .select('*')
+      .eq('klub_id', KLUB_ID);
+    if (error) { console.error('sbLoadClanovi:', error); return false; }
+    if (!data || data.length === 0) {
+      // Baza je prazna - uploadaj lokalne podatke
+      await sbSaveClanovi();
+      return false;
+    }
+    // Mapiranje Supabase -> state format
+    state.clanovi = data.map(c => ({
+      id: c.id,
+      ime: c.ime,
+      prezime: c.prezime,
+      datRod: c.dat_rod,
+      oib: c.oib || '',
+      adresa: c.adresa || '',
+      roditelji: c.roditelji || '',
+      mobitel: c.mobitel || '',
+      email: c.email || '',
+      pojas: c.pojas || 'Bijeli pojas',
+      kyu: c.kyu || '',
+      status: c.status || 'aktivan',
+      bolest: c.bolest || '',
+      datUclan: c.dat_uclan || '',
+      izjava: c.izjava || 'ne',
+      clanarina: c.clanarina || 'ne',
+      kategorija: c.kategorija || '',
+      sifra: c.sifra || '',
+      gdpr: c.gdpr || 'ne',
+      foto: c.foto || null
+    }));
+    localStorage.setItem('kk_djurdjevac', JSON.stringify({...state, version: 3}));
+    console.log('✅ Članovi učitani iz Supabase:', data.length);
+    return true;
+  } catch(e) { console.error('sbLoadClanovi:', e); return false; }
+}
+
+async function sbSaveAll() {
+  if (!sbEnabled || !sb) return;
+  await sbSaveClanovi();
+  await sbSaveFinancije();
+  await sbSaveTreninzi();
+  await sbSaveKalendar();
+  await sbSaveTrenere();
+  await sbSaveLijecnicki();
+  await sbSavePutneNaloge();
+  await sbSaveRezultate();
+  await sbSaveObavijesti();
+  await sbSavePlanove();
+  await sbSaveOdluke();
+}
+
+async function sbLoadAll() {
+  if (!sbEnabled || !sb) return;
+  const loaded = await sbLoadClanovi();
+  if (loaded) {
+    if (typeof renderClanovi === 'function') renderClanovi();
+    if (typeof updateStats === 'function') updateStats();
+    toast('☁️ Podaci učitani iz oblaka!');
+  }
+  await sbLoadFinancije();
+  await sbLoadTreninzi();
+  await sbLoadKalendar();
+  await sbLoadTrenere();
+  await sbLoadLijecnicki();
+  await sbLoadPutneNaloge();
+  await sbLoadRezultate();
+  await sbLoadObavijesti();
+  await sbLoadPlanove();
+  await sbLoadOdluke();
+}
+
+// ========== FINANCIJE ==========
+async function sbSaveFinancije() {
+  if (!sbEnabled || !sb) return;
+  try {
+    const fin = JSON.parse(localStorage.getItem('kk_financije') || '[]');
+    if (!fin.length) return;
+    const rows = fin.map(s => ({ ...s, klub_id: KLUB_ID, iznos: parseFloat(s.iznos) || 0 }));
+    const { error } = await sb.from('financije').upsert(rows, { onConflict: 'id' });
+    if (error) console.error('sbSaveFinancije:', error);
+  } catch(e) { console.error('sbSaveFinancije:', e); }
+}
+
+async function sbLoadFinancije() {
+  if (!sbEnabled || !sb) return;
+  try {
+    const { data, error } = await sb.from('financije').select('*').eq('klub_id', KLUB_ID);
+    if (error || !data || !data.length) return;
+    localStorage.setItem('kk_financije', JSON.stringify(data));
+  } catch(e) {}
+}
+
+// ========== TRENINZI ==========
+async function sbSaveTreninzi() {
+  if (!sbEnabled || !sb) return;
+  try {
+    const treninzi = JSON.parse(localStorage.getItem('kk_treninzi') || '[]');
+    if (!treninzi.length) return;
+    const rows = treninzi.map(t => ({
+      id: String(t.id), klub_id: KLUB_ID,
+      datum: t.datum, naslov: t.naslov,
+      prisutni: t.prisutni || []
+    }));
+    const { error } = await sb.from('treninzi').upsert(rows, { onConflict: 'id' });
+    if (error) console.error('sbSaveTreninzi:', error);
+  } catch(e) { console.error('sbSaveTreninzi:', e); }
+}
+
+async function sbLoadTreninzi() {
+  if (!sbEnabled || !sb) return;
+  try {
+    const { data, error } = await sb.from('treninzi').select('*').eq('klub_id', KLUB_ID);
+    if (error || !data || !data.length) return;
+    localStorage.setItem('kk_treninzi', JSON.stringify(data));
+  } catch(e) {}
+}
+
+// ========== KALENDAR ==========
+async function sbSaveKalendar() {
+  if (!sbEnabled || !sb) return;
+  try {
+    const kal = JSON.parse(localStorage.getItem('kk_kalendar') || '[]');
+    if (!kal.length) return;
+    const rows = kal.map(e => ({ ...e, klub_id: KLUB_ID }));
+    const { error } = await sb.from('kalendar').upsert(rows, { onConflict: 'id' });
+    if (error) console.error('sbSaveKalendar:', error);
+  } catch(e) {}
+}
+
+async function sbLoadKalendar() {
+  if (!sbEnabled || !sb) return;
+  try {
+    const { data, error } = await sb.from('kalendar').select('*').eq('klub_id', KLUB_ID);
+    if (error || !data || !data.length) return;
+    localStorage.setItem('kk_kalendar', JSON.stringify(data));
+  } catch(e) {}
+}
+
+// ========== TRENERI ==========
+async function sbSaveTrenere() {
+  if (!sbEnabled || !sb) return;
+  try {
+    const tr = JSON.parse(localStorage.getItem('kk_treneri') || '[]');
+    if (!tr.length) return;
+    const rows = tr.map(t => ({ ...t, klub_id: KLUB_ID, datrod: t.datrod || null, licvrijedi: t.licvrijedi || null, datzap: t.datzap || null }));
+    const { error } = await sb.from('treneri').upsert(rows, { onConflict: 'id' });
+    if (error) console.error('sbSaveTrenere:', error);
+  } catch(e) {}
+}
+
+async function sbLoadTrenere() {
+  if (!sbEnabled || !sb) return;
+  try {
+    const { data, error } = await sb.from('treneri').select('*').eq('klub_id', KLUB_ID);
+    if (error || !data || !data.length) return;
+    localStorage.setItem('kk_treneri', JSON.stringify(data));
+  } catch(e) {}
+}
+
+// ========== LIJEČNIČKI ==========
+async function sbSaveLijecnicki() {
+  if (!sbEnabled || !sb) return;
+  try {
+    const lj = JSON.parse(localStorage.getItem('kk_lijecnicki') || '[]');
+    if (!lj.length) return;
+    const rows = lj.map(p => ({ ...p, klub_id: KLUB_ID, clan_id: parseInt(p.clanId) || null, datum: p.datum || null, vrijedi: p.vrijedi || null }));
+    const { error } = await sb.from('lijecnicki').upsert(rows, { onConflict: 'id' });
+    if (error) console.error('sbSaveLijecnicki:', error);
+  } catch(e) {}
+}
+
+async function sbLoadLijecnicki() {
+  if (!sbEnabled || !sb) return;
+  try {
+    const { data, error } = await sb.from('lijecnicki').select('*').eq('klub_id', KLUB_ID);
+    if (error || !data || !data.length) return;
+    const mapped = data.map(p => ({ ...p, clanId: p.clan_id }));
+    localStorage.setItem('kk_lijecnicki', JSON.stringify(mapped));
+  } catch(e) {}
+}
+
+// ========== PUTNI NALOZI ==========
+async function sbSavePutneNaloge() {
+  if (!sbEnabled || !sb) return;
+  try {
+    const pn = JSON.parse(localStorage.getItem('kk_putni_nalozi') || '[]');
+    if (!pn.length) return;
+    const rows = pn.map(n => ({
+      id: n.id, klub_id: KLUB_ID, status: n.status, ime: n.ime,
+      uloga: n.uloga, svrha: n.svrha, polaziste: n.polaziste, odrediste: n.odrediste,
+      vozilo: n.vozilo, marka: n.marka, reg: n.reg,
+      polazak: n.polazak || null, povratak: n.povratak || null,
+      km_s: n.kmS || 0, km_e: n.kmE || 0, km_t: n.kmT || 0,
+      troskovi: parseFloat(n.troskovi) || 0, predujam: parseFloat(n.predujam) || 0,
+      dnevnica: parseFloat(n.dnevnica) || 0, ukupno: parseFloat(n.ukupno) || 0,
+      napomena: n.napomena, racuni: n.racuni || []
+    }));
+    const { error } = await sb.from('putni_nalozi').upsert(rows, { onConflict: 'id' });
+    if (error) console.error('sbSavePutneNaloge:', error);
+  } catch(e) {}
+}
+
+async function sbLoadPutneNaloge() {
+  if (!sbEnabled || !sb) return;
+  try {
+    const { data, error } = await sb.from('putni_nalozi').select('*').eq('klub_id', KLUB_ID);
+    if (error || !data || !data.length) return;
+    const mapped = data.map(n => ({ ...n, kmS: n.km_s, kmE: n.km_e, kmT: n.km_t }));
+    localStorage.setItem('kk_putni_nalozi', JSON.stringify(mapped));
+  } catch(e) {}
+}
+
+// ========== REZULTATI ==========
+async function sbSaveRezultate() {
+  if (!sbEnabled || !sb) return;
+  try {
+    const rez = JSON.parse(localStorage.getItem('kk_rezultati') || '[]');
+    if (!rez.length) return;
+    const rows = rez.map(r => ({ ...r, klub_id: KLUB_ID, clan_id: parseInt(r.clanId) || null, datum: r.datum || null }));
+    const { error } = await sb.from('rezultati').upsert(rows, { onConflict: 'id' });
+    if (error) console.error('sbSaveRezultate:', error);
+  } catch(e) {}
+}
+
+async function sbLoadRezultate() {
+  if (!sbEnabled || !sb) return;
+  try {
+    const { data, error } = await sb.from('rezultati').select('*').eq('klub_id', KLUB_ID);
+    if (error || !data || !data.length) return;
+    const mapped = data.map(r => ({ ...r, clanId: r.clan_id }));
+    localStorage.setItem('kk_rezultati', JSON.stringify(mapped));
+  } catch(e) {}
+}
+
+// ========== OBAVIJESTI ==========
+async function sbSaveObavijesti() {
+  if (!sbEnabled || !sb) return;
+  try {
+    const ob = JSON.parse(localStorage.getItem('kk_obavijesti2') || '[]');
+    if (!ob.length) return;
+    const rows = ob.map(o => ({ ...o, klub_id: KLUB_ID }));
+    const { error } = await sb.from('obavijesti').upsert(rows, { onConflict: 'id' });
+    if (error) console.error('sbSaveObavijesti:', error);
+  } catch(e) {}
+}
+
+async function sbLoadObavijesti() {
+  if (!sbEnabled || !sb) return;
+  try {
+    const { data, error } = await sb.from('obavijesti').select('*').eq('klub_id', KLUB_ID);
+    if (error || !data || !data.length) return;
+    localStorage.setItem('kk_obavijesti2', JSON.stringify(data));
+  } catch(e) {}
+}
+
+// ========== PLANOVI ==========
+async function sbSavePlanove() {
+  if (!sbEnabled || !sb) return;
+  try {
+    const pl = JSON.parse(localStorage.getItem('kk_planovi') || '[]');
+    if (!pl.length) return;
+    const rows = pl.map(p => ({ ...p, klub_id: KLUB_ID, datum: p.datum || null }));
+    const { error } = await sb.from('planovi').upsert(rows, { onConflict: 'id' });
+    if (error) console.error('sbSavePlanove:', error);
+  } catch(e) {}
+}
+
+async function sbLoadPlanove() {
+  if (!sbEnabled || !sb) return;
+  try {
+    const { data, error } = await sb.from('planovi').select('*').eq('klub_id', KLUB_ID);
+    if (error || !data || !data.length) return;
+    localStorage.setItem('kk_planovi', JSON.stringify(data));
+  } catch(e) {}
+}
+
+// ========== ODLUKE ==========
+async function sbSaveOdluke() {
+  if (!sbEnabled || !sb) return;
+  try {
+    const od = state.odluke || [];
+    if (!od.length) return;
+    const rows = od.map(o => ({ id: o.id, klub_id: KLUB_ID, vrsta: o.vrsta, predmet: o.predmet, datum: o.datum || null, sadrzaj: o.sadrzaj, status: o.status || null }));
+    const { error } = await sb.from('odluke').upsert(rows, { onConflict: 'id' });
+    if (error) console.error('sbSaveOdluke:', error);
+  } catch(e) {}
+}
+
+async function sbLoadOdluke() {
+  if (!sbEnabled || !sb) return;
+  try {
+    const { data, error } = await sb.from('odluke').select('*').eq('klub_id', KLUB_ID);
+    if (error || !data || !data.length) return;
+    state.odluke = data;
+    localStorage.setItem('kk_djurdjevac', JSON.stringify({...state, version: 3}));
+  } catch(e) {}
+}
+
+// ========== RUČNI SYNC ==========
+async function manualSyncAll() {
+  const btn = document.getElementById('btnSync');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Syncira...'; }
+  if (!sbEnabled) sbInit();
+  if (!sbEnabled) { toast('Supabase nije dostupan!', 'err'); return; }
+  try {
+    await sbSaveClanovi();
+    // Financije
+    const fin = JSON.parse(localStorage.getItem('kk_financije') || '[]');
+    if (fin.length) {
+      const rows = fin.map(s => ({ ...s, klub_id: KLUB_ID, iznos: parseFloat(s.iznos) || 0 }));
+      await sb.from('financije').upsert(rows, { onConflict: 'id' });
+    }
+    // Treninzi
+    const tr = JSON.parse(localStorage.getItem('kk_treninzi') || '[]');
+    if (tr.length) {
+      const rows = tr.map(t => ({ id: String(t.id), klub_id: KLUB_ID, datum: t.datum, naslov: t.naslov, prisutni: t.prisutni || [] }));
+      await sb.from('treninzi').upsert(rows, { onConflict: 'id' });
+    }
+    // Kalendar
+    const kal = JSON.parse(localStorage.getItem('kk_kalendar') || '[]');
+    if (kal.length) {
+      await sb.from('kalendar').upsert(kal.map(e => ({ ...e, klub_id: KLUB_ID })), { onConflict: 'id' });
+    }
+    // Treneri
+    const treneri = JSON.parse(localStorage.getItem('kk_treneri') || '[]');
+    if (treneri.length) {
+      const rows = treneri.map(t => ({ ...t, klub_id: KLUB_ID, datrod: t.datrod||null, licvrijedi: t.licvrijedi||null, datzap: t.datzap||null }));
+      await sb.from('treneri').upsert(rows, { onConflict: 'id' });
+    }
+    // Liječnički
+    const lj = JSON.parse(localStorage.getItem('kk_lijecnicki') || '[]');
+    if (lj.length) {
+      const rows = lj.map(p => ({ ...p, klub_id: KLUB_ID, clan_id: parseInt(p.clanId)||null, datum: p.datum||null, vrijedi: p.vrijedi||null }));
+      await sb.from('lijecnicki').upsert(rows, { onConflict: 'id' });
+    }
+    // Rezultati
+    const rez = JSON.parse(localStorage.getItem('kk_rezultati') || '[]');
+    if (rez.length) {
+      const rows = rez.map(r => ({ ...r, klub_id: KLUB_ID, clan_id: parseInt(r.clanId)||null, datum: r.datum||null }));
+      await sb.from('rezultati').upsert(rows, { onConflict: 'id' });
+    }
+    // Odluke
+    if (state.odluke && state.odluke.length) {
+      const rows = state.odluke.map(o => ({ id: o.id, klub_id: KLUB_ID, vrsta: o.vrsta, predmet: o.predmet, datum: o.datum||null, sadrzaj: o.sadrzaj, status: o.status||null }));
+      await sb.from('odluke').upsert(rows, { onConflict: 'id' });
+    }
+    toast('✅ Svi podaci syncirani u oblak!');
+    console.log('✅ manualSyncAll završen');
+  } catch(e) {
+    toast('Greška pri syncu: ' + e.message, 'err');
+    console.error('manualSyncAll error:', e);
+  }
+  if (btn) { btn.disabled = false; btn.textContent = '☁️ Sync u oblak'; }
+}
+
+// ========== HOOK U POSTOJEĆE SAVE FUNKCIJE ==========
+// Svaki put kad se lokalno spremi - syncira i u Supabase
+const _origSave = window.save || function(){};
+window.save = function() {
+  _origSave();
+  if (sbEnabled) setTimeout(sbSaveClanovi, 500);
+};
+
+// ========== INIT NAKON PRIJAVE ==========
+const _origPrijavi = prijaviKorisnika;
+prijaviKorisnika = function() {
+  _origPrijavi();
+  // Inicijaliziraj Supabase i učitaj podatke iz oblaka
+  if (sbInit()) {
+    setTimeout(async () => {
+      await sbLoadAll();
+      if (typeof renderClanovi === 'function') renderClanovi();
+      if (typeof updateStats === 'function') updateStats();
+    }, 800);
+  }
+};
+
 </script>
 
 </body>

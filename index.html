@@ -6601,7 +6601,14 @@ async function sbSaveKalendar() {
   try {
     const kal = JSON.parse(localStorage.getItem('kk_kalendar') || '[]');
     if (!kal.length) return;
-    const rows = kal.map(e => ({ ...e, klub_id: (window.AKTIVAN_KLUB_ID || '00000000-0000-0000-0000-000000000001') }));
+    const rows = kal.map(e => ({
+      id: e.id, klub_id: (window.AKTIVAN_KLUB_ID || '00000000-0000-0000-0000-000000000001'),
+      naziv: e.naziv || e.naslov || '', datum: e.datum,
+      vrsta: e.vrsta || 'ostalo', naslov: e.naziv || e.naslov || '',
+      pocetak: e.pocetak || null, kraj: e.kraj || null,
+      lokacija: e.lokacija || null, napomena: e.napomena || null,
+      opis: e.opis || null
+    }));
     const { error } = await sb.from('kalendar').upsert(rows, { onConflict: 'id' });
     if (error) console.error('sbSaveKalendar:', error);
   } catch(e) {}
@@ -6718,7 +6725,10 @@ async function sbSaveObavijesti() {
   try {
     const ob = JSON.parse(localStorage.getItem('kk_obavijesti2') || '[]');
     if (!ob.length) return;
-    const rows = ob.map(o => ({ ...o, klub_id: (window.AKTIVAN_KLUB_ID || '00000000-0000-0000-0000-000000000001') }));
+    const rows = ob.map(o => ({
+      id: o.id, klub_id: (window.AKTIVAN_KLUB_ID || '00000000-0000-0000-0000-000000000001'),
+      naslov: o.naslov, tekst: o.tekst, vrsta: o.vrsta, prima: o.prima, datum: o.datum
+    }));
     const { error } = await sb.from('obavijesti').upsert(rows, { onConflict: 'id' });
     if (error) console.error('sbSaveObavijesti:', error);
   } catch(e) {}
@@ -6739,7 +6749,12 @@ async function sbSavePlanove() {
   try {
     const pl = JSON.parse(localStorage.getItem('kk_planovi') || '[]');
     if (!pl.length) return;
-    const rows = pl.map(p => ({ ...p, klub_id: (window.AKTIVAN_KLUB_ID || '00000000-0000-0000-0000-000000000001'), datum: p.datum || null }));
+    const rows = pl.map(p => ({
+      id: p.id, klub_id: (window.AKTIVAN_KLUB_ID || '00000000-0000-0000-0000-000000000001'),
+      god: p.god, vrsta: p.vrsta, ciljevi: p.ciljevi, programi: p.programi || null,
+      prihodi: parseFloat(p.prihodi) || null, rashodi: parseFloat(p.rashodi) || null,
+      datum: p.datum || null, status: p.status || 'nacrt'
+    }));
     const { error } = await sb.from('planovi').upsert(rows, { onConflict: 'id' });
     if (error) console.error('sbSavePlanove:', error);
   } catch(e) {}

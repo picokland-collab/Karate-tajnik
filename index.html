@@ -6908,7 +6908,15 @@ async function saUdiUKlub(klubId, klubNaziv) {
   // Super admin ulazi u klub i vidi njegove podatke
   window.AKTIVAN_KLUB_ID = klubId;
   toast(`👁 Gledaš podatke: ${klubNaziv}`);
-  // Učitaj podatke tog kluba
+
+  // Resetiraj state - novi klub ima svoje podatke
+  state.clanovi = [];
+  state.odluke = [];
+  state.izvjestaji = [];
+  state.obavijesti = [];
+  state.aktivnosti = [];
+
+  // Učitaj podatke tog kluba iz Supabase
   await sbLoadAll();
   if (typeof renderClanovi === 'function') renderClanovi();
   if (typeof updateStats === 'function') updateStats();

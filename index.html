@@ -2623,13 +2623,14 @@ async function loginSubmit() {
     // Provjeri super admin prvo
     if (user === 'superadmin') {
       if (!sb) sbInit();
-      const { data: saData, error: saError } = await sb
+      const { data: saArr, error: saError } = await sb
         .from('super_admini')
         .select('*')
         .eq('username', user)
         .eq('lozinka', pass)
-        .single();
+        .limit(1);
 
+      const saData = saArr && saArr.length > 0 ? saArr[0] : null;
       if (saData && !saError) {
         trenutniKorisnik = { 
           username: 'superadmin', 
@@ -2654,13 +2655,14 @@ async function loginSubmit() {
     // Provjeri u Supabase korisnici tablici
     if (!sb) sbInit();
     if (sb) {
-      const { data: kData, error: kError } = await sb
+      const { data: kArr, error: kError } = await sb
         .from('korisnici')
         .select('*, klubovi(*)')
         .eq('username', user)
         .eq('lozinka', pass)
-        .single();
+        .limit(1);
 
+      const kData = kArr && kArr.length > 0 ? kArr[0] : null;
       if (kData && !kError) {
         // Provjeri je li klub aktivan
         if (kData.klubovi && !kData.klubovi.aktivan) {

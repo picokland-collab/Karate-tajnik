@@ -2605,6 +2605,15 @@ function loginSubmit() {
 
 function prijaviKorisnika() {
   if (!trenutniKorisnik) return;
+  // Inicijaliziraj Supabase
+  if (typeof sbInit === 'function') {
+    sbInit();
+    setTimeout(async () => {
+      if (typeof sbLoadAll === 'function') await sbLoadAll();
+      if (typeof renderClanovi === 'function') renderClanovi();
+      if (typeof updateStats === 'function') updateStats();
+    }, 1000);
+  }
   // Show/hide admin nav
   const navK = document.getElementById('navKorisnici');
   if (navK) navK.style.display = trenutniKorisnik.uloga === 'admin' ? '' : 'none';
@@ -6673,19 +6682,7 @@ async function manualSyncAll() {
 // Svaki put kad se lokalno spremi - syncira i u Supabase
 // Auto-sync je integriran direktno u save funkcije
 
-// ========== INIT NAKON PRIJAVE ==========
-const _origPrijavi = prijaviKorisnika;
-prijaviKorisnika = function() {
-  _origPrijavi();
-  // Inicijaliziraj Supabase i učitaj podatke iz oblaka
-  if (sbInit()) {
-    setTimeout(async () => {
-      await sbLoadAll();
-      if (typeof renderClanovi === 'function') renderClanovi();
-      if (typeof updateStats === 'function') updateStats();
-    }, 800);
-  }
-};
+// prijaviKorisnika hook - integriran direktno u funkciju
 
 </script>
 

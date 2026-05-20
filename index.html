@@ -2739,7 +2739,17 @@ async function loginSubmit() {
 
 function prijaviKorisnika() {
   if (!trenutniKorisnik) return;
-  // Supabase load - poziva se iz init bloka
+  // Učitaj Supabase podatke
+  setTimeout(function() {
+    if (!sbEnabled && typeof sbInit === 'function') sbInit();
+    if (sbEnabled && typeof sbLoadAll === 'function') {
+      sbLoadAll().then(function() {
+        if (typeof renderClanovi === 'function') renderClanovi();
+        if (typeof updateStats === 'function') updateStats();
+        console.log('✅ Podaci ucitani iz Supabase');
+      }).catch(function(e) { console.error('sbLoadAll greška:', e); });
+    }
+  }, 500);
   // Show/hide admin nav
   const navK = document.getElementById('navKorisnici');
   if (navK) navK.style.display = trenutniKorisnik.uloga === 'admin' ? '' : 'none';
@@ -6953,21 +6963,7 @@ async function saKreirajKlub(naziv, username, lozinka) {
   }
 }
 
-// Učitaj podatke nakon što je stranica potpuno učitana i korisnik prijavljen
-window.addEventListener('load', function() {
-  setTimeout(function() {
-    if (!window.trenutniKorisnik) return;
-    if (!sbEnabled) sbInit();
-    if (!sbEnabled) return;
-    sbLoadAll().then(function() {
-      if (typeof renderClanovi === 'function') renderClanovi();
-      if (typeof updateStats === 'function') updateStats();
-      console.log('Podaci ucitani iz Supabase');
-    }).catch(function(e) {
-      console.error('sbLoadAll greška:', e);
-    });
-  }, 1500);
-});
+// Supabase load se poziva iz prijaviKorisnika
 
 </script>
 

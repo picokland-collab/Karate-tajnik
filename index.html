@@ -6267,11 +6267,12 @@ const SUPABASE_URL = 'https://hpdnevnfgrwrkqgoohcv.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_vj1fn6UISchRJHo6q_j1QA__2f07mkh';
 const KLUB_ID = '00000000-0000-0000-0000-000000000001';
 
-// Inicijaliziraj Supabase klijent
+// Inicijaliziraj Supabase klijent odmah
 let sb = null;
 let sbEnabled = false;
 
 function sbInit() {
+  if (sb && sbEnabled) return true; // već inicijaliziran
   try {
     sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     sbEnabled = true;
@@ -6282,6 +6283,15 @@ function sbInit() {
     sbEnabled = false;
     return false;
   }
+}
+
+// Inicijaliziraj odmah kad se script učita
+try {
+  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  sbEnabled = true;
+  console.log('✅ Supabase auto-inicijaliziran');
+} catch(e) {
+  console.warn('Supabase auto-init failed, pokušat će se pri prijavi:', e.message);
 }
 
 // ========== SYNC FUNKCIJE ==========

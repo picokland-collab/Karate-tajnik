@@ -3080,7 +3080,7 @@ function showSection(id) {
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
   document.getElementById(id).classList.add('active');
-  event.currentTarget && event.currentTarget.classList.add('active');
+  // nav active state handled by querySelector below
   // Find the right nav button
   document.querySelectorAll('nav button').forEach(b => {
     if (b.getAttribute('onclick') && b.getAttribute('onclick').includes(id)) b.classList.add('active');
@@ -3399,7 +3399,7 @@ async function generirajOdluku() {
   
   if (!predmet) { toast('Unesite predmet odluke!', 'err'); return; }
   
-  const btn = event.currentTarget;
+  const btn = event?.currentTarget || null;
   btn.textContent = '⏳ Generira se...';
   btn.disabled = true;
   
@@ -3511,7 +3511,7 @@ async function generirajIzvjestaj() {
   
   if (!naziv) { toast('Unesite naziv natjecanja!', 'err'); return; }
   
-  const btn = event.currentTarget;
+  const btn = event?.currentTarget || null;
   btn.textContent = '⏳ Generira se...';
   btn.disabled = true;
   
@@ -3614,7 +3614,7 @@ async function generirajObavijest() {
   
   if (!opis) { toast('Unesite opis situacije!', 'err'); return; }
   
-  const btn = event.currentTarget;
+  const btn = event?.currentTarget || null;
   btn.textContent = '⏳ Generira se...';
   btn.disabled = true;
   
@@ -4651,7 +4651,7 @@ function planPrikaziDetalje(id) {
 async function planGenerirajAI() {
   const god = document.getElementById('plan-god').value || new Date().getFullYear();
   const vrsta = document.getElementById('plan-vrsta').value;
-  const btn = event.currentTarget;
+  const btn = event?.currentTarget || null;
   btn.textContent = '⏳ Generira se...'; btn.disabled = true;
   try {
     const resp = await fetch('https://api.anthropic.com/v1/messages', {

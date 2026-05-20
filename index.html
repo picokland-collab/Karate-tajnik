@@ -3062,7 +3062,7 @@ try {
 
 function save() {
   try { localStorage.setItem('kk_djurdjevac', JSON.stringify({...state, version: DATA_VERSION})); } catch(e){}
-  if (typeof sbEnabled !== 'undefined' && sbEnabled) {
+  if (typeof sbEnabled !== 'undefined' && sbEnabled && !(window.trenutniKorisnik && window.trenutniKorisnik.superadmin)) {
     clearTimeout(window._syncTimer);
     window._syncTimer = setTimeout(sbSaveClanovi, 1500);
   }
@@ -6778,6 +6778,11 @@ async function sbLoadOdluke() {
 
 // ========== RUČNI SYNC ==========
 async function manualSyncAll() {
+  // Superadmin ne smije syncati - spriječava miješanje podataka između klubova
+  if (window.trenutniKorisnik && window.trenutniKorisnik.superadmin) {
+    toast('⚠️ Super admin ne može koristiti Sync!', 'err');
+    return;
+  }
   const btn = document.getElementById('btnSync');
   if (btn) { btn.disabled = true; btn.textContent = '⏳ Syncira...'; }
   if (!sbEnabled) sbInit();

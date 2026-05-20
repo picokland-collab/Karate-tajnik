@@ -2739,19 +2739,20 @@ async function loginSubmit() {
 
 function prijaviKorisnika() {
   if (!trenutniKorisnik) return;
-  // Inicijaliziraj Supabase i učitaj podatke
-  const _pokusajUcitati = async (pokusaj) => {
+  // Inicijaliziraj Supabase i učitaj podatke s retry
+  setTimeout(function _ucitaj(pokusaj) {
+    pokusaj = pokusaj || 1;
     if (typeof sbLoadAll !== 'function') {
-      if (pokusaj < 10) setTimeout(() => _pokusajUcitati(pokusaj + 1), 500);
+      if (pokusaj < 10) setTimeout(function() { _ucitaj(pokusaj + 1); }, 500);
       return;
     }
     if (!sbEnabled) sbInit();
-    await sbLoadAll();
-    if (typeof renderClanovi === 'function') renderClanovi();
-    if (typeof updateStats === 'function') updateStats();
-    console.log('✅ Podaci učitani, pokušaj:', pokusaj);
-  };
-  setTimeout(() => _pokusajUcitati(1), 800);
+    sbLoadAll().then(function() {
+      if (typeof renderClanovi === 'function') renderClanovi();
+      if (typeof updateStats === 'function') updateStats();
+      console.log('Podaci ucitani, pokusaj: ' + pokusaj);
+    });
+  }, 800);
   // Show/hide admin nav
   const navK = document.getElementById('navKorisnici');
   if (navK) navK.style.display = trenutniKorisnik.uloga === 'admin' ? '' : 'none';

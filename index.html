@@ -3036,20 +3036,24 @@ let state = {
 };
 
 // Load from storage — v2 forces re-import of members with OIB+pojas
-const DATA_VERSION = 2;
+const DATA_VERSION = 4;
 try {
   const saved = localStorage.getItem('kk_djurdjevac');
   if (saved) {
     const parsed = JSON.parse(saved);
-    if ((parsed.version || 1) < DATA_VERSION) {
-      // Stari podaci — zadrži odluke/izvještaje/obavijesti, resetiraj članove
-      state.odluke = parsed.odluke || [];
-      state.izvjestaji = parsed.izvjestaji || [];
-      state.obavijesti = parsed.obavijesti || [];
-      state.aktivnosti = parsed.aktivnosti || [];
-      // clanovi se osvježavaju iz hksClanovi niže
-    } else {
-      state = {...state, ...parsed};
+    state = {...state, ...parsed};
+    if (!Array.isArray(state.izvjestaji)) state.izvjestaji = [];
+    if (!Array.isArray(state.odluke)) state.odluke = [];
+    if (!Array.isArray(state.aktivnosti)) state.aktivnosti = [];
+    // Deduplikacija članova
+    if (Array.isArray(state.clanovi) && state.clanovi.length > 0) {
+      const seen = {};
+      state.clanovi = state.clanovi.filter(c => {
+        const key = c.oib ? c.oib : String(Math.round(c.id));
+        if (seen[key]) return false;
+        seen[key] = true;
+        return true;
+      });
     }
   }
 } catch(e){}
@@ -6471,7 +6475,7 @@ async function sbLoadClanovi() {
       state.clanovi = [];
       return true; // vraćamo true da signaliziramo uspješno učitavanje (0 članova)
     }
-    // Mapiranje Supabase -> state format
+    // Supabase je izvor istine - zamijeni sve lokalne podatke
     state.clanovi = data.map(c => ({
       id: c.id,
       ime: c.ime,
@@ -6494,8 +6498,16 @@ async function sbLoadClanovi() {
       gdpr: c.gdpr || 'ne',
       foto: c.foto || null
     }));
+    // Spremi u localStorage bez duplikata
+    const seen = {};
+    state.clanovi = state.clanovi.filter(c => {
+      const key = c.oib || String(c.id);
+      if (seen[key]) return false;
+      seen[key] = true;
+      return true;
+    });
     localStorage.setItem('kk_djurdjevac', JSON.stringify({...state, version: 3}));
-    console.log('✅ Članovi učitani iz Supabase:', data.length);
+    console.log('✅ Članovi učitani iz Supabase:', state.clanovi.length);
     return true;
   } catch(e) { console.error('sbLoadClanovi:', e); return false; }
 }

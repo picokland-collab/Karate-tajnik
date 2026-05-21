@@ -2513,11 +2513,11 @@
       <button class="modal-close" onclick="closeModal('modalIzjava')">✕</button>
     </div>
     <div class="modal-body">
-      <pre id="izjavaTekst" style="white-space:pre-wrap;font-size:13px;line-height:1.7;max-height:60vh;overflow-y:auto"></pre>
+      <textarea id="izjavaTekst" style="white-space:pre-wrap;font-size:13px;line-height:1.7;height:60vh;width:100%;resize:vertical;background:#1C1C1C;color:#EDEDED;border:1px solid #2E2E2E;border-radius:6px;padding:12px;font-family:monospace"></textarea>
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('modalIzjava')">Zatvori</button>
-      <button class="btn btn-secondary" onclick="navigator.clipboard.writeText(document.getElementById('izjavaTekst').textContent);toast('Kopirano!')">📋 Kopiraj</button>
+      <button class="btn btn-secondary" onclick="navigator.clipboard.writeText(document.getElementById('izjavaTekst').value);toast('Kopirano!')">📋 Kopiraj</button>
       <button class="btn btn-primary" onclick="spremiIzjavu()">💾 Spremi izjavu</button>
     </div>
   </div>
@@ -4297,7 +4297,7 @@ Napiši kompletnu, formalnu izjavu s popunjenim podacima. Na kraju navedi mjesto
     const text = await pozovaiAI(prompt);
     document.getElementById('izjavaModalNaslov').textContent = 'Izjava — ' + c.ime + ' ' + c.prezime;
     document.getElementById('izjavaModalVrsta').textContent = vrstaIzjave;
-    document.getElementById('izjavaTekst').textContent = text;
+    document.getElementById('izjavaTekst').value = text;
     window._izjavaClan = c;
     window._izjavaVrsta = vrstaIzjave;
     window._izjavaTekst = text;
@@ -6416,7 +6416,7 @@ function spremiIzjavu() {
     clanId: c.id,
     clanIme: c.ime + ' ' + c.prezime,
     vrsta: window._izjavaVrsta,
-    tekst: window._izjavaTekst,
+    tekst: document.getElementById('izjavaTekst').value || window._izjavaTekst,
     datum: new Date().toISOString().split('T')[0],
     updated: new Date().toISOString()
   };
@@ -6439,7 +6439,7 @@ function prikaziIzjavu(id) {
   if (!iz) return;
   document.getElementById('izjavaModalNaslov').textContent = 'Izjava — ' + iz.clanIme;
   document.getElementById('izjavaModalVrsta').textContent = iz.vrsta + ' · ' + iz.datum;
-  document.getElementById('izjavaTekst').textContent = iz.tekst;
+  document.getElementById('izjavaTekst').value = iz.tekst;
   window._izjavaTekst = iz.tekst;
   window._izjavaClan = state.clanovi.find(c => c.id === iz.clanId) || { id: iz.clanId, ime: '', prezime: '' };
   window._izjavaVrsta = iz.vrsta;

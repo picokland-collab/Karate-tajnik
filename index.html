@@ -2588,6 +2588,32 @@ function anthropicHeaders() {
   return { 'Content-Type': 'application/json' };
 }
 
+// ========== AI HELPER ==========
+async function pozovaiAI(prompt, systemPrompt) {
+  const messages = [];
+  if (systemPrompt) messages.push({ role: 'user', content: systemPrompt + '\n\n' + prompt });
+  else messages.push({ role: 'user', content: prompt });
+  
+  const resp = await fetch('/api/ai', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ max_tokens: 1500, messages })
+  });
+  
+  if (!resp.ok) {
+    const err = await resp.text();
+    throw new Error('API greška ' + resp.status + ': ' + err);
+  }
+  
+  const data = await resp.json();
+  const text = data.choices?.[0]?.message?.content || 
+               data.content?.map(b => b.text || '').join('') || '';
+  if (!text) throw new Error('Prazan odgovor od AI-a');
+  return text;
+}
+
+
+
 
 
 // ========== FOTOGRAFIJA ČLANA ==========
@@ -3457,20 +3483,12 @@ Napiši formalnu odluku s:
 Budi koncizan i formalan. Koristi standardni format službenih dokumenata.`;
 
   try {
-    const resp = await fetch('/api/ai', {
-      method: 'POST',
-      headers: anthropicHeaders(),
-      body: JSON.stringify({
-        max_tokens: 1000,
-        messages: [{ role: 'user', content: prompt }]
-      })
-    });
-    const data = await resp.json();
-    const text = (data.content?.map(b => b.text || '').join('') || data.choices?.[0]?.message?.content || '') || 'Greška pri generiranju.';
+    const text = await pozovaiAI(prompt);
     document.getElementById('odlukaText').textContent = text;
     document.getElementById('odlukaOutput').style.display = 'block';
   } catch(e) {
-    toast('Greška pri generiranju dokumenta.', 'err');
+    console.error('generirajOdluku:', e);
+    toast('Greška: ' + e.message, 'err');
   }
   
   btn.textContent = '🤖 Generiraj s AI';
@@ -3561,20 +3579,12 @@ Napiši uzbudljiv, pozitivan i informativan tekst na hrvatskom jeziku koji:
 - Završava s hashtagovima: #KarateKlubĐurđevac #KKĐurđevac #karate #Đurđevac`;
 
   try {
-    const resp = await fetch('/api/ai', {
-      method: 'POST',
-      headers: anthropicHeaders(),
-      body: JSON.stringify({
-        max_tokens: 1000,
-        messages: [{ role: 'user', content: prompt }]
-      })
-    });
-    const data = await resp.json();
-    const text = (data.content?.map(b => b.text || '').join('') || data.choices?.[0]?.message?.content || '') || 'Greška.';
+    const text = await pozovaiAI(prompt);
     document.getElementById('izvjestajText').textContent = text;
     document.getElementById('izvjestajOutput').style.display = 'block';
   } catch(e) {
-    toast('Greška pri generiranju.', 'err');
+    console.error('generirajIzvjestaj:', e);
+    toast('Greška: ' + e.message, 'err');
   }
   
   btn.textContent = '🤖 Generiraj izvještaj za portale';
@@ -3664,20 +3674,12 @@ Napiši kratku, jasnu obavijest koja:
 - Završava prijaznim pozdravom`;
 
   try {
-    const resp = await fetch('/api/ai', {
-      method: 'POST',
-      headers: anthropicHeaders(),
-      body: JSON.stringify({
-        max_tokens: 1000,
-        messages: [{ role: 'user', content: prompt }]
-      })
-    });
-    const data = await resp.json();
-    const text = (data.content?.map(b => b.text || '').join('') || data.choices?.[0]?.message?.content || '') || 'Greška.';
+    const text = await pozovaiAI(prompt);
     document.getElementById('obavijestText').textContent = text;
     document.getElementById('obavijestOutput').style.display = 'block';
   } catch(e) {
-    toast('Greška pri generiranju.', 'err');
+    console.error('generirajObavijest:', e);
+    toast('Greška: ' + e.message, 'err');
   }
   
   btn.textContent = '🤖 Generiraj obavijest s AI';
@@ -4199,14 +4201,15 @@ async function sendAI() {
   try {
     const resp = await fetch('/api/ai', {
       method: 'POST',
-      headers: anthropicHeaders(),
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        max_tokens: 1000,
+        max_tokens: 1500,
         messages: [{role:'system',content:SYSTEM_PROMPT}, ...chatHistory]
       })
     });
+    if (!resp.ok) throw new Error('API ' + resp.status);
     const data = await resp.json();
-    const text = (data.content?.map(b => b.text || '').join('') || data.choices?.[0]?.message?.content || '') || 'Greška pri komunikaciji.';
+    const text = (data.choices?.[0]?.message?.content || data.content?.map(b => b.text || '').join('') || '') || 'Greška pri komunikaciji.';
     
     updateMsg(loadId, text);
     chatHistory.push({ role: 'assistant', content: text });
@@ -4291,17 +4294,7 @@ Podaci kluba: KK Đurđevac, Ulica Andrije Hebranga 12, 48350 Đurđevac, OIB: 9
 Napiši kompletnu, formalnu izjavu s popunjenim podacima. Na kraju navedi mjesto za potpis roditelja/staratelja i predsjednika Ivana Juričića.`;
 
   try {
-    const resp = await fetch('/api/ai', {
-      method: 'POST',
-      headers: anthropicHeaders(),
-      body: JSON.stringify({
-        max_tokens: 1000,
-        messages: [{ role: 'user', content: prompt }]
-      })
-    });
-    const data = await resp.json();
-    const text = (data.content?.map(b => b.text || '').join('') || data.choices?.[0]?.message?.content || '') || 'Greška.';
-    // Prikaži u modalu umjesto alert()
+    const text = await pozovaiAI(prompt);
     document.getElementById('izjavaModalNaslov').textContent = 'Izjava — ' + c.ime + ' ' + c.prezime;
     document.getElementById('izjavaModalVrsta').textContent = vrstaIzjave;
     document.getElementById('izjavaTekst').textContent = text;
@@ -4309,10 +4302,10 @@ Napiši kompletnu, formalnu izjavu s popunjenim podacima. Na kraju navedi mjesto
     window._izjavaVrsta = vrstaIzjave;
     window._izjavaTekst = text;
     openModal('modalIzjava');
-    navigator.clipboard.writeText(text);
-    toast('Izjava generirana i kopirana!');
+    toast('Izjava generirana!');
   } catch(e) {
-    toast('Greška pri generiranju.', 'err');
+    console.error('generirajIzjavu:', e);
+    toast('Greška: ' + e.message, 'err');
   }
   
   btn.textContent = '🤖 Generiraj izjavu o učlanjenju';
@@ -4680,24 +4673,18 @@ function planPrikaziDetalje(id) {
 async function planGenerirajAI() {
   const god = document.getElementById('plan-god').value || new Date().getFullYear();
   const vrsta = document.getElementById('plan-vrsta').value;
-  const btn = event?.currentTarget || null;
-  btn.textContent = '⏳ Generira se...'; btn.disabled = true;
+  const btn = document.querySelector('#modalNoviPlan .btn-gold');
+  if (btn) { btn.textContent = '⏳ Generira se...'; btn.disabled = true; }
   try {
-    const resp = await fetch('/api/ai', {
-      method: 'POST',
-      headers: anthropicHeaders(),
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514', max_tokens: 1000,
-        messages: [{ role: 'user', content: `Napiši ${PLAN_VRSTA_LABEL[vrsta]} za Karate klub Đurđevac za ${god}. godinu. Klub ima ~60 članova, djeca i mladi, karate sport. Temelji se na statutu kluba i Zakonu o udrugama. Budi koncizan i konkretan.` }]
-      })
-    });
-    const data = await resp.json();
-    const text = (data.content?.map(b => b.text||'').join('') || data.choices?.[0]?.message?.content || '') || 'Greška.';
+    const text = await pozovaiAI(`Napiši ${PLAN_VRSTA_LABEL[vrsta]} za Karate klub Đurđevac za ${god}. godinu. Klub ima ~60 članova, djeca i mladi, karate sport. Temelji se na statutu kluba i Zakonu o udrugama. Budi koncizan i konkretan.`);
     document.getElementById('plan-ai-tekst').textContent = text;
     document.getElementById('plan-ai-output').style.display = 'block';
     document.getElementById('plan-ciljevi').value = text.substring(0, 500);
-  } catch(e) { toast('AI nije dostupan.', 'err'); }
-  btn.textContent = '🤖 Generiraj s AI'; btn.disabled = false;
+  } catch(e) {
+    console.error('planGenerirajAI:', e);
+    toast('Greška: ' + e.message, 'err');
+  }
+  if (btn) { btn.textContent = '🤖 Generiraj s AI'; btn.disabled = false; }
 }
 
 // ========== FINANCIJSKO IZVJEŠĆE ==========

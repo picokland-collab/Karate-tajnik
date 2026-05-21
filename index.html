@@ -2501,6 +2501,28 @@
   </div>
 </div>
 
+
+<!-- MODAL: IZJAVA -->
+<div class="modal-overlay" id="modalIzjava">
+  <div class="modal" style="max-width:700px">
+    <div class="modal-header">
+      <div>
+        <h3 id="izjavaModalNaslov">Izjava</h3>
+        <div id="izjavaModalVrsta" style="font-size:12px;color:#aaa;margin-top:4px"></div>
+      </div>
+      <button class="modal-close" onclick="closeModal('modalIzjava')">✕</button>
+    </div>
+    <div class="modal-body">
+      <pre id="izjavaTekst" style="white-space:pre-wrap;font-size:13px;line-height:1.7;max-height:60vh;overflow-y:auto"></pre>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modalIzjava')">Zatvori</button>
+      <button class="btn btn-secondary" onclick="navigator.clipboard.writeText(document.getElementById('izjavaTekst').textContent);toast('Kopirano!')">📋 Kopiraj</button>
+      <button class="btn btn-primary" onclick="spremiIzjavu()">💾 Spremi izjavu</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <script>
@@ -4280,10 +4302,13 @@ Napiši kompletnu, formalnu izjavu s popunjenim podacima. Na kraju navedi mjesto
     const data = await resp.json();
     const text = (data.content?.map(b => b.text || '').join('') || data.choices?.[0]?.message?.content || '') || 'Greška.';
     // Prikaži u modalu umjesto alert()
-    document.getElementById('odlukaViewNaslov').textContent = 'Izjava — ' + c.ime + ' ' + c.prezime;
-    document.getElementById('odlukaViewTekst').textContent = text;
-    document.getElementById('odlukaViewDatum').textContent = vrstaIzjave;
-    openModal('modalOdlukaView');
+    document.getElementById('izjavaModalNaslov').textContent = 'Izjava — ' + c.ime + ' ' + c.prezime;
+    document.getElementById('izjavaModalVrsta').textContent = vrstaIzjave;
+    document.getElementById('izjavaTekst').textContent = text;
+    window._izjavaClan = c;
+    window._izjavaVrsta = vrstaIzjave;
+    window._izjavaTekst = text;
+    openModal('modalIzjava');
     navigator.clipboard.writeText(text);
     toast('Izjava generirana i kopirana!');
   } catch(e) {
@@ -6385,6 +6410,60 @@ function filterNeplaceni() {
     renderClanovi();
     window._filterNeplaceni = false;
   }, 50);
+}
+
+
+// ========== IZJAVE ==========
+let izjaveLista = [];
+try { izjaveLista = JSON.parse(localStorage.getItem('kk_izjave') || '[]'); } catch(e) {}
+function izjaveSave() { localStorage.setItem('kk_izjave', JSON.stringify(izjaveLista)); }
+
+function spremiIzjavu() {
+  const c = window._izjavaClan;
+  if (!c || !window._izjavaTekst) { toast('Nema podataka za spremanje!', 'err'); return; }
+  
+  // Provjeri postoji li izjava za ovog člana
+  const existingIdx = izjaveLista.findIndex(i => i.clanId === c.id);
+  const izjava = {
+    id: existingIdx >= 0 ? izjaveLista[existingIdx].id : Date.now().toString(),
+    clanId: c.id,
+    clanIme: c.ime + ' ' + c.prezime,
+    vrsta: window._izjavaVrsta,
+    tekst: window._izjavaTekst,
+    datum: new Date().toISOString().split('T')[0],
+    updated: new Date().toISOString()
+  };
+  
+  if (existingIdx >= 0) {
+    izjaveLista[existingIdx] = izjava;
+    toast('Izjava ažurirana!');
+  } else {
+    izjaveLista.push(izjava);
+    toast('Izjava spremljena!');
+  }
+  
+  izjaveSave();
+  closeModal('modalIzjava');
+  logActivity('📄', 'Izjava spremljena: ' + c.ime + ' ' + c.prezime);
+}
+
+function prikaziIzjavu(id) {
+  const iz = izjaveLista.find(i => i.id === id);
+  if (!iz) return;
+  document.getElementById('izjavaModalNaslov').textContent = 'Izjava — ' + iz.clanIme;
+  document.getElementById('izjavaModalVrsta').textContent = iz.vrsta + ' · ' + iz.datum;
+  document.getElementById('izjavaTekst').textContent = iz.tekst;
+  window._izjavaTekst = iz.tekst;
+  window._izjavaClan = state.clanovi.find(c => c.id === iz.clanId) || { id: iz.clanId, ime: '', prezime: '' };
+  window._izjavaVrsta = iz.vrsta;
+  openModal('modalIzjava');
+}
+
+function obrisiIzjavu(id) {
+  if (!confirm('Obrisati izjavu?')) return;
+  izjaveLista = izjaveLista.filter(i => i.id !== id);
+  izjaveSave();
+  toast('Izjava obrisana.');
 }
 
 // Init

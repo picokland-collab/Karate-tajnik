@@ -4253,7 +4253,7 @@ async function generirajIzjavu() {
   const god = c.datRod ? new Date().getFullYear() - new Date(c.datRod).getFullYear() : 18;
   const vrstaIzjave = god < 14 ? 'Izjava o učlanjenju (za članove mlađe od 14 god.)' : 'Izjava o suglasnosti (za maloljetne članove od 14 do 18 god.)';
   
-  const prompt = `Napiši popunjenu "${vrstaIzjave}" za KK Đurđevac na temelju ovih podataka:
+  const prompt = `Napiši popunjenu "${vrstaIzjave}" za KARATE klub Đurđevac (KK Đurđevac, sport: KARATE) na temelju ovih podataka:
 
 Ime i prezime djeteta: ${c.ime} ${c.prezime}
 Datum rođenja: ${c.datRod || '—'}
@@ -4279,7 +4279,11 @@ Napiši kompletnu, formalnu izjavu s popunjenim podacima. Na kraju navedi mjesto
     });
     const data = await resp.json();
     const text = (data.content?.map(b => b.text || '').join('') || data.choices?.[0]?.message?.content || '') || 'Greška.';
-    alert(text);
+    // Prikaži u modalu umjesto alert()
+    document.getElementById('odlukaViewNaslov').textContent = 'Izjava — ' + c.ime + ' ' + c.prezime;
+    document.getElementById('odlukaViewTekst').textContent = text;
+    document.getElementById('odlukaViewDatum').textContent = vrstaIzjave;
+    openModal('modalOdlukaView');
     navigator.clipboard.writeText(text);
     toast('Izjava generirana i kopirana!');
   } catch(e) {

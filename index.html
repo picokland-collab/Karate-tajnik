@@ -3382,7 +3382,7 @@ function prikaziClana(id) {
   }
   openModal('modalDetaljiClana');
   // Prikaži izjave tog člana
-  renderClanIzjave(id);
+  setTimeout(() => renderClanIzjave(String(id)), 50);
 }
 
 function spremiUrednogClana() {
@@ -6418,7 +6418,7 @@ function izjaveSave() { localStorage.setItem('kk_izjave', JSON.stringify(izjaveL
 function renderClanIzjave(clanId) {
   const el = document.getElementById('clanIzjaveLista');
   if (!el) return;
-  const izjave = izjaveLista.filter(i => i.clanId === clanId);
+  const izjave = izjaveLista.filter(i => String(i.clanId) === String(clanId));
   if (izjave.length === 0) {
     el.innerHTML = '<div style="font-size:12px;color:#555;padding:6px 0">Nema spremljenih izjava.</div>';
     return;
@@ -6431,7 +6431,7 @@ function renderClanIzjave(clanId) {
       </div>
       <div style="display:flex;gap:6px;flex-shrink:0">
         <button class="btn btn-secondary btn-sm" onclick="prikaziIzjavu('${iz.id}')">✏️ Uredi</button>
-        <button class="btn btn-sm" style="background:rgba(200,16,46,0.15);color:#ff5a70;border:1px solid rgba(200,16,46,0.2)" onclick="obrisiIzjavu('${iz.id}');renderClanIzjave(${clanId})">✕</button>
+        <button class="btn btn-sm" style="background:rgba(200,16,46,0.15);color:#ff5a70;border:1px solid rgba(200,16,46,0.2)" onclick="obrisiIzjavu('${iz.id}');renderClanIzjave('${iz.clanId}')">✕</button>
       </div>
     </div>`).join('');
 }
@@ -6444,7 +6444,7 @@ function spremiIzjavu() {
   const existingIdx = izjaveLista.findIndex(i => i.clanId === c.id);
   const izjava = {
     id: existingIdx >= 0 ? izjaveLista[existingIdx].id : Date.now().toString(),
-    clanId: c.id,
+    clanId: String(c.id),
     clanIme: c.ime + ' ' + c.prezime,
     vrsta: window._izjavaVrsta,
     tekst: document.getElementById('izjavaTekst').value || window._izjavaTekst,
@@ -6463,7 +6463,7 @@ function spremiIzjavu() {
   izjaveSave();
   closeModal('modalIzjava');
   // Osvježi listu izjava u modalu člana
-  if (typeof renderClanIzjave === 'function') renderClanIzjave(c.id);
+  if (typeof renderClanIzjave === 'function') renderClanIzjave(String(c.id));
   logActivity('📄', 'Izjava ' + (existingIdx >= 0 ? 'ažurirana' : 'spremljena') + ': ' + c.ime + ' ' + c.prezime);
 }
 

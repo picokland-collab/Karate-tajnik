@@ -1974,12 +1974,19 @@
         </div>
       </div>
     </div>
-    <div class="modal-footer" style="justify-content:space-between">
-      <button class="btn btn-gold btn-sm" onclick="generirajIzjavu()" id="btnIzjava">🤖 Generiraj izjavu</button>
-      <div style="display:flex;gap:8px">
-        <button class="btn btn-secondary" onclick="closeModal('modalDetaljiClana')">Odustani</button>
-        <button class="btn btn-primary" onclick="spremiUrednogClana()">💾 Spremi promjene</button>
+    <!-- Izjave člana -->
+    <div style="border-top:1px solid #2E2E2E;padding:16px 0 0">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div style="font-family:'Bebas Neue',sans-serif;letter-spacing:1px;font-size:15px;color:#aaa">📄 IZJAVE</div>
+        <button class="btn btn-gold btn-sm" onclick="generirajIzjavu()" id="btnIzjava">🤖 Generiraj izjavu</button>
       </div>
+      <div id="clanIzjaveLista">
+        <div style="font-size:12px;color:#555;padding:6px 0">Nema spremljenih izjava.</div>
+      </div>
+    </div>
+    <div class="modal-footer" style="justify-content:flex-end">
+      <button class="btn btn-secondary" onclick="closeModal('modalDetaljiClana')">Odustani</button>
+      <button class="btn btn-primary" onclick="spremiUrednogClana()">💾 Spremi promjene</button>
     </div>
   </div>
 </div>
@@ -3374,6 +3381,8 @@ function prikaziClana(id) {
     fotoInit.textContent = c.ime.charAt(0) + c.prezime.charAt(0);
   }
   openModal('modalDetaljiClana');
+  // Prikaži izjave tog člana
+  renderClanIzjave(id);
 }
 
 function spremiUrednogClana() {
@@ -6405,6 +6414,28 @@ let izjaveLista = [];
 try { izjaveLista = JSON.parse(localStorage.getItem('kk_izjave') || '[]'); } catch(e) {}
 function izjaveSave() { localStorage.setItem('kk_izjave', JSON.stringify(izjaveLista)); }
 
+
+function renderClanIzjave(clanId) {
+  const el = document.getElementById('clanIzjaveLista');
+  if (!el) return;
+  const izjave = izjaveLista.filter(i => i.clanId === clanId);
+  if (izjave.length === 0) {
+    el.innerHTML = '<div style="font-size:12px;color:#555;padding:6px 0">Nema spremljenih izjava.</div>';
+    return;
+  }
+  el.innerHTML = izjave.map(iz => `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:#242424;border-radius:6px;margin-bottom:6px">
+      <div>
+        <div style="font-size:13px;color:#EDEDED;font-weight:600">${iz.vrsta.substring(0,40)}...</div>
+        <div style="font-size:11px;color:#666;margin-top:2px">Datum: ${iz.datum || '—'}</div>
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0">
+        <button class="btn btn-secondary btn-sm" onclick="prikaziIzjavu('${iz.id}')">✏️ Uredi</button>
+        <button class="btn btn-sm" style="background:rgba(200,16,46,0.15);color:#ff5a70;border:1px solid rgba(200,16,46,0.2)" onclick="obrisiIzjavu('${iz.id}');renderClanIzjave(${clanId})">✕</button>
+      </div>
+    </div>`).join('');
+}
+
 function spremiIzjavu() {
   const c = window._izjavaClan;
   if (!c || !window._izjavaTekst) { toast('Nema podataka za spremanje!', 'err'); return; }
@@ -6431,7 +6462,9 @@ function spremiIzjavu() {
   
   izjaveSave();
   closeModal('modalIzjava');
-  logActivity('📄', 'Izjava spremljena: ' + c.ime + ' ' + c.prezime);
+  // Osvježi listu izjava u modalu člana
+  if (typeof renderClanIzjave === 'function') renderClanIzjave(c.id);
+  logActivity('📄', 'Izjava ' + (existingIdx >= 0 ? 'ažurirana' : 'spremljena') + ': ' + c.ime + ' ' + c.prezime);
 }
 
 function prikaziIzjavu(id) {

@@ -658,6 +658,7 @@
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.0.4/tesseract.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 </head>
 <body>
 
@@ -5271,29 +5272,60 @@ function gdprOznaci(id) {
 }
 
 
-function posaljiSvimaMail(subject, body) {
-  const emailovi = state.clanovi
-    .filter(c => c.status === 'aktivan' && c.email && c.email.trim())
-    .map(c => c.email.trim());
-  
-  if (emailovi.length === 0) {
+// ========== EMAILJS KONFIGURACIJA ==========
+const EJS_SERVICE  = 'service_hg62jsr';
+const EJS_TEMPLATE = 'template_2oq38d8';
+const EJS_PUBLIC   = 'HtsQTuabxo_LG6_cX';
+
+function ejsInit() {
+  try { emailjs.init({ publicKey: EJS_PUBLIC }); } catch(e) { console.warn('EmailJS init:', e); }
+}
+
+async function ejsSendMail(toEmail, toName, subject, body) {
+  try {
+    ejsInit();
+    await emailjs.send(EJS_SERVICE, EJS_TEMPLATE, {
+      to_email: toEmail,
+      to_name: toName || toEmail,
+      subject: subject,
+      message: body,
+      from_name: 'KK Đurđevac',
+      reply_to: 'karate.djurdjevac@gmail.com'
+    });
+    return true;
+  } catch(e) {
+    console.error('EmailJS send error:', e);
+    return false;
+  }
+}
+
+async function posaljiSvimaMail(subject, body) {
+  const clanovi = state.clanovi.filter(c => c.status === 'aktivan' && c.email && c.email.trim());
+
+  if (clanovi.length === 0) {
     toast('Nema unesenih email adresa! Unesite ih u Email adrese sekciji.', 'err');
     showSection('emailovi');
     return;
   }
 
-  const subj = encodeURIComponent(subject || 'Obavijest — Karate klub Đurđevac');
-  const bod = encodeURIComponent(body || 'Poštovani,\n\n\n\nSrdačan pozdrav,\nKarate klub Đurđevac');
-  const bcc = encodeURIComponent(emailovi.join(','));
-  
-  // Otvori default mail klijent s BCC svima
-  const mailtoUrl = `mailto:?bcc=${bcc}&subject=${subj}&body=${bod}`;
-  const a = document.createElement('a');
-  a.href = mailtoUrl;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  toast('✅ Otvara se mail klijent s ' + emailovi.length + ' primatelja!');
+  const subj = subject || 'Obavijest — Karate klub Đurđevac';
+  const bod  = body  || 'Poštovani,\n\nSrdačan pozdrav,\nKarate klub Đurđevac';
+
+  toast('📧 Šaljem mailove... (' + clanovi.length + ')');
+  ejsInit();
+
+  let uspjelo = 0, neuspjelo = 0;
+  for (const c of clanovi) {
+    const ok = await ejsSendMail(c.email.trim(), c.ime + ' ' + c.prezime, subj, bod);
+    if (ok) uspjelo++; else neuspjelo++;
+    await new Promise(r => setTimeout(r, 300)); // pauza između slanja
+  }
+
+  if (neuspjelo === 0) {
+    toast('✅ Poslano ' + uspjelo + ' mailova!');
+  } else {
+    toast('⚠ Poslano ' + uspjelo + ', nije uspjelo ' + neuspjelo, 'err');
+  }
 }
 
 // ========== BRZI UNOS EMAILOVA ==========
@@ -6634,27 +6666,31 @@ Tel: 098/805-555
 E-mail: karate.djurdjevac@gmail.com`;
 }
 
-function posaljiMailObj(u) {
-  const subject = encodeURIComponent('KK Djurdjevac - Clanarina ' + u.mjesec + ' ' + u.godina + ' - ' + u.ime + ' ' + u.prezime);
-  const body = encodeURIComponent(napraviMailBody(u));
-  const a = document.createElement('a');
-  a.href = 'mailto:' + u.email + '?subject=' + subject + '&body=' + body;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+async function posaljiMailObj(u) {
+  if (!u.email) { toast('Član nema e-mail adresu!', 'err'); return; }
+  const subject = 'KK Đurđevac - Članarina ' + u.mjesec + ' ' + u.godina + ' - ' + u.ime + ' ' + u.prezime;
+  const body = napraviMailBody(u);
+  const ok = await ejsSendMail(u.email, u.ime + ' ' + u.prezime, subject, body);
+  if (ok) toast('✅ Mail poslan: ' + u.ime + ' ' + u.prezime);
+  else toast('❌ Greška pri slanju maila!', 'err');
 }
 
-function posaljiSveMailove() {
+async function posaljiSveMailove() {
   const lista = window._zadnjeUplatnice;
   if (!lista || lista.length === 0) { toast('Najprije generirajte uplatnice!', 'err'); return; }
-  const bezMaila = (window._zadnjeUplatnice_svi || []).filter(u => u.iznos > 0 && !u.email);
-  if (!confirm(`Otvorit će se ${lista.length} mail prozora (samo oni koji imaju e-mail adresu).${bezMaila.length > 0 ? ' ' + bezMaila.length + ' članova nema e-mail.' : ''} Nastaviti?`)) return;
-  lista.forEach((u, i) => {
-    setTimeout(() => {
-      posaljiMailObj(u);
-    }, i * 800);
-  });
-  toast(`Šalje se ${lista.length} mailova...`);
+  if (!confirm(`Poslati ${lista.length} mailova roditeljima?`)) return;
+
+  toast('📧 Šaljem ' + lista.length + ' mailova...');
+  let uspjelo = 0, neuspjelo = 0;
+  for (const u of lista) {
+    const subject = 'KK Đurđevac - Članarina ' + u.mjesec + ' ' + u.godina + ' - ' + u.ime + ' ' + u.prezime;
+    const body = napraviMailBody(u);
+    const ok = await ejsSendMail(u.email, u.ime + ' ' + u.prezime, subject, body);
+    if (ok) uspjelo++; else neuspjelo++;
+    await new Promise(r => setTimeout(r, 300));
+  }
+  if (neuspjelo === 0) toast('✅ Svi mailovi poslani! (' + uspjelo + ')');
+  else toast('⚠ Poslano ' + uspjelo + ', nije uspjelo ' + neuspjelo, 'err');
 }
 
 function prikaziUplatnicuIdx(idx) {

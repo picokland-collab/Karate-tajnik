@@ -740,9 +740,6 @@
       </div>
       <div class="content">
         <!-- ALERT PANEL -->
-        <div id="alertPanel" style="margin-bottom:16px"></div>
-
-        <!-- ALERT PANEL -->
         <div id="alertPanel" style="margin-bottom:18px"></div>
 
         <div class="stats-row" id="statsRow">
@@ -769,7 +766,7 @@
         <h3 style="font-family:'Bebas Neue',sans-serif;letter-spacing:1px;font-size:18px;margin-bottom:12px;color:var(--muted)">BRZE RADNJE</h3>
         <div style="display:flex;gap:10px;flex-wrap:wrap;">
           <button class="btn btn-primary" onclick="openModal('modalDodajClana')">+ Novi član</button>
-          <button class="btn btn-secondary" onclick="openModal('modalOdluka')">📜 Nova odluka</button>
+          <button class="btn btn-secondary" onclick="novaOdluka()">📜 Nova odluka</button>
           <button class="btn btn-secondary" onclick="openModal('modalIzvjestaj')">🏆 Novi izvještaj</button>
           <button class="btn btn-secondary" onclick="openModal('modalKomunikacija')">✉️ Pošalji obavijest</button>
         </div>
@@ -833,7 +830,7 @@
           <h2>Odluke i akti</h2>
           <p>Dokumenti upravljačkih tijela</p>
         </div>
-        <button class="btn btn-primary" onclick="openModal('modalOdluka')">+ Nova odluka</button>
+        <button class="btn btn-primary" onclick="novaOdluka()">+ Nova odluka</button>
       </div>
       <div class="content">
         <div id="listaOdluka">
@@ -1156,6 +1153,7 @@
         <div id="pn-detalji-body"></div>
         <div style="display:flex;gap:10px;margin-top:16px;padding-bottom:20px">
           <button class="btn btn-sm" style="background:rgba(200,16,46,0.15);color:#ff5a70;border:1px solid rgba(200,16,46,0.2)" onclick="obrisiPutniNalog()">🗑 Obriši</button>
+          <button class="btn btn-secondary" onclick="printPutniNalog(pnCurrentId)">🖨️ Ispis</button>
           <button class="btn btn-primary" style="flex:1" id="pn-odobri-btn" onclick="odobriPutniNalog()">✓ Odobri nalog</button>
         </div>
       </div>
@@ -1167,6 +1165,7 @@
       <div class="page-header">
         <div><h2>Dnevnik rada</h2><p>Prozivka i plan treninga</p></div>
         <div style="display:flex;gap:8px">
+          <button class="btn btn-secondary btn-sm" onclick="dnShowStats()">📊 Statistika</button>
           <button class="btn btn-secondary btn-sm" onclick="dnOcistiSve()" title="Obriši sve treninge">🗑</button>
           <button class="btn btn-primary" onclick="noviTrening()">+ Novi trening</button>
         </div>
@@ -1183,9 +1182,21 @@
 
         <!-- PROZIVKA -->
         <div id="dn-prozivka-panel" style="display:none">
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
-            <button class="btn btn-secondary btn-sm" onclick="zatvoriProzivku()">← Natrag</button>
-            <h3 style="font-family:'Bebas Neue',sans-serif;letter-spacing:1px;font-size:20px" id="dn-trening-naslov">Trening</h3>
+          <div class="card" style="margin-bottom:14px">
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Naziv treninga</label>
+                <input type="text" id="dn-input-naslov" placeholder="npr. Trening A grupe">
+              </div>
+              <div class="form-group">
+                <label>Datum</label>
+                <input type="date" id="dn-input-datum">
+              </div>
+              <div class="form-group full">
+                <label>Napomena (opcionalno)</label>
+                <input type="text" id="dn-input-napomena" placeholder="Npr: Rad na bacanjima, Kata Heian Shodan...">
+              </div>
+            </div>
           </div>
           <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
             <span style="font-size:13px;color:#aaa;flex:1">Tapnite člana za prisutnost:</span>
@@ -1206,6 +1217,23 @@
           <div id="dn-lista-html">
             <div class="empty-state"><div class="icon">📋</div><p>Nema unesenih treninga.</p></div>
           </div>
+
+        <!-- STATISTIKA PRISUTNOSTI -->
+        <div id="dn-stats-panel" style="display:none">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+            <button class="btn btn-secondary btn-sm" onclick="dnHideStats()">← Natrag</button>
+            <h3 style="font-family:'Bebas Neue',sans-serif;letter-spacing:1px;font-size:20px">Statistika prisutnosti</h3>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+            <label style="font-size:13px;color:#aaa">Filtar:</label>
+            <select id="dn-stats-filter" onchange="dnRenderStats()" style="background:#1C1C1C;border:1px solid #333;color:#EDEDED;padding:6px 10px;border-radius:8px;font-size:13px">
+              <option value="all">Svi treninzi</option>
+            </select>
+            <span id="dn-stats-summary" style="font-size:12px;color:#aaa;"></span>
+            <button class="btn btn-secondary btn-sm" onclick="printDnevnikStats()">🖨️ Ispis</button>
+          </div>
+          <div id="dn-stats-html"></div>
+        </div>
         </div>
       </div>
     </div>
@@ -1405,6 +1433,7 @@
         <div><h2>Natjecanja i rezultati</h2><p>Evidencija natjecanja i plasmana</p></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn btn-secondary" onclick="openModal('modalIzvjestaj')">📰 Izvještaj za portale</button>
+          <button class="btn btn-secondary" onclick="printRezultati()">🖨️ Ispis rezultata</button>
           <button class="btn btn-primary" onclick="openModal('modalNoviRezultat')">+ Dodaj rezultat</button>
         </div>
       </div>
@@ -1466,6 +1495,7 @@
           <select id="fin-god" onchange="finRenderLista()" style="flex:1;max-width:150px">
           </select>
           <button class="btn btn-secondary btn-sm" onclick="finGenerirajIzvjesce()">📄 Generiraj izvješće za Skupštinu</button>
+          <button class="btn btn-secondary btn-sm" onclick="printFinancije()">🖨️ Ispis izvješća</button>
         </div>
 
         <!-- Summary kartice -->
@@ -1663,7 +1693,7 @@
 <div class="modal-overlay" id="modalOdluka">
   <div class="modal">
     <div class="modal-header">
-      <h3>Nova Odluka</h3>
+      <h3 id="modalOdlukaTitle">Nova Odluka</h3>
       <button class="modal-close" onclick="closeModal('modalOdluka')">✕</button>
     </div>
     <div class="modal-body">
@@ -3504,24 +3534,63 @@ Budi koncizan i formalan. Koristi standardni format službenih dokumenata.`;
   btn.disabled = false;
 }
 
+let _odlukaEditId = null;
+
+function novaOdluka() {
+  _odlukaEditId = null;
+  document.getElementById("modalOdlukaTitle").textContent = "Nova Odluka";
+  document.getElementById("oVrsta").selectedIndex = 0;
+  document.getElementById("oDatum").value = "";
+  document.getElementById("oPredmet").value = "";
+  document.getElementById("oSadrzaj").value = "";
+  document.getElementById("odlukaOutput").style.display = "none";
+  document.getElementById("odlukaText").textContent = "";
+  openModal("modalOdluka");
+}
+
+function urediOdluku(id) {
+  const o = state.odluke.find(x => String(x.id) === String(id));
+  if (!o) return;
+  _odlukaEditId = id;
+  document.getElementById("modalOdlukaTitle").textContent = "Uredi Odluku";
+  document.getElementById("oVrsta").value = o.vrsta || "Odluka Upravnog odbora";
+  document.getElementById("oDatum").value = o.datum || "";
+  document.getElementById("oPredmet").value = o.predmet || "";
+  document.getElementById("oSadrzaj").value = o.sadrzaj || "";
+  if (o.sadrzaj) {
+    document.getElementById("odlukaText").textContent = o.sadrzaj;
+    document.getElementById("odlukaOutput").style.display = "block";
+  } else {
+    document.getElementById("odlukaOutput").style.display = "none";
+    document.getElementById("odlukaText").textContent = "";
+  }
+  openModal("modalOdluka");
+}
+
 function spremiOdluku() {
-  const odluka = {
-    id: Date.now(),
-    vrsta: document.getElementById('oVrsta').value,
-    predmet: document.getElementById('oPredmet').value,
-    datum: document.getElementById('oDatum').value,
-    sadrzaj: document.getElementById('odlukaText').textContent
-  };
+  const sadrzajAI = document.getElementById("odlukaText").textContent.trim();
+  const sadrzajRucni = document.getElementById("oSadrzaj").value.trim();
+  const sadrzaj = sadrzajAI || sadrzajRucni;
+  const predmet = document.getElementById("oPredmet").value.trim();
+  if (!predmet) { toast("Unesite predmet odluke!", "err"); return; }
+  if (_odlukaEditId !== null) {
+    const idx = state.odluke.findIndex(x => String(x.id) === String(_odlukaEditId));
+    if (idx !== -1) {
+      state.odluke[idx] = { ...state.odluke[idx], vrsta: document.getElementById("oVrsta").value, predmet, datum: document.getElementById("oDatum").value, sadrzaj };
+      save(); closeModal("modalOdluka"); renderOdluke();
+      toast("Odluka ažurirana!");
+      return;
+    }
+  }
+  const odluka = { id: Date.now(), vrsta: document.getElementById("oVrsta").value, predmet, datum: document.getElementById("oDatum").value, sadrzaj };
   state.odluke.push(odluka);
-  save();
-  closeModal('modalOdluka');
-  renderOdluke();
-  logActivity('📜', `Nova odluka: ${odluka.predmet}`);
-  toast('Odluka pohranjena!');
+  save(); closeModal("modalOdluka"); renderOdluke();
+  logActivity("📜", `Nova odluka: ${odluka.predmet}`);
+  toast("Odluka pohranjena!");
 }
 
 function renderOdluke() {
-  const el = document.getElementById('listaOdluka');
+  const el = document.getElementById("listaOdluka");
   if (state.odluke.length === 0) {
     el.innerHTML = '<div class="empty-state"><div class="icon">📜</div><p>Nema zapisanih odluka.</p></div>';
     return;
@@ -3529,27 +3598,23 @@ function renderOdluke() {
   el.innerHTML = state.odluke.slice().reverse().map(o => `
     <div class="card">
       <div class="card-row">
-        <div>
-          <div style="font-weight:500">${o.predmet}</div>
-          <div style="font-size:12px;color:var(--muted);margin-top:3px">${o.vrsta} · ${o.datum || '—'}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:600">${o.predmet}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:3px">${o.vrsta} · ${o.datum || "—"}</div>
+          ${o.sadrzaj ? `<div style="font-size:12px;color:#888;margin-top:5px;white-space:pre-wrap;max-height:54px;overflow:hidden">${o.sadrzaj.substring(0,150)}${o.sadrzaj.length>150?"…":""}</div>` : ""}
         </div>
-        <div class="card-actions">
-          <button class="btn btn-secondary btn-sm" onclick="prikaziOdluku(${o.id})">Prikaži</button>
+        <div class="card-actions" style="flex-shrink:0">
+          <button class="btn btn-secondary btn-sm" onclick="urediOdluku(${o.id})">✏️ Uredi</button>
+          <button class="btn btn-sm btn-secondary" onclick="printOdluka(${o.id})" title="Ispiši odluku">🖨️</button>
           <button class="btn btn-sm" style="background:rgba(200,16,46,0.15);color:#ff5a70;border:1px solid rgba(200,16,46,0.2)" onclick="obrisiOdluku(${o.id})">✕</button>
         </div>
       </div>
-    </div>`).join('');
-}
-
-function prikaziOdluku(id) {
-  const o = state.odluke.find(x => x.id === id);
-  if (!o) return;
-  alert(o.sadrzaj);
+    </div>`).join("");
 }
 
 function obrisiOdluku(id) {
-  if (!confirm('Obrisati odluku?')) return;
-  state.odluke = state.odluke.filter(x => x.id !== id);
+  if (!confirm("Obrisati odluku?")) return;
+  state.odluke = state.odluke.filter(x => String(x.id) !== String(id));
   save(); renderOdluke();
 }
 
@@ -5221,10 +5286,14 @@ function posaljiSvimaMail(subject, body) {
   const bod = encodeURIComponent(body || 'Poštovani,\n\n\n\nSrdačan pozdrav,\nKarate klub Đurđevac');
   const bcc = encodeURIComponent(emailovi.join(','));
   
-  // Open Gmail compose directly in browser
-  const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=karate.djurdjevac@gmail.com&bcc=${bcc}&su=${subj}&body=${bod}`;
-  window.open(gmailUrl, '_blank');
-  toast('✅ Otvara se Gmail s ' + emailovi.length + ' primatelja!');
+  // Otvori default mail klijent s BCC svima
+  const mailtoUrl = `mailto:?bcc=${bcc}&subject=${subj}&body=${bod}`;
+  const a = document.createElement('a');
+  a.href = mailtoUrl;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  toast('✅ Otvara se mail klijent s ' + emailovi.length + ' primatelja!');
 }
 
 // ========== BRZI UNOS EMAILOVA ==========
@@ -5303,27 +5372,34 @@ function dnSave() {
 function noviTrening() {
   const danas = new Date().toISOString().split('T')[0];
   const naslov = 'Trening ' + new Date().toLocaleDateString('hr-HR');
-  dnAktivniTrening = { id: Date.now().toString(), datum: danas, naslov, prisutni: [] };
+  dnAktivniTrening = { id: Date.now().toString(), datum: danas, naslov, napomena: '', prisutni: [] };
   dnPrisutni = {};
-  document.getElementById('dn-trening-naslov').textContent = naslov;
+  document.getElementById('dn-input-naslov').value = naslov;
+  document.getElementById('dn-input-datum').value = danas;
+  document.getElementById('dn-input-napomena').value = '';
+  dnRenderProzivkaLista();
+  document.getElementById('dn-lista-panel').style.display = 'none';
+  document.getElementById('dn-prozivka-panel').style.display = 'block';
+  dnUpdateCount();
+}
+
+function dnRenderProzivkaLista() {
   const lista = document.getElementById('dn-prozivka-lista');
   lista.style.cssText = 'display:grid;grid-template-columns:repeat(3,1fr);gap:8px';
   lista.innerHTML = state.clanovi.filter(c => c.status === 'aktivan').sort((a,b) => a.prezime.localeCompare(b.prezime)).map(c => {
     const cid = String(c.id);
-    const foto = c.foto ? `<img src="${c.foto}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;border:2px solid #333;transition:border-color 0.2s">` 
-      : `<div style="width:52px;height:52px;border-radius:50%;background:#2E2E2E;display:flex;align-items:center;justify-content:center;font-size:18px;color:#888;font-weight:700">${c.ime.charAt(0)}${c.prezime.charAt(0)}</div>`;
-    return `<div id="dn-clan-${cid}" data-cid="${cid}" onclick="dnToggle('${cid}')" style="padding:14px 8px;border-radius:12px;border:2px solid #333;cursor:pointer;text-align:center;background:#1C1C1C;min-height:110px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;user-select:none;-webkit-tap-highlight-color:transparent;transition:all 0.15s">
+    const jePrisutan = dnPrisutni[cid] === true;
+    const foto = c.foto ? `<img src="${c.foto}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;border:2px solid ${jePrisutan ? '#2ECC71' : '#333'}">`
+      : `<div style="width:52px;height:52px;border-radius:50%;background:${jePrisutan ? 'rgba(46,204,113,0.15)' : '#2E2E2E'};display:flex;align-items:center;justify-content:center;font-size:18px;color:${jePrisutan ? '#2ECC71' : '#888'};font-weight:700">${c.ime.charAt(0)}${c.prezime.charAt(0)}</div>`;
+    return `<div id="dn-clan-${cid}" data-cid="${cid}" onclick="dnToggle('${cid}')" style="padding:14px 8px;border-radius:12px;border:2px solid ${jePrisutan ? '#2ECC71' : '#333'};cursor:pointer;text-align:center;background:${jePrisutan ? 'rgba(46,204,113,0.2)' : '#1C1C1C'};min-height:110px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;user-select:none;-webkit-tap-highlight-color:transparent;transition:all 0.15s">
       ${foto}
       <div style="font-size:12px;font-weight:700;color:#EDEDED;line-height:1.3">${c.ime}<br>${c.prezime}</div>
-      <div class="dn-ck" style="font-size:16px;line-height:1">⬜</div>
+      <div class="dn-ck" style="font-size:16px;line-height:1">${jePrisutan ? '✅' : '⬜'}</div>
     </div>`;
   }).join('');
-  document.getElementById('dn-lista-panel').style.display = 'none';
-  document.getElementById('dn-prozivka-panel').style.display = 'block';
 }
 
 function dnOznaciSve(prisutan) {
-  // Postavi SVE na prisutan/odsutan i odmah vizualno prikaži
   document.querySelectorAll('[data-cid]').forEach(el => {
     const key = el.getAttribute('data-cid');
     dnPrisutni[key] = prisutan;
@@ -5350,33 +5426,31 @@ function dnUpdateCount() {
 function dnToggle(id) {
   dnPrisutni[id] = !dnPrisutni[id];
   const el = document.getElementById('dn-clan-' + id);
+  if (!el) return;
+  const ck = el.querySelector('.dn-ck');
   if (dnPrisutni[id]) {
-    el.style.background = 'rgba(46,204,113,0.15)';
+    el.style.background = 'rgba(46,204,113,0.2)';
     el.style.borderColor = '#2ECC71';
     el.style.transform = 'scale(0.96)';
-    setTimeout(() => { if(el) el.style.transform = ''; }, 150);
-    // Add checkmark
-    let ck = el.querySelector('.dn-check');
-    if (!ck) {
-      ck = document.createElement('div');
-      ck.className = 'dn-check';
-      ck.style.cssText = 'position:absolute;top:6px;right:6px;width:22px;height:22px;background:#2ECC71;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff';
-      ck.textContent = '✓';
-      el.style.position = 'relative';
-      el.appendChild(ck);
-    }
+    setTimeout(() => { if (el) el.style.transform = ''; }, 150);
+    if (ck) ck.textContent = '✅';
   } else {
     el.style.background = '#1C1C1C';
     el.style.borderColor = '#333';
-    const ck = el.querySelector('.dn-check');
-    if (ck) ck.remove();
+    if (ck) ck.textContent = '⬜';
   }
+  dnUpdateCount();
 }
 
 function spremiProzivku() {
   if (!dnAktivniTrening) return;
+  const naslov = document.getElementById('dn-input-naslov').value.trim() || dnAktivniTrening.naslov;
+  const datum  = document.getElementById('dn-input-datum').value  || dnAktivniTrening.datum;
+  const napomena = document.getElementById('dn-input-napomena').value.trim();
+  dnAktivniTrening.naslov   = naslov;
+  dnAktivniTrening.datum    = datum;
+  dnAktivniTrening.napomena = napomena;
   dnAktivniTrening.prisutni = Object.entries(dnPrisutni).filter(([k,v])=>v).map(([k])=>k);
-  // Ako trening već postoji (editiranje) — ažuriraj, inače dodaj novi
   const idx = dnTreninzi.findIndex(t => t.id === dnAktivniTrening.id);
   if (idx >= 0) {
     dnTreninzi[idx] = dnAktivniTrening;
@@ -5396,7 +5470,7 @@ function zatvoriProzivku() {
 }
 
 function dnRenderLista() {
-  dnLoad(); // Uvijek učitaj svježe iz localStorage
+  dnLoad();
   document.getElementById('dn-st-treninga').textContent = dnTreninzi.length;
   const danas = dnTreninzi.find(t => t.datum === new Date().toISOString().split('T')[0]);
   document.getElementById('dn-st-danas').textContent = danas ? danas.prisutni.length : 0;
@@ -5412,6 +5486,7 @@ function dnRenderLista() {
         <div style="flex:1">
           <div style="font-weight:600;color:#EDEDED">${t.naslov}</div>
           <div style="font-size:12px;color:#aaa;margin-top:2px">${new Date(t.datum+'T12:00:00').toLocaleDateString('hr-HR')}</div>
+          ${t.napomena ? `<div style="font-size:12px;color:#888;margin-top:3px;font-style:italic">${t.napomena}</div>` : ''}
           <div style="font-size:12px;color:var(--success);margin-top:4px">✓ ${t.prisutni.length} prisutnih</div>
           <div style="font-size:11px;color:#666;margin-top:2px">${prisutni.slice(0,5).map(c=>c.ime+' '+c.prezime).join(', ')}${prisutni.length > 5 ? ' +' + (prisutni.length-5) + ' više' : ''}</div>
         </div>
@@ -5427,10 +5502,8 @@ function dnRenderLista() {
 function dnObrisi(id) {
   if (!confirm('Obrisati trening?')) return;
   dnLoad();
-  const idStr = String(id);
-  dnTreninzi = dnTreninzi.filter(t => String(t.id) !== idStr);
-  localStorage.setItem('kk_treninzi', JSON.stringify(dnTreninzi));
-  dnTreninzi = JSON.parse(localStorage.getItem('kk_treninzi') || '[]');
+  dnTreninzi = dnTreninzi.filter(t => String(t.id) !== String(id));
+  dnSave();
   dnRenderLista();
   toast('Trening obrisan!');
 }
@@ -5444,29 +5517,305 @@ function dnOcistiSve() {
 }
 
 function dnUredi(id) {
-  const t = dnTreninzi.find(x => x.id === id);
+  const t = dnTreninzi.find(x => String(x.id) === String(id));
   if (!t) return;
-  // Load existing trening into prozivka for editing
-  dnAktivniTrening = t;
+  dnAktivniTrening = { ...t };
   dnPrisutni = {};
-  // Mark existing prisutni
   t.prisutni.forEach(cid => { dnPrisutni[String(cid)] = true; });
-  document.getElementById('dn-trening-naslov').textContent = t.naslov;
-  const lista = document.getElementById('dn-prozivka-lista');
-  lista.style.cssText = 'display:grid;grid-template-columns:repeat(3,1fr);gap:8px';
-  lista.innerHTML = state.clanovi.filter(c => c.status === 'aktivan').sort((a,b) => a.prezime.localeCompare(b.prezime)).map(c => {
-    const key = String(c.id);
-    const jePrisutan = dnPrisutni[key] === true;
-    const foto = c.foto ? `<img src="${c.foto}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;border:2px solid ${jePrisutan ? '#2ECC71' : '#333'}">` 
-      : `<div style="width:52px;height:52px;border-radius:50%;background:${jePrisutan ? 'rgba(46,204,113,0.15)' : '#2E2E2E'};display:flex;align-items:center;justify-content:center;font-size:18px;color:${jePrisutan ? '#2ECC71' : '#888'};font-weight:700">${c.ime.charAt(0)}${c.prezime.charAt(0)}</div>`;
-    return `<div id="dn-clan-${key}" data-cid="${key}" onclick="dnToggle('${key}')" style="padding:14px 8px;border-radius:12px;border:2px solid ${jePrisutan ? '#2ECC71' : '#333'};cursor:pointer;text-align:center;background:${jePrisutan ? 'rgba(46,204,113,0.2)' : '#1C1C1C'};min-height:110px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;user-select:none;-webkit-tap-highlight-color:transparent;transition:all 0.15s">
-      ${foto}
-      <div style="font-size:12px;font-weight:700;color:#EDEDED;line-height:1.3">${c.ime}<br>${c.prezime}</div>
-      <div class="dn-ck" style="font-size:16px;line-height:1">${jePrisutan ? '✅' : '⬜'}</div>
-    </div>`;
-  }).join('');
+  document.getElementById('dn-input-naslov').value = t.naslov || '';
+  document.getElementById('dn-input-datum').value  = t.datum  || '';
+  document.getElementById('dn-input-napomena').value = t.napomena || '';
+  dnRenderProzivkaLista();
   document.getElementById('dn-lista-panel').style.display = 'none';
   document.getElementById('dn-prozivka-panel').style.display = 'block';
+  dnUpdateCount();
+}
+
+
+function dnShowStats() {
+  dnLoad();
+  document.getElementById('dn-lista-panel').style.display = 'none';
+  document.getElementById('dn-prozivka-panel').style.display = 'none';
+  document.getElementById('dn-stats-panel').style.display = 'block';
+  // Populate month filter
+  const sel = document.getElementById('dn-stats-filter');
+  const months = [...new Set(dnTreninzi.map(t => t.datum ? t.datum.substring(0,7) : null).filter(Boolean))].sort().reverse();
+  sel.innerHTML = '<option value="all">Svi treninzi (' + dnTreninzi.length + ')</option>' +
+    months.map(m => {
+      const [y, mo] = m.split('-');
+      const label = new Date(y, mo-1, 1).toLocaleDateString('hr-HR', {month:'long', year:'numeric'});
+      const cnt = dnTreninzi.filter(t => t.datum && t.datum.startsWith(m)).length;
+      return `<option value="${m}">${label} (${cnt})</option>`;
+    }).join('');
+  dnRenderStats();
+}
+
+function dnHideStats() {
+  document.getElementById('dn-stats-panel').style.display = 'none';
+  document.getElementById('dn-lista-panel').style.display = 'block';
+}
+
+function dnRenderStats() {
+  const filter = document.getElementById('dn-stats-filter').value;
+  const treninzi = filter === 'all' ? dnTreninzi : dnTreninzi.filter(t => t.datum && t.datum.startsWith(filter));
+  const totalTreninzi = treninzi.length;
+  const el = document.getElementById('dn-stats-html');
+  const summary = document.getElementById('dn-stats-summary');
+  if (totalTreninzi === 0) {
+    el.innerHTML = '<div class="empty-state"><div class="icon">📊</div><p>Nema podataka za odabrani period.</p></div>';
+    summary.textContent = '';
+    return;
+  }
+  // Count attendance per member
+  const counts = {};
+  treninzi.forEach(t => {
+    (t.prisutni || []).forEach(cid => {
+      const key = String(cid);
+      counts[key] = (counts[key] || 0) + 1;
+    });
+  });
+  const avgPrisutnih = totalTreninzi > 0
+    ? (treninzi.reduce((s, t) => s + (t.prisutni||[]).length, 0) / totalTreninzi).toFixed(1)
+    : 0;
+  summary.textContent = `${totalTreninzi} treninga · prosjek ${avgPrisutnih} prisutnih`;
+  // Build per-member rows sorted by attendance desc
+  const aktivni = state.clanovi.filter(c => c.status === 'aktivan');
+  const rows = aktivni.map(c => ({
+    clan: c,
+    count: counts[String(c.id)] || 0,
+    pct: totalTreninzi > 0 ? Math.round((counts[String(c.id)] || 0) / totalTreninzi * 100) : 0
+  })).sort((a, b) => b.count - a.count);
+  el.innerHTML = `
+    <div class="card" style="padding:0;overflow:hidden">
+      <div style="display:grid;grid-template-columns:1fr auto auto;gap:0;font-size:11px;color:#666;padding:10px 16px;border-bottom:1px solid #222;font-weight:600;text-transform:uppercase;letter-spacing:0.5px">
+        <span>Član</span><span style="text-align:right;padding-right:16px">Treninzi</span><span style="text-align:right;min-width:52px">%</span>
+      </div>
+      ${rows.map((r, i) => {
+        const bar = r.pct;
+        const color = r.pct >= 75 ? '#2ECC71' : r.pct >= 50 ? '#F0A500' : '#ff5a70';
+        const foto = r.clan.foto
+          ? `<img src="${r.clan.foto}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0">`
+          : `<div style="width:32px;height:32px;border-radius:50%;background:#2E2E2E;display:flex;align-items:center;justify-content:center;font-size:13px;color:#888;font-weight:700;flex-shrink:0">${r.clan.ime.charAt(0)}${r.clan.prezime.charAt(0)}</div>`;
+        return `<div style="display:grid;grid-template-columns:1fr auto auto;align-items:center;padding:10px 16px;border-bottom:1px solid #1a1a1a;${i % 2 === 1 ? 'background:rgba(255,255,255,0.02);' : ''}">
+          <div style="display:flex;align-items:center;gap:10px;min-width:0">
+            ${foto}
+            <div style="min-width:0">
+              <div style="font-size:13px;font-weight:600;color:#EDEDED;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.clan.ime} ${r.clan.prezime}</div>
+              <div style="margin-top:3px;height:4px;border-radius:2px;background:#222;width:100px">
+                <div style="height:4px;border-radius:2px;background:${color};width:${bar}%"></div>
+              </div>
+            </div>
+          </div>
+          <div style="font-size:14px;font-weight:700;color:#EDEDED;text-align:right;padding-right:16px">${r.count}<span style="font-size:11px;color:#555;font-weight:400"> /${totalTreninzi}</span></div>
+          <div style="font-size:14px;font-weight:700;color:${color};text-align:right;min-width:52px">${r.pct}%</div>
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+
+// ========== ISPIS / PDF IZVOZI ==========
+
+const KLUB_ZAGLAVLJE = `
+  <div style="font-family:Arial,sans-serif;border-bottom:2px solid #C8102E;padding-bottom:12px;margin-bottom:18px;display:flex;align-items:center;gap:16px">
+    <div style="width:50px;height:50px;background:#C8102E;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:18px;flex-shrink:0">KK</div>
+    <div>
+      <div style="font-size:20px;font-weight:900;letter-spacing:1px;color:#111">KARATE KLUB ĐURĐEVAC</div>
+      <div style="font-size:11px;color:#666;margin-top:2px">Ulica Andrije Hebranga 12, 48350 Đurđevac &nbsp;|&nbsp; OIB: 98308789784 &nbsp;|&nbsp; IBAN: HR8823600001102289908</div>
+    </div>
+  </div>`;
+
+const PRINT_CSS = `
+  *{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body{font-family:Arial,sans-serif;color:#111;margin:0;padding:20px;font-size:13px;line-height:1.5}
+  h2{font-size:16px;margin:0 0 4px 0}
+  h3{font-size:14px;margin:12px 0 6px 0;color:#C8102E}
+  table{width:100%;border-collapse:collapse;font-size:12px;margin:10px 0}
+  th{background:#C8102E;color:#fff;padding:6px 8px;text-align:left;font-size:11px;text-transform:uppercase}
+  td{padding:5px 8px;border-bottom:1px solid #ddd}
+  tr:nth-child(even) td{background:#f9f9f9}
+  .row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #eee;font-size:12px}
+  .row span:first-child{color:#666}
+  .row strong{color:#111}
+  .box{border:2px solid #C8102E;border-radius:6px;padding:14px;margin:14px 0;text-align:center}
+  .sig{display:flex;justify-content:space-between;margin-top:40px}
+  .sig div{text-align:center;flex:1}
+  .sig .line{border-top:1px solid #999;margin-top:30px;padding-top:4px;font-size:11px;color:#666}
+  .footer{margin-top:30px;padding-top:8px;border-top:1px solid #ddd;font-size:10px;color:#999;text-align:center}
+  @media print{body{padding:10px}}`;
+
+function printDoc(bodyHtml, title) {
+  const w = window.open('', '_blank', 'width=900,height=700');
+  if (!w) { toast('Dopustite pop-up prozore za ispis!', 'err'); return; }
+  w.document.write(`<!DOCTYPE html><html lang="hr"><head><meta charset="UTF-8"><title>${title}</title><style>${PRINT_CSS}</style></head><body>${KLUB_ZAGLAVLJE}${bodyHtml}<div class="footer">Generirano: ${new Date().toLocaleString('hr-HR')} · Digitalni Tajnik · KK Đurđevac</div></body></html>`);
+  w.document.close();
+  setTimeout(() => { w.focus(); w.print(); }, 400);
+}
+
+// ── Odluka ──
+function printOdluka(id) {
+  const o = state.odluke.find(x => String(x.id) === String(id));
+  if (!o) return;
+  const html = `
+    <h2 style="text-align:center;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">${o.vrsta}</h2>
+    <p style="text-align:center;color:#666;margin:0 0 20px">Datum: ${o.datum ? new Date(o.datum+'T12:00:00').toLocaleDateString('hr-HR',{day:'2-digit',month:'long',year:'numeric'}) : '—'}</p>
+    <h3>PREDMET:</h3>
+    <p style="font-weight:700;font-size:14px">${o.predmet}</p>
+    ${o.sadrzaj ? `<h3>SADRŽAJ ODLUKE:</h3><p style="white-space:pre-wrap;line-height:1.7">${o.sadrzaj}</p>` : ''}
+    <div class="sig">
+      <div><div class="line">Tajnik kluba</div></div>
+      <div><div class="line">Predsjednik KK Đurđevac</div></div>
+    </div>`;
+  printDoc(html, o.vrsta + ' — ' + o.predmet);
+}
+
+// ── Putni nalog ──
+function printPutniNalog(id) {
+  const n = pnNalozi.find(x => x.id === id);
+  if (!n) return;
+  const datum = n.datum ? new Date(n.datum).toLocaleDateString('hr-HR') : '—';
+  const polazak = n.polazak ? new Date(n.polazak).toLocaleString('hr-HR') : '—';
+  const povratak = n.povratak ? new Date(n.povratak).toLocaleString('hr-HR') : '—';
+  const km = parseFloat(n.kmT || 0);
+  const kmIznos = (km * PN_KM_CIJENA).toFixed(2);
+  const dnevnica = parseFloat(n.dnevnica || 0).toFixed(2);
+  const troskovi = parseFloat(n.troskovi || 0).toFixed(2);
+  const predujam = parseFloat(n.predujam || 0).toFixed(2);
+  const ukupno = parseFloat(n.ukupno || 0).toFixed(2);
+  const html = `
+    <h2 style="text-align:center;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">PUTNI NALOG</h2>
+    <p style="text-align:center;color:#666;margin:0 0 20px 0">Datum: ${datum} &nbsp;|&nbsp; Status: ${n.status === 'odobreno' ? '✓ ODOBRENO' : 'NA ČEKANJU'}</p>
+    <h3>PODACI O PUTNIKU</h3>
+    <div class="row"><span>Ime i prezime:</span><strong>${n.ime}</strong></div>
+    <div class="row"><span>Uloga:</span><strong>${n.uloga}</strong></div>
+    <div class="row"><span>Svrha putovanja:</span><strong>${n.svrha}</strong></div>
+    <h3>PUTOVANJE</h3>
+    <div class="row"><span>Relacija:</span><strong>${n.polaziste} → ${n.odrediste}</strong></div>
+    <div class="row"><span>Polazak:</span><strong>${polazak}</strong></div>
+    <div class="row"><span>Povratak:</span><strong>${povratak}</strong></div>
+    <div class="row"><span>Vozilo:</span><strong>${n.vozilo}${n.marka ? ' · ' + n.marka : ''}${n.reg ? ' · ' + n.reg : ''}</strong></div>
+    <div class="row"><span>Prijeđeni km:</span><strong>${km} km × 0,30 €/km = ${kmIznos} €</strong></div>
+    <h3>OBRAČUN TROŠKOVA</h3>
+    <table>
+      <tr><th>Stavka</th><th style="text-align:right">Iznos (€)</th></tr>
+      <tr><td>Kilometraža (${km} km × €0,30)</td><td style="text-align:right">${kmIznos}</td></tr>
+      <tr><td>Dnevnica</td><td style="text-align:right">${dnevnica}</td></tr>
+      <tr><td>Ostali troškovi</td><td style="text-align:right">${troskovi}</td></tr>
+      <tr><td>Predujam (odbitak)</td><td style="text-align:right">−${predujam}</td></tr>
+      <tr><td style="font-weight:700">UKUPNO ZA ISPLATU</td><td style="text-align:right;font-weight:700;color:#C8102E;font-size:15px">€ ${ukupno}</td></tr>
+    </table>
+    ${n.napomena ? `<h3>NAPOMENA</h3><p>${n.napomena}</p>` : ''}
+    <div class="sig">
+      <div><div class="line">Putnik: ${n.ime}</div></div>
+      <div><div class="line">Odobrio: Predsjednik kluba</div></div>
+    </div>`;
+  printDoc(html, 'Putni nalog — ' + n.ime);
+}
+
+// ── Financijsko izvješće ──
+function printFinancije() {
+  const god = document.getElementById('fin-god')?.value || new Date().getFullYear().toString();
+  const stavke = finStavke.filter(s => (s.datum||'').startsWith(god));
+  const prihodi = stavke.filter(s => s.vrsta === 'prihod').reduce((sum,s) => sum + parseFloat(s.iznos||0), 0);
+  const rashodi = stavke.filter(s => s.vrsta === 'rashod').reduce((sum,s) => sum + parseFloat(s.iznos||0), 0);
+  const saldo   = prihodi - rashodi;
+  const katSum = (vrsta) => Object.entries(stavke.filter(s=>s.vrsta===vrsta).reduce((acc,s)=>{
+    const k = FIN_KAT_LABELS[s.kategorija]||s.kategorija;
+    acc[k] = (acc[k]||0) + parseFloat(s.iznos||0);
+    return acc;
+  }, {})).map(([k,v]) => `<tr><td>${k}</td><td style="text-align:right">${v.toFixed(2)}</td></tr>`).join('') || '<tr><td colspan="2" style="color:#999">Nema stavki</td></tr>';
+  const html = `
+    <h2 style="text-align:center;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">FINANCIJSKO IZVJEŠĆE</h2>
+    <p style="text-align:center;color:#666;margin:0 0 20px">Godina: ${god}</p>
+    <div class="box">
+      <div style="display:flex;justify-content:space-around">
+        <div><div style="font-size:22px;font-weight:700;color:#2ECC71">€ ${prihodi.toFixed(2)}</div><div style="font-size:11px;color:#666;text-transform:uppercase">Prihodi</div></div>
+        <div><div style="font-size:22px;font-weight:700;color:#C8102E">€ ${rashodi.toFixed(2)}</div><div style="font-size:11px;color:#666;text-transform:uppercase">Rashodi</div></div>
+        <div><div style="font-size:22px;font-weight:700;color:${saldo >= 0 ? '#2ECC71' : '#C8102E'}">€ ${saldo >= 0 ? '+' : ''}${saldo.toFixed(2)}</div><div style="font-size:11px;color:#666;text-transform:uppercase">Saldo</div></div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div>
+        <h3 style="color:#2ECC71">PRIHODI PO KATEGORIJI</h3>
+        <table><tr><th>Kategorija</th><th style="text-align:right">EUR</th></tr>${katSum('prihod')}</table>
+      </div>
+      <div>
+        <h3 style="color:#C8102E">RASHODI PO KATEGORIJI</h3>
+        <table><tr><th>Kategorija</th><th style="text-align:right">EUR</th></tr>${katSum('rashod')}</table>
+      </div>
+    </div>
+    <h3>SVE STAVKE — ${god}.</h3>
+    <table>
+      <tr><th>Datum</th><th>Opis</th><th>Kategorija</th><th style="text-align:right">Iznos (€)</th></tr>
+      ${stavke.sort((a,b) => (a.datum||'').localeCompare(b.datum||''))
+        .map(s => `<tr><td>${s.datum||'—'}</td><td>${s.opis||''}</td><td>${FIN_KAT_LABELS[s.kategorija]||s.kategorija}</td><td style="text-align:right;color:${s.vrsta==='prihod'?'#2ECC71':'#C8102E'};font-weight:600">${s.vrsta==='prihod'?'+':'-'}${parseFloat(s.iznos||0).toFixed(2)}</td></tr>`).join('') || '<tr><td colspan="4" style="color:#999">Nema stavki</td></tr>'}
+    </table>
+    <div class="sig">
+      <div><div class="line">Blagajnik / Tajnik</div></div>
+      <div><div class="line">Predsjednik KK Đurđevac</div></div>
+    </div>`;
+  printDoc(html, 'Financijsko izvješće ' + god);
+}
+
+// ── Rezultati natjecanja ──
+function printRezultati() {
+  const god = document.getElementById('rez-filter-god')?.value || '';
+  const lista = god ? rezLista.filter(r => r.datum && r.datum.startsWith(god)) : rezLista;
+  const sorted = [...lista].sort((a,b) => (a.datum||'').localeCompare(b.datum||''));
+  const med = { '1':'🥇', '2':'🥈', '3':'🥉', '4':'4. mj', '5':'5-8. mj', '0':'-' };
+  const zlato = lista.filter(r => r.plasman === '1').length;
+  const srebro = lista.filter(r => r.plasman === '2').length;
+  const bronca = lista.filter(r => r.plasman === '3').length;
+  const html = `
+    <h2 style="text-align:center;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">REZULTATI NATJECANJA</h2>
+    <p style="text-align:center;color:#666;margin:0 0 20px">${god ? 'Godina: ' + god : 'Sve godine'}</p>
+    <div class="box" style="margin-bottom:16px">
+      <div style="display:flex;justify-content:space-around">
+        <div><div style="font-size:22px;font-weight:700;color:#FFD700">${zlato}</div><div style="font-size:11px;color:#666">🥇 ZLATNIH</div></div>
+        <div><div style="font-size:22px;font-weight:700;color:#C0C0C0">${srebro}</div><div style="font-size:11px;color:#666">🥈 SREBRNIH</div></div>
+        <div><div style="font-size:22px;font-weight:700;color:#CD7F32">${bronca}</div><div style="font-size:11px;color:#666">🥉 BRONČANIH</div></div>
+        <div><div style="font-size:22px;font-weight:700">${lista.length}</div><div style="font-size:11px;color:#666">NATJECANJA</div></div>
+      </div>
+    </div>
+    <table>
+      <tr><th>Datum</th><th>Sportaš</th><th>Natjecanje</th><th>Kategorija / Disciplina</th><th>Plasman</th></tr>
+      ${sorted.map(r => `<tr>
+        <td>${r.datum ? new Date(r.datum+'T12:00:00').toLocaleDateString('hr-HR') : '—'}</td>
+        <td style="font-weight:600">${r.natjecatelj||''}</td>
+        <td>${r.naziv||''}</td>
+        <td>${[r.kategorija,r.disciplina].filter(Boolean).join(' / ')||'—'}</td>
+        <td style="font-weight:700">${med[r.plasman]||r.plasman||'—'}</td>
+      </tr>`).join('') || '<tr><td colspan="5" style="color:#999">Nema rezultata</td></tr>'}
+    </table>`;
+  printDoc(html, 'Rezultati natjecanja — KK Đurđevac');
+}
+
+// ── Statistika prisutnosti ──
+function printDnevnikStats() {
+  const filter = document.getElementById('dn-stats-filter')?.value || 'all';
+  const treninzi = filter === 'all' ? dnTreninzi : dnTreninzi.filter(t => t.datum && t.datum.startsWith(filter));
+  const totalTreninzi = treninzi.length;
+  if (totalTreninzi === 0) { toast('Nema podataka za ispis.', 'err'); return; }
+  const counts = {};
+  treninzi.forEach(t => { (t.prisutni||[]).forEach(cid => { const k = String(cid); counts[k] = (counts[k]||0) + 1; }); });
+  const avg = (treninzi.reduce((s,t) => s + (t.prisutni||[]).length, 0) / totalTreninzi).toFixed(1);
+  const aktivni = state.clanovi.filter(c => c.status === 'aktivan');
+  const rows = aktivni.map(c => ({
+    c, count: counts[String(c.id)]||0, pct: Math.round((counts[String(c.id)]||0)/totalTreninzi*100)
+  })).sort((a,b) => b.count - a.count);
+  const labelPeriod = filter === 'all' ? 'Svi treninzi' : (() => { const [y,m] = filter.split('-'); return new Date(y,m-1,1).toLocaleDateString('hr-HR',{month:'long',year:'numeric'}); })();
+  const html = `
+    <h2 style="text-align:center;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">STATISTIKA PRISUTNOSTI NA TRENINZIMA</h2>
+    <p style="text-align:center;color:#666;margin:0 0 20px">Period: ${labelPeriod} &nbsp;|&nbsp; Ukupno treninga: ${totalTreninzi} &nbsp;|&nbsp; Prosječno prisutnih: ${avg}</p>
+    <table>
+      <tr><th>#</th><th>Član</th><th style="text-align:right">Treninga</th><th style="text-align:right">Prisutnost %</th></tr>
+      ${rows.map((r,i) => `<tr>
+        <td style="color:#999">${i+1}.</td>
+        <td style="font-weight:600">${r.c.ime} ${r.c.prezime}</td>
+        <td style="text-align:right">${r.count} / ${totalTreninzi}</td>
+        <td style="text-align:right;font-weight:700;color:${r.pct>=75?'#2ECC71':r.pct>=50?'#F0A500':'#C8102E'}">${r.pct}%</td>
+      </tr>`).join('')}
+    </table>`;
+  printDoc(html, 'Statistika prisutnosti — ' + labelPeriod);
 }
 
 // ========== MODUL 3: KALENDAR ==========
@@ -5959,7 +6308,7 @@ function pnRenderLista() {
         </div>
         <div style="text-align:right;flex-shrink:0">
           <div style="font-size:20px;font-weight:700;color:#C8102E">€${parseFloat(n.ukupno).toFixed(2)}</div>
-          <div style="font-size:11px;color:#666;margin-top:2px">${new Date(n.datum).toLocaleDateString('hr-HR')}</div>
+          <div style="font-size:11px;color:#666;margin-top:2px">${n.datum ? new Date(n.datum).toLocaleDateString('hr-HR') : '—'}</div>
         </div>
       </div>
     </div>`).join('');
@@ -6401,10 +6750,9 @@ function filterNeplaceni() {
   setTimeout(() => {
     const sel = document.getElementById('filterStatus');
     if (sel) { sel.value = 'aktivan'; }
-    // Also filter by unpaid - use search workaround via custom filter
     window._filterNeplaceni = true;
     renderClanovi();
-    window._filterNeplaceni = false;
+    setTimeout(() => { window._filterNeplaceni = false; }, 200);
   }, 50);
 }
 
@@ -6412,7 +6760,13 @@ function filterNeplaceni() {
 // ========== IZJAVE ==========
 let izjaveLista = [];
 try { izjaveLista = JSON.parse(localStorage.getItem('kk_izjave') || '[]'); } catch(e) {}
-function izjaveSave() { localStorage.setItem('kk_izjave', JSON.stringify(izjaveLista)); }
+function izjaveSave() {
+  localStorage.setItem('kk_izjave', JSON.stringify(izjaveLista));
+  if (typeof sbEnabled !== 'undefined' && sbEnabled) {
+    clearTimeout(window._syncIzjaveTimer);
+    window._syncIzjaveTimer = setTimeout(sbSaveIzjave, 1500);
+  }
+}
 
 
 function renderClanIzjave(clanId) {
@@ -6487,6 +6841,7 @@ function obrisiIzjavu(id) {
 }
 
 // Init
+initTheme();
 updateStats();
 renderKalendar();
 provjeriSesiju();
@@ -6644,6 +6999,7 @@ async function sbLoadAll() {
   await sbLoadObavijesti();
   await sbLoadPlanove();
   await sbLoadOdluke();
+  await sbLoadIzjave();
 }
 
 // ========== FINANCIJE ==========
@@ -6888,6 +7244,41 @@ async function sbLoadOdluke() {
   } catch(e) {}
 }
 
+// ========== IZJAVE SUPABASE ==========
+async function sbSaveIzjave() {
+  if (!sbEnabled || !sb) return;
+  try {
+    const iz = JSON.parse(localStorage.getItem('kk_izjave') || '[]');
+    if (!iz.length) return;
+    const rows = iz.map(i => ({
+      id: i.id,
+      klub_id: (window.AKTIVAN_KLUB_ID || '00000000-0000-0000-0000-000000000001'),
+      clan_id: String(i.clanId),
+      clan_ime: i.clanIme || '',
+      vrsta: i.vrsta || '',
+      tekst: i.tekst || '',
+      datum: i.datum || null,
+      updated: i.updated || new Date().toISOString()
+    }));
+    const { error } = await sb.from('izjave').upsert(rows, { onConflict: 'id' });
+    if (error) console.error('sbSaveIzjave:', error);
+    else console.log('✅ Izjave syncirane:', rows.length);
+  } catch(e) { console.error('sbSaveIzjave:', e); }
+}
+
+async function sbLoadIzjave() {
+  if (!sbEnabled || !sb) return;
+  try {
+    const { data, error } = await sb.from('izjave').select('*')
+      .eq('klub_id', window.AKTIVAN_KLUB_ID || KLUB_ID);
+    if (error || !data || !data.length) return;
+    const mapped = data.map(i => ({ ...i, clanId: i.clan_id, clanIme: i.clan_ime }));
+    localStorage.setItem('kk_izjave', JSON.stringify(mapped));
+    izjaveLista = mapped;
+    console.log('✅ Izjave učitane:', mapped.length);
+  } catch(e) { console.error('sbLoadIzjave:', e); }
+}
+
 // ========== RUČNI SYNC ==========
 async function manualSyncAll() {
   // Superadmin ne smije syncati - spriječava miješanje podataka između klubova
@@ -6941,6 +7332,7 @@ async function manualSyncAll() {
       const rows = state.odluke.map(o => ({ id: o.id, klub_id: (window.AKTIVAN_KLUB_ID || '00000000-0000-0000-0000-000000000001'), vrsta: o.vrsta, predmet: o.predmet, datum: o.datum||null, sadrzaj: o.sadrzaj, status: o.status||null }));
       await sb.from('odluke').upsert(rows, { onConflict: 'id' });
     }
+    await sbSaveIzjave();
     toast('✅ Svi podaci syncirani u oblak!');
     console.log('✅ manualSyncAll završen');
   } catch(e) {

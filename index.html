@@ -658,7 +658,6 @@
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.0.4/tesseract.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 </head>
 <body>
 
@@ -740,6 +739,9 @@
         <button class="btn btn-secondary btn-sm" onclick="manualSyncAll()" id="btnSync" style="margin-right:8px">☁️ Sync u oblak</button><button class="btn btn-gold" onclick="showSection('ai')">🤖 Pitaj AI tajnika</button>
       </div>
       <div class="content">
+        <!-- ALERT PANEL -->
+        <div id="alertPanel" style="margin-bottom:16px"></div>
+
         <!-- ALERT PANEL -->
         <div id="alertPanel" style="margin-bottom:18px"></div>
 
@@ -2135,7 +2137,7 @@
   <div class="modal">
     <div class="modal-header">
       <h3>Nova obavijest</h3>
-      <button class="modal-close" onclick="closeModal('modalNovaObavijest2')">✕</button>
+      <button class="modal-close" onclick="_ob2EditId=null;document.querySelector('#modalNovaObavijest2 .modal-header h3').textContent='Nova obavijest';document.querySelector('#modalNovaObavijest2 .btn-primary').textContent='Objavi';closeModal('modalNovaObavijest2')">✕</button>
     </div>
     <div class="modal-body">
       <div class="form-grid">
@@ -2168,7 +2170,7 @@
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeModal('modalNovaObavijest2')">Odustani</button>
+      <button class="btn btn-secondary" onclick="_ob2EditId=null;document.querySelector('#modalNovaObavijest2 .modal-header h3').textContent='Nova obavijest';document.querySelector('#modalNovaObavijest2 .btn-primary').textContent='Objavi';closeModal('modalNovaObavijest2')">Odustani</button>
       <button class="btn btn-primary" onclick="spremiObavijest2()">Objavi</button>
     </div>
   </div>
@@ -5272,60 +5274,25 @@ function gdprOznaci(id) {
 }
 
 
-// ========== EMAILJS KONFIGURACIJA ==========
-const EJS_SERVICE  = 'service_hg62jsr';
-const EJS_TEMPLATE = 'template_2oq38d8';
-const EJS_PUBLIC   = 'HtsQTuabxo_LG6_cX';
-
-function ejsInit() {
-  try { emailjs.init({ publicKey: EJS_PUBLIC }); } catch(e) { console.warn('EmailJS init:', e); }
-}
-
-async function ejsSendMail(toEmail, toName, subject, body) {
-  try {
-    ejsInit();
-    await emailjs.send(EJS_SERVICE, EJS_TEMPLATE, {
-      to_email: toEmail,
-      to_name: toName || toEmail,
-      subject: subject,
-      message: body,
-      from_name: 'KK Đurđevac',
-      reply_to: 'karate.djurdjevac@gmail.com'
-    });
-    return true;
-  } catch(e) {
-    console.error('EmailJS send error:', e);
-    return false;
-  }
-}
-
-async function posaljiSvimaMail(subject, body) {
-  const clanovi = state.clanovi.filter(c => c.status === 'aktivan' && c.email && c.email.trim());
-
-  if (clanovi.length === 0) {
+function posaljiSvimaMail(subject, body) {
+  const emailovi = state.clanovi
+    .filter(c => c.status === 'aktivan' && c.email && c.email.trim())
+    .map(c => c.email.trim());
+  
+  if (emailovi.length === 0) {
     toast('Nema unesenih email adresa! Unesite ih u Email adrese sekciji.', 'err');
     showSection('emailovi');
     return;
   }
 
-  const subj = subject || 'Obavijest — Karate klub Đurđevac';
-  const bod  = body  || 'Poštovani,\n\nSrdačan pozdrav,\nKarate klub Đurđevac';
-
-  toast('📧 Šaljem mailove... (' + clanovi.length + ')');
-  ejsInit();
-
-  let uspjelo = 0, neuspjelo = 0;
-  for (const c of clanovi) {
-    const ok = await ejsSendMail(c.email.trim(), c.ime + ' ' + c.prezime, subj, bod);
-    if (ok) uspjelo++; else neuspjelo++;
-    await new Promise(r => setTimeout(r, 300)); // pauza između slanja
-  }
-
-  if (neuspjelo === 0) {
-    toast('✅ Poslano ' + uspjelo + ' mailova!');
-  } else {
-    toast('⚠ Poslano ' + uspjelo + ', nije uspjelo ' + neuspjelo, 'err');
-  }
+  const subj = encodeURIComponent(subject || 'Obavijest — Karate klub Đurđevac');
+  const bod = encodeURIComponent(body || 'Poštovani,\n\n\n\nSrdačan pozdrav,\nKarate klub Đurđevac');
+  const bcc = encodeURIComponent(emailovi.join(','));
+  
+  // Open Gmail compose directly in browser
+  const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=karate.djurdjevac@gmail.com&bcc=${bcc}&su=${subj}&body=${bod}`;
+  window.open(gmailUrl, '_blank');
+  toast('✅ Otvara se Gmail s ' + emailovi.length + ' primatelja!');
 }
 
 // ========== BRZI UNOS EMAILOVA ==========
@@ -6118,28 +6085,94 @@ function ob2RenderLista() {
           <div style="font-weight:600;color:#EDEDED">${o.naslov}</div>
           <div style="font-size:12px;color:#aaa;margin-top:2px">${new Date(o.datum).toLocaleDateString('hr-HR')} · Prima: ${o.prima}</div>
           <div style="font-size:13px;color:#ccc;margin-top:6px;line-height:1.5">${o.tekst}</div>
+          <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+            <button class="btn btn-secondary btn-sm" onclick="ob2Uredi('${o.id}')">✏️ Uredi</button>
+            <button class="btn btn-primary btn-sm" onclick="ob2PosaljiMail('${o.id}')">📧 Pošalji mailom</button>
+            <button class="btn btn-sm" style="background:rgba(200,16,46,0.15);color:#ff5a70;border:1px solid rgba(200,16,46,0.2)" onclick="ob2Obrisi('${o.id}')">✕ Obriši</button>
+          </div>
         </div>
-        <button onclick="ob2Obrisi('${o.id}')" style="background:none;border:none;color:#666;cursor:pointer;flex-shrink:0">✕</button>
       </div>
     </div>`).join('');
+}
+
+let _ob2EditId = null;
+
+function ob2Uredi(id) {
+  const o = ob2Lista.find(x => x.id === id);
+  if (!o) return;
+  _ob2EditId = id;
+  document.getElementById('ob2-naslov').value = o.naslov || '';
+  document.getElementById('ob2-tekst').value = o.tekst || '';
+  const setS = (elId, val) => { const el = document.getElementById(elId); if(el) { for(let opt of el.options) if(opt.value===val) { el.value=val; break; } } };
+  setS('ob2-vrsta', o.vrsta);
+  setS('ob2-prima', o.prima);
+  openModal('modalNovaObavijest2');
+  document.querySelector('#modalNovaObavijest2 .modal-header h3').textContent = 'Uredi obavijest';
+  document.querySelector('#modalNovaObavijest2 .btn-primary').textContent = '💾 Spremi izmjene';
+}
+
+async function ob2PosaljiMail(id) {
+  const o = ob2Lista.find(x => x.id === id);
+  if (!o) return;
+  const primatelji = state.clanovi.filter(c => {
+    if (!c.email || !c.email.trim()) return false;
+    if (c.status !== 'aktivan') return false;
+    return true;
+  });
+  if (primatelji.length === 0) {
+    toast('Nema aktivnih članova s email adresom!', 'err');
+    return;
+  }
+  if (!confirm(`Poslati obavijest "${o.naslov}" na ${primatelji.length} email adresa?`)) return;
+  toast('📧 Šaljem obavijest...');
+  let uspjelo = 0, neuspjelo = 0;
+  for (const c of primatelji) {
+    const ok = await ejsSendMail(c.email.trim(), c.ime + ' ' + c.prezime, o.naslov, o.tekst);
+    if (ok) uspjelo++; else neuspjelo++;
+    await new Promise(r => setTimeout(r, 300));
+  }
+  if (neuspjelo === 0) toast('✅ Obavijest poslana na ' + uspjelo + ' adresa!');
+  else toast('⚠ Poslano ' + uspjelo + ', nije uspjelo ' + neuspjelo, 'err');
 }
 
 function spremiObavijest2() {
   const naslov = document.getElementById('ob2-naslov').value.trim();
   const tekst = document.getElementById('ob2-tekst').value.trim();
   if (!naslov || !tekst) { toast('Unesite naslov i tekst!', 'err'); return; }
-  ob2Lista.push({
-    id: Date.now().toString(),
-    naslov, tekst,
-    vrsta: document.getElementById('ob2-vrsta').value,
-    prima: document.getElementById('ob2-prima').value,
-    datum: new Date().toISOString()
-  });
-  ob2Save();
-  closeModal('modalNovaObavijest2');
-  ob2RenderLista();
-  logActivity('📢', 'Obavijest: ' + naslov);
-  toast('Obavijest objavljena!');
+
+  if (_ob2EditId) {
+    // Uredi postojeću
+    const idx = ob2Lista.findIndex(o => o.id === _ob2EditId);
+    if (idx >= 0) {
+      ob2Lista[idx] = { ...ob2Lista[idx], naslov, tekst,
+        vrsta: document.getElementById('ob2-vrsta').value,
+        prima: document.getElementById('ob2-prima').value
+      };
+      ob2Save();
+      closeModal('modalNovaObavijest2');
+      ob2RenderLista();
+      toast('Obavijest ažurirana!');
+    }
+    _ob2EditId = null;
+  } else {
+    // Nova obavijest
+    ob2Lista.push({
+      id: Date.now().toString(),
+      naslov, tekst,
+      vrsta: document.getElementById('ob2-vrsta').value,
+      prima: document.getElementById('ob2-prima').value,
+      datum: new Date().toISOString()
+    });
+    ob2Save();
+    closeModal('modalNovaObavijest2');
+    ob2RenderLista();
+    logActivity('📢', 'Obavijest: ' + naslov);
+    toast('Obavijest objavljena!');
+  }
+
+  // Reset modal naslov i gumb
+  document.querySelector('#modalNovaObavijest2 .modal-header h3').textContent = 'Nova obavijest';
+  document.querySelector('#modalNovaObavijest2 .btn-primary').textContent = 'Objavi';
   ['ob2-naslov','ob2-tekst'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
 }
 
@@ -6340,7 +6373,7 @@ function pnRenderLista() {
         </div>
         <div style="text-align:right;flex-shrink:0">
           <div style="font-size:20px;font-weight:700;color:#C8102E">€${parseFloat(n.ukupno).toFixed(2)}</div>
-          <div style="font-size:11px;color:#666;margin-top:2px">${n.datum ? new Date(n.datum).toLocaleDateString('hr-HR') : '—'}</div>
+          <div style="font-size:11px;color:#666;margin-top:2px">${new Date(n.datum).toLocaleDateString('hr-HR')}</div>
         </div>
       </div>
     </div>`).join('');
@@ -6666,31 +6699,27 @@ Tel: 098/805-555
 E-mail: karate.djurdjevac@gmail.com`;
 }
 
-async function posaljiMailObj(u) {
-  if (!u.email) { toast('Član nema e-mail adresu!', 'err'); return; }
-  const subject = 'KK Đurđevac - Članarina ' + u.mjesec + ' ' + u.godina + ' - ' + u.ime + ' ' + u.prezime;
-  const body = napraviMailBody(u);
-  const ok = await ejsSendMail(u.email, u.ime + ' ' + u.prezime, subject, body);
-  if (ok) toast('✅ Mail poslan: ' + u.ime + ' ' + u.prezime);
-  else toast('❌ Greška pri slanju maila!', 'err');
+function posaljiMailObj(u) {
+  const subject = encodeURIComponent('KK Djurdjevac - Clanarina ' + u.mjesec + ' ' + u.godina + ' - ' + u.ime + ' ' + u.prezime);
+  const body = encodeURIComponent(napraviMailBody(u));
+  const a = document.createElement('a');
+  a.href = 'mailto:' + u.email + '?subject=' + subject + '&body=' + body;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
 }
 
-async function posaljiSveMailove() {
+function posaljiSveMailove() {
   const lista = window._zadnjeUplatnice;
   if (!lista || lista.length === 0) { toast('Najprije generirajte uplatnice!', 'err'); return; }
-  if (!confirm(`Poslati ${lista.length} mailova roditeljima?`)) return;
-
-  toast('📧 Šaljem ' + lista.length + ' mailova...');
-  let uspjelo = 0, neuspjelo = 0;
-  for (const u of lista) {
-    const subject = 'KK Đurđevac - Članarina ' + u.mjesec + ' ' + u.godina + ' - ' + u.ime + ' ' + u.prezime;
-    const body = napraviMailBody(u);
-    const ok = await ejsSendMail(u.email, u.ime + ' ' + u.prezime, subject, body);
-    if (ok) uspjelo++; else neuspjelo++;
-    await new Promise(r => setTimeout(r, 300));
-  }
-  if (neuspjelo === 0) toast('✅ Svi mailovi poslani! (' + uspjelo + ')');
-  else toast('⚠ Poslano ' + uspjelo + ', nije uspjelo ' + neuspjelo, 'err');
+  const bezMaila = (window._zadnjeUplatnice_svi || []).filter(u => u.iznos > 0 && !u.email);
+  if (!confirm(`Otvorit će se ${lista.length} mail prozora (samo oni koji imaju e-mail adresu).${bezMaila.length > 0 ? ' ' + bezMaila.length + ' članova nema e-mail.' : ''} Nastaviti?`)) return;
+  lista.forEach((u, i) => {
+    setTimeout(() => {
+      posaljiMailObj(u);
+    }, i * 800);
+  });
+  toast(`Šalje se ${lista.length} mailova...`);
 }
 
 function prikaziUplatnicuIdx(idx) {
@@ -6786,9 +6815,10 @@ function filterNeplaceni() {
   setTimeout(() => {
     const sel = document.getElementById('filterStatus');
     if (sel) { sel.value = 'aktivan'; }
+    // Also filter by unpaid - use search workaround via custom filter
     window._filterNeplaceni = true;
     renderClanovi();
-    setTimeout(() => { window._filterNeplaceni = false; }, 200);
+    window._filterNeplaceni = false;
   }, 50);
 }
 
@@ -6796,13 +6826,7 @@ function filterNeplaceni() {
 // ========== IZJAVE ==========
 let izjaveLista = [];
 try { izjaveLista = JSON.parse(localStorage.getItem('kk_izjave') || '[]'); } catch(e) {}
-function izjaveSave() {
-  localStorage.setItem('kk_izjave', JSON.stringify(izjaveLista));
-  if (typeof sbEnabled !== 'undefined' && sbEnabled) {
-    clearTimeout(window._syncIzjaveTimer);
-    window._syncIzjaveTimer = setTimeout(sbSaveIzjave, 1500);
-  }
-}
+function izjaveSave() { localStorage.setItem('kk_izjave', JSON.stringify(izjaveLista)); }
 
 
 function renderClanIzjave(clanId) {
@@ -6877,7 +6901,6 @@ function obrisiIzjavu(id) {
 }
 
 // Init
-initTheme();
 updateStats();
 renderKalendar();
 provjeriSesiju();
@@ -7035,7 +7058,6 @@ async function sbLoadAll() {
   await sbLoadObavijesti();
   await sbLoadPlanove();
   await sbLoadOdluke();
-  await sbLoadIzjave();
 }
 
 // ========== FINANCIJE ==========
@@ -7280,41 +7302,6 @@ async function sbLoadOdluke() {
   } catch(e) {}
 }
 
-// ========== IZJAVE SUPABASE ==========
-async function sbSaveIzjave() {
-  if (!sbEnabled || !sb) return;
-  try {
-    const iz = JSON.parse(localStorage.getItem('kk_izjave') || '[]');
-    if (!iz.length) return;
-    const rows = iz.map(i => ({
-      id: i.id,
-      klub_id: (window.AKTIVAN_KLUB_ID || '00000000-0000-0000-0000-000000000001'),
-      clan_id: String(i.clanId),
-      clan_ime: i.clanIme || '',
-      vrsta: i.vrsta || '',
-      tekst: i.tekst || '',
-      datum: i.datum || null,
-      updated: i.updated || new Date().toISOString()
-    }));
-    const { error } = await sb.from('izjave').upsert(rows, { onConflict: 'id' });
-    if (error) console.error('sbSaveIzjave:', error);
-    else console.log('✅ Izjave syncirane:', rows.length);
-  } catch(e) { console.error('sbSaveIzjave:', e); }
-}
-
-async function sbLoadIzjave() {
-  if (!sbEnabled || !sb) return;
-  try {
-    const { data, error } = await sb.from('izjave').select('*')
-      .eq('klub_id', window.AKTIVAN_KLUB_ID || KLUB_ID);
-    if (error || !data || !data.length) return;
-    const mapped = data.map(i => ({ ...i, clanId: i.clan_id, clanIme: i.clan_ime }));
-    localStorage.setItem('kk_izjave', JSON.stringify(mapped));
-    izjaveLista = mapped;
-    console.log('✅ Izjave učitane:', mapped.length);
-  } catch(e) { console.error('sbLoadIzjave:', e); }
-}
-
 // ========== RUČNI SYNC ==========
 async function manualSyncAll() {
   // Superadmin ne smije syncati - spriječava miješanje podataka između klubova
@@ -7368,7 +7355,6 @@ async function manualSyncAll() {
       const rows = state.odluke.map(o => ({ id: o.id, klub_id: (window.AKTIVAN_KLUB_ID || '00000000-0000-0000-0000-000000000001'), vrsta: o.vrsta, predmet: o.predmet, datum: o.datum||null, sadrzaj: o.sadrzaj, status: o.status||null }));
       await sb.from('odluke').upsert(rows, { onConflict: 'id' });
     }
-    await sbSaveIzjave();
     toast('✅ Svi podaci syncirani u oblak!');
     console.log('✅ manualSyncAll završen');
   } catch(e) {

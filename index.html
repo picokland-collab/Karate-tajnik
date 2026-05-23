@@ -658,6 +658,7 @@
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.0.4/tesseract.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 </head>
 <body>
 
@@ -2164,7 +2165,7 @@
           </select>
         </div>
         <div class="form-group full">
-          <label>Kratki opis (za AI) ili unesite tekst direktno</label>
+          <label>Kratki opis (za AI) — ili unesite tekst direktno ispod</label>
           <input type="text" id="ob2-opis-ai" placeholder="npr: Trening u petak se otkazuje, sljedeći u utorak...">
         </div>
         <div class="form-group full" style="margin-top:-8px">
@@ -6103,6 +6104,51 @@ function ob2RenderLista() {
     </div>`).join('');
 }
 
+function spremiObavijest2() {
+  const naslov = document.getElementById('ob2-naslov').value.trim();
+  const tekst = document.getElementById('ob2-tekst').value.trim();
+  if (!naslov || !tekst) { toast('Unesite naslov i tekst!', 'err'); return; }
+
+  if (_ob2EditId) {
+    const idx = ob2Lista.findIndex(o => o.id === _ob2EditId);
+    if (idx >= 0) {
+      ob2Lista[idx] = { ...ob2Lista[idx], naslov, tekst,
+        vrsta: document.getElementById('ob2-vrsta').value,
+        prima: document.getElementById('ob2-prima').value
+      };
+      ob2Save();
+      _ob2EditId = null;
+      closeModal('modalNovaObavijest2');
+      ob2RenderLista();
+      toast('Obavijest ažurirana!');
+    }
+  } else {
+    ob2Lista.push({
+      id: Date.now().toString(),
+      naslov, tekst,
+      vrsta: document.getElementById('ob2-vrsta').value,
+      prima: document.getElementById('ob2-prima').value,
+      datum: new Date().toISOString()
+    });
+    ob2Save();
+    closeModal('modalNovaObavijest2');
+    ob2RenderLista();
+    logActivity('📢', 'Obavijest: ' + naslov);
+    toast('Obavijest objavljena!');
+  }
+
+  // Reset modal
+  document.querySelector('#modalNovaObavijest2 .modal-header h3').textContent = 'Nova obavijest';
+  document.querySelector('#modalNovaObavijest2 .btn-primary').textContent = 'Objavi';
+  ['ob2-naslov','ob2-tekst','ob2-opis-ai'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+}
+
+function ob2Obrisi(id) {
+  if (!confirm('Obrisati obavijest?')) return;
+  ob2Lista = ob2Lista.filter(o => o.id !== id);
+  ob2Save(); ob2RenderLista();
+}
+
 let _ob2EditId = null;
 
 function ob2Uredi(id) {
@@ -6122,15 +6168,8 @@ function ob2Uredi(id) {
 async function ob2PosaljiMail(id) {
   const o = ob2Lista.find(x => x.id === id);
   if (!o) return;
-  const primatelji = state.clanovi.filter(c => {
-    if (!c.email || !c.email.trim()) return false;
-    if (c.status !== 'aktivan') return false;
-    return true;
-  });
-  if (primatelji.length === 0) {
-    toast('Nema aktivnih članova s email adresom!', 'err');
-    return;
-  }
+  const primatelji = state.clanovi.filter(c => c.email && c.email.trim() && c.status === 'aktivan');
+  if (primatelji.length === 0) { toast('Nema aktivnih članova s email adresom!', 'err'); return; }
   if (!confirm(`Poslati obavijest "${o.naslov}" na ${primatelji.length} email adresa?`)) return;
   toast('📧 Šaljem obavijest...');
   let uspjelo = 0, neuspjelo = 0;
@@ -6143,56 +6182,14 @@ async function ob2PosaljiMail(id) {
   else toast('⚠ Poslano ' + uspjelo + ', nije uspjelo ' + neuspjelo, 'err');
 }
 
-function spremiObavijest2() {
-  const naslov = document.getElementById('ob2-naslov').value.trim();
-  const tekst = document.getElementById('ob2-tekst').value.trim();
-  if (!naslov || !tekst) { toast('Unesite naslov i tekst!', 'err'); return; }
-
-  if (_ob2EditId) {
-    // Uredi postojeću
-    const idx = ob2Lista.findIndex(o => o.id === _ob2EditId);
-    if (idx >= 0) {
-      ob2Lista[idx] = { ...ob2Lista[idx], naslov, tekst,
-        vrsta: document.getElementById('ob2-vrsta').value,
-        prima: document.getElementById('ob2-prima').value
-      };
-      ob2Save();
-      closeModal('modalNovaObavijest2');
-      ob2RenderLista();
-      toast('Obavijest ažurirana!');
-    }
-    _ob2EditId = null;
-  } else {
-    // Nova obavijest
-    ob2Lista.push({
-      id: Date.now().toString(),
-      naslov, tekst,
-      vrsta: document.getElementById('ob2-vrsta').value,
-      prima: document.getElementById('ob2-prima').value,
-      datum: new Date().toISOString()
-    });
-    ob2Save();
-    closeModal('modalNovaObavijest2');
-    ob2RenderLista();
-    logActivity('📢', 'Obavijest: ' + naslov);
-    toast('Obavijest objavljena!');
-  }
-
-  // Reset modal naslov i gumb
-  document.querySelector('#modalNovaObavijest2 .modal-header h3').textContent = 'Nova obavijest';
-  document.querySelector('#modalNovaObavijest2 .btn-primary').textContent = 'Objavi';
-  ['ob2-naslov','ob2-tekst'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
-}
-
 async function ob2GenerirajAI() {
-  const opis = document.getElementById('ob2-opis-ai').value.trim();
+  const opis = document.getElementById('ob2-opis-ai') ? document.getElementById('ob2-opis-ai').value.trim() : '';
   const vrsta = document.getElementById('ob2-vrsta').value;
   const prima = document.getElementById('ob2-prima').value;
   if (!opis) { toast('Unesite kratki opis situacije!', 'err'); return; }
 
   const btn = document.getElementById('ob2-btn-ai');
-  btn.textContent = '⏳ Generira se...';
-  btn.disabled = true;
+  if (btn) { btn.textContent = '⏳ Generira se...'; btn.disabled = true; }
 
   const vrstaTekst = { info:'informativna obavijest', hitno:'hitna obavijest', trening:'obavijest o treningu', natjecanje:'obavijest o natjecanju', placanje:'obavijest o plaćanju' };
   const primaTekst = { svi:'svim članovima i roditeljima', roditelji:'roditeljima', treneri:'trenerima' };
@@ -6227,14 +6224,7 @@ TEKST: [tekst ovdje]`;
     toast('Greška: ' + e.message, 'err');
   }
 
-  btn.textContent = '🤖 Napiši s AI tajnikom';
-  btn.disabled = false;
-}
-
-function ob2Obrisi(id) {
-  if (!confirm('Obrisati obavijest?')) return;
-  ob2Lista = ob2Lista.filter(o => o.id !== id);
-  ob2Save(); ob2RenderLista();
+  if (btn) { btn.textContent = '🤖 Napiši s AI tajnikom'; btn.disabled = false; }
 }
 
 
@@ -6963,7 +6953,39 @@ initMobileNav();
 </script>
 
 <script>
-// ========== SUPABASE INTEGRACIJA ==========
+// ========== EMAILJS INTEGRACIJA ==========
+const EJS_SERVICE = 'service_hg62jsr';
+const EJS_TEMPLATE = 'template_2oq38d8';
+const EJS_PUBLIC_KEY = 'HtsQTuabxo_LG6_cX';
+let _ejsInited = false;
+
+function ejsInit() {
+  if (_ejsInited) return;
+  try {
+    emailjs.init(EJS_PUBLIC_KEY);
+    _ejsInited = true;
+  } catch(e) { console.error('EmailJS init error:', e); }
+}
+
+async function ejsSendMail(toEmail, toName, subject, body) {
+  ejsInit();
+  try {
+    await emailjs.send(EJS_SERVICE, EJS_TEMPLATE, {
+      to_email: toEmail,
+      to_name: toName,
+      subject: subject,
+      message: body,
+      from_name: 'KK Đurđevac',
+      reply_to: 'karate.djurdjevac@gmail.com'
+    });
+    return true;
+  } catch(e) {
+    console.error('ejsSendMail error:', e);
+    return false;
+  }
+}
+
+
 const SUPABASE_URL = 'https://hpdnevnfgrwrkqgoohcv.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_vj1fn6UISchRJHo6q_j1QA__2f07mkh';
 const KLUB_ID = '00000000-0000-0000-0000-000000000001';

@@ -2576,6 +2576,29 @@
 
 <script>
 
+// ========== EMAILJS INTEGRACIJA ==========
+const EJS_SERVICE = 'service_hg62jsr';
+const EJS_TEMPLATE = 'template_2oq38d8';
+const EJS_PUBLIC_KEY = 'HtsQTuabxo_LG6_cX';
+let _ejsInited = false;
+
+function ejsInit() {
+  if (_ejsInited) return;
+  try { emailjs.init(EJS_PUBLIC_KEY); _ejsInited = true; }
+  catch(e) { console.error('EmailJS init error:', e); }
+}
+
+async function ejsSendMail(toEmail, toName, subject, body) {
+  ejsInit();
+  try {
+    await emailjs.send(EJS_SERVICE, EJS_TEMPLATE, {
+      to_email: toEmail, to_name: toName, subject: subject,
+      message: body, from_name: 'KK Đurđevac',
+      reply_to: 'karate.djurdjevac@gmail.com'
+    });
+    return true;
+  } catch(e) { console.error('ejsSendMail error:', e); return false; }
+}
 
 // ========== TEMA ==========
 function applyTheme(theme) {
@@ -6953,39 +6976,6 @@ initMobileNav();
 </script>
 
 <script>
-// ========== EMAILJS INTEGRACIJA ==========
-const EJS_SERVICE = 'service_hg62jsr';
-const EJS_TEMPLATE = 'template_2oq38d8';
-const EJS_PUBLIC_KEY = 'HtsQTuabxo_LG6_cX';
-let _ejsInited = false;
-
-function ejsInit() {
-  if (_ejsInited) return;
-  try {
-    emailjs.init(EJS_PUBLIC_KEY);
-    _ejsInited = true;
-  } catch(e) { console.error('EmailJS init error:', e); }
-}
-
-async function ejsSendMail(toEmail, toName, subject, body) {
-  ejsInit();
-  try {
-    await emailjs.send(EJS_SERVICE, EJS_TEMPLATE, {
-      to_email: toEmail,
-      to_name: toName,
-      subject: subject,
-      message: body,
-      from_name: 'KK Đurđevac',
-      reply_to: 'karate.djurdjevac@gmail.com'
-    });
-    return true;
-  } catch(e) {
-    console.error('ejsSendMail error:', e);
-    return false;
-  }
-}
-
-
 const SUPABASE_URL = 'https://hpdnevnfgrwrkqgoohcv.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_vj1fn6UISchRJHo6q_j1QA__2f07mkh';
 const KLUB_ID = '00000000-0000-0000-0000-000000000001';

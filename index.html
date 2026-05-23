@@ -2164,8 +2164,16 @@
           </select>
         </div>
         <div class="form-group full">
+          <label>Kratki opis (za AI) ili unesite tekst direktno</label>
+          <input type="text" id="ob2-opis-ai" placeholder="npr: Trening u petak se otkazuje, sljedeći u utorak...">
+        </div>
+        <div class="form-group full" style="margin-top:-8px">
+          <button class="btn btn-gold btn-sm" onclick="ob2GenerirajAI()" id="ob2-btn-ai">🤖 Napiši s AI tajnikom</button>
+          <span style="font-size:12px;color:var(--muted);margin-left:8px">AI piše profesionalnu obavijest na temelju opisa</span>
+        </div>
+        <div class="form-group full">
           <label>Tekst obavijesti *</label>
-          <textarea id="ob2-tekst" placeholder="Tekst obavijesti..." style="min-height:100px"></textarea>
+          <textarea id="ob2-tekst" placeholder="Tekst obavijesti..." style="min-height:120px"></textarea>
         </div>
       </div>
     </div>
@@ -6174,6 +6182,53 @@ function spremiObavijest2() {
   document.querySelector('#modalNovaObavijest2 .modal-header h3').textContent = 'Nova obavijest';
   document.querySelector('#modalNovaObavijest2 .btn-primary').textContent = 'Objavi';
   ['ob2-naslov','ob2-tekst'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+}
+
+async function ob2GenerirajAI() {
+  const opis = document.getElementById('ob2-opis-ai').value.trim();
+  const vrsta = document.getElementById('ob2-vrsta').value;
+  const prima = document.getElementById('ob2-prima').value;
+  if (!opis) { toast('Unesite kratki opis situacije!', 'err'); return; }
+
+  const btn = document.getElementById('ob2-btn-ai');
+  btn.textContent = '⏳ Generira se...';
+  btn.disabled = true;
+
+  const vrstaTekst = { info:'informativna obavijest', hitno:'hitna obavijest', trening:'obavijest o treningu', natjecanje:'obavijest o natjecanju', placanje:'obavijest o plaćanju' };
+  const primaTekst = { svi:'svim članovima i roditeljima', roditelji:'roditeljima', treneri:'trenerima' };
+
+  const prompt = `Ti si tajnik Karate kluba Đurđevac. Napiši ${vrstaTekst[vrsta]||'obavijest'} namijenjena ${primaTekst[prima]||'svima'}.
+
+Situacija: ${opis}
+
+Podaci kluba:
+- Tel: 098/805-555, 098/9078-738
+- E-mail: karate.djurdjevac@gmail.com
+- Predsjednik: Ivan Juričić
+
+Napiši kratku, jasnu obavijest (max 100 riječi) koja:
+- Ima jasan, koncizan naslov (SAMO naslov, bez "Naslov:" prefiksa)
+- Sadržaj koji objašnjava situaciju
+- Završava s pozdravom
+
+Odgovori u formatu:
+NASLOV: [naslov ovdje]
+TEKST: [tekst ovdje]`;
+
+  try {
+    const text = await pozovaiAI(prompt);
+    const naslovMatch = text.match(/NASLOV:\s*(.+)/);
+    const tekstMatch = text.match(/TEKST:\s*([\s\S]+)/);
+    if (naslovMatch) document.getElementById('ob2-naslov').value = naslovMatch[1].trim();
+    if (tekstMatch) document.getElementById('ob2-tekst').value = tekstMatch[1].trim();
+    else document.getElementById('ob2-tekst').value = text;
+    toast('✓ AI napisao obavijest — provjerite i objavite!');
+  } catch(e) {
+    toast('Greška: ' + e.message, 'err');
+  }
+
+  btn.textContent = '🤖 Napiši s AI tajnikom';
+  btn.disabled = false;
 }
 
 function ob2Obrisi(id) {

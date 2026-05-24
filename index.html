@@ -1118,6 +1118,10 @@
             <div style="font-family:'Bebas Neue',sans-serif;letter-spacing:1px;margin-bottom:12px;color:#aaa;font-size:14px">💶 TROŠKOVI</div>
             <div class="form-grid">
               <div class="form-group">
+                <label>Cestarina (€)</label>
+                <input type="number" id="pn-cestarina" value="0" min="0" step="0.01" oninput="pnCalc()">
+              </div>
+              <div class="form-group">
                 <label>Ostali troškovi (€)</label>
                 <input type="number" id="pn-troskovi" value="0" min="0" step="0.01" oninput="pnCalc()">
               </div>
@@ -1138,6 +1142,10 @@
                   <option value="100">Puna opskrba (−100%)</option>
                 </select>
               </div>
+            </div>
+
+            <div style="margin-top:10px;padding:10px 12px;background:rgba(240,165,0,0.08);border-left:3px solid var(--gold);border-radius:6px;font-size:11px;color:#aaa;line-height:1.7">
+              ⚖️ <strong style="color:var(--gold)">Pravila 2026:</strong> Naknada <strong>0,50 €/km</strong> je paušalna i pokriva gorivo, amortizaciju, osiguranje i održavanje — gorivo se ne smije isplatiti zasebno. Cestarina je poseban trošak (priložiti račun).
             </div>
 
             <!-- Računi -->
@@ -5734,12 +5742,13 @@ function printPutniNalog(id) {
     <div class="row"><span>Polazak:</span><strong>${polazak}</strong></div>
     <div class="row"><span>Povratak:</span><strong>${povratak}</strong></div>
     <div class="row"><span>Vozilo:</span><strong>${n.vozilo}${n.marka ? ' · ' + n.marka : ''}${n.reg ? ' · ' + n.reg : ''}</strong></div>
-    <div class="row"><span>Prijeđeni km:</span><strong>${km} km × 0,40 €/km = ${kmIznos} €</strong></div>
+    <div class="row"><span>Prijeđeni km:</span><strong>${km} km × 0,50 €/km = ${kmIznos} €</strong></div>
     <h3>OBRAČUN TROŠKOVA</h3>
     <table>
       <tr><th>Stavka</th><th style="text-align:right">Iznos (€)</th></tr>
-      <tr><td>Kilometraža (${km} km × €0,40)</td><td style="text-align:right">${kmIznos}</td></tr>
+      <tr><td>Kilometraža (${km} km × €0,50)</td><td style="text-align:right">${kmIznos}</td></tr>
       <tr><td>Dnevnica${parseFloat(n.umanjenjePct||0)>0?' (−'+n.umanjenjePct+'% za obroke)':''}</td><td style="text-align:right">${dnevnica}</td></tr>
+      ${parseFloat(n.cestarina||0)>0?`<tr><td>Cestarina (uz račun)</td><td style="text-align:right">${parseFloat(n.cestarina).toFixed(2)}</td></tr>`:''}
       ${parseFloat(n.smjestaj||0)>0?`<tr><td>Smještaj</td><td style="text-align:right">${parseFloat(n.smjestaj).toFixed(2)}</td></tr>`:''}
       <tr><td>Ostali troškovi</td><td style="text-align:right">${troskovi}</td></tr>
       <tr><td>Predujam (odbitak)</td><td style="text-align:right">−${predujam}</td></tr>
@@ -6176,7 +6185,7 @@ function pnSave() {
   }
 }
 
-const PN_KM_CIJENA = 0.40;
+const PN_KM_CIJENA = 0.50;
 const PN_DNEVNICA_CIJELA = 30.00;
 const PN_DNEVNICA_POLA = 15.00;
 
@@ -6301,12 +6310,14 @@ function pnCalc() {
   const kmT = Math.max(0, kmE - kmS);
   const kmNak = kmT * PN_KM_CIJENA;
   const tro = parseFloat(document.getElementById('pn-troskovi').value) || 0;
+  const cestarina = parseFloat(document.getElementById('pn-cestarina')?.value || 0) || 0;
   const smjestaj = parseFloat(document.getElementById('pn-smjestaj')?.value || 0) || 0;
   const pred = parseFloat(document.getElementById('pn-predujam').value) || 0;
-  const ukupno = Math.max(0, kmNak + tro + smjestaj + dnevnica - pred);
+  const ukupno = Math.max(0, kmNak + tro + cestarina + smjestaj + dnevnica - pred);
   document.getElementById('pn-ukupno-display').textContent = '€ ' + ukupno.toFixed(2);
-  let breakdown = `km: €${kmNak.toFixed(2)} (${kmT}km×€0,40)`;
+  let breakdown = `km: €${kmNak.toFixed(2)} (${kmT}km×€0,50)`;
   if (dnevnica > 0) breakdown += ` | dnevnica: €${dnevnica.toFixed(2)}${umanjenjePct>0?' (−'+umanjenjePct+'%)':''}`;
+  if (cestarina > 0) breakdown += ` | cestarina: €${cestarina.toFixed(2)}`;
   if (smjestaj > 0) breakdown += ` | smještaj: €${smjestaj.toFixed(2)}`;
   if (tro > 0) breakdown += ` | ostalo: €${tro.toFixed(2)}`;
   if (pred > 0) breakdown += ` | −predujam: €${pred.toFixed(2)}`;
@@ -6359,8 +6370,9 @@ function spremiPutniNalog() {
   const kmT = Math.max(0, kmE - kmS);
   const tro = parseFloat(document.getElementById('pn-troskovi').value) || 0;
   const smjestaj = parseFloat(document.getElementById('pn-smjestaj')?.value || 0) || 0;
+  const cestarina = parseFloat(document.getElementById('pn-cestarina')?.value || 0) || 0;
   const pred = parseFloat(document.getElementById('pn-predujam').value) || 0;
-  const ukupno = Math.max(0, kmT * PN_KM_CIJENA + tro + smjestaj + dnevnica - pred);
+  const ukupno = Math.max(0, kmT * PN_KM_CIJENA + tro + smjestaj + cestarina + dnevnica - pred);
 
   const nalog = {
     id: Date.now().toString(),
@@ -6374,7 +6386,7 @@ function spremiPutniNalog() {
     reg: document.getElementById('pn-reg').value.toUpperCase(),
     polazak: pol, povratak: pov,
     kmS, kmE, kmT,
-    troskovi: tro, smjestaj, predujam: pred, dnevnica, umanjenjePct,
+    troskovi: tro, smjestaj, cestarina, predujam: pred, dnevnica, umanjenjePct,
     vrstaPutovanja: document.getElementById('pn-vrsta-put')?.value || 'tuzemno',
     zemlja: document.getElementById('pn-zemlja')?.value || '',
     ukupno: ukupno.toFixed(2),

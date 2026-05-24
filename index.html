@@ -1630,7 +1630,7 @@
     <div id="superadmin" class="section">
       <div class="page-header">
         <div><h2>Super Admin</h2><p>Upravljanje svim klubovima</p></div>
-        <button class="btn btn-primary" onclick="saNoviKlub()">+ Novi klub</button>
+        <button class="btn btn-primary" onclick="saOtvoriNoviKlub()">+ Novi klub</button>
       </div>
       <div class="content">
         <div class="stats-row" style="grid-template-columns:repeat(3,1fr)">
@@ -1641,9 +1641,123 @@
         <div id="sa-lista-klubova">
           <div class="empty-state"><div class="icon">🏢</div><p>Učitavanje klubova...</p></div>
         </div>
+
+        <h3 style="font-family:'Bebas Neue',sans-serif;letter-spacing:1px;font-size:18px;margin:28px 0 12px;color:var(--muted)">KORISNICI KLUBOVA</h3>
+        <div style="margin-bottom:12px">
+          <button class="btn btn-secondary" onclick="saOtvoriNoviKorisnik()">+ Novi korisnik</button>
+        </div>
+        <div id="sa-lista-korisnika">
+          <div class="empty-state"><div class="icon">👥</div><p>Učitavanje korisnika...</p></div>
+        </div>
       </div>
     </div>
   </main>
+</div>
+
+<!-- MODAL: SUPER ADMIN — NOVI/UREDI KLUB -->
+<div class="modal-overlay" id="modalNoviKlub">
+  <div class="modal" style="max-width:540px">
+    <div class="modal-header">
+      <h3 id="saKlubModalNaslov">Novi klub</h3>
+      <button class="modal-close" onclick="closeModal('modalNoviKlub')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="saKlubId">
+      <div class="form-grid">
+        <div class="form-group full">
+          <label>Naziv kluba *</label>
+          <input type="text" id="saKlubNaziv" placeholder="npr. Karate klub Zagreb">
+        </div>
+        <div class="form-group">
+          <label>OIB</label>
+          <input type="text" id="saKlubOib" placeholder="11 znamenki" maxlength="11">
+        </div>
+        <div class="form-group">
+          <label>Kontakt email</label>
+          <input type="email" id="saKlubEmail" placeholder="klub@email.hr">
+        </div>
+        <div class="form-group full">
+          <label>Adresa</label>
+          <input type="text" id="saKlubAdresa" placeholder="Ulica i broj, grad">
+        </div>
+        <div class="form-group">
+          <label>Kontakt telefon</label>
+          <input type="text" id="saKlubTel" placeholder="+385 ...">
+        </div>
+        <div class="form-group">
+          <label>Plan</label>
+          <select id="saKlubPlan">
+            <option value="basic">Basic</option>
+            <option value="pro">Pro</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Datum isteka licence</label>
+          <input type="date" id="saKlubIsteka">
+        </div>
+        <div class="form-group">
+          <label>Status</label>
+          <select id="saKlubAktivan">
+            <option value="true">✓ Aktivan</option>
+            <option value="false">✗ Neaktivan</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modalNoviKlub')">Odustani</button>
+      <button class="btn btn-primary" onclick="saSpremiKlub()">Spremi</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: SUPER ADMIN — NOVI KORISNIK KLUBA -->
+<div class="modal-overlay" id="modalSaKorisnik">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header">
+      <h3>Novi korisnik kluba</h3>
+      <button class="modal-close" onclick="closeModal('modalSaKorisnik')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group full">
+          <label>Klub *</label>
+          <select id="saKorKlub"></select>
+        </div>
+        <div class="form-group">
+          <label>Korisničko ime *</label>
+          <input type="text" id="saKorUsername" placeholder="npr. tajnik.zagreb" autocomplete="off">
+        </div>
+        <div class="form-group">
+          <label>Lozinka *</label>
+          <div style="position:relative">
+            <input type="password" id="saKorLozinka" placeholder="Min. 6 znakova" autocomplete="new-password">
+            <button type="button" onclick="togglePassVis('saKorLozinka')" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#888;font-size:14px">👁</button>
+          </div>
+        </div>
+        <div class="form-group full">
+          <label>Ime i prezime *</label>
+          <input type="text" id="saKorIme" placeholder="npr. Marko Horvat">
+        </div>
+        <div class="form-group full">
+          <label>Uloga</label>
+          <select id="saKorUloga">
+            <option value="admin">🔑 Administrator</option>
+            <option value="tajnik">📋 Tajnik</option>
+            <option value="trener">🥋 Trener</option>
+            <option value="blagajnik">💶 Blagajnik</option>
+          </select>
+        </div>
+      </div>
+      <div style="margin-top:12px;padding:12px;background:var(--surface2);border-radius:8px;font-size:12px;color:#888;line-height:1.8">
+        <strong style="color:#EDEDED">Napomena:</strong> Korisnik se prijavljuje korisničkim imenom i lozinkom. Automatski je vezan za odabrani klub i vidi samo njegove podatke.
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modalSaKorisnik')">Odustani</button>
+      <button class="btn btn-primary" onclick="saSpremiKorisnika()">Kreiraj korisnika</button>
+    </div>
+  </div>
 </div>
 
 <!-- MODAL: DODAJ ČLANA -->
@@ -3258,7 +3372,7 @@ function showSection(id) {
   if (id === 'kalendar') { renderKalendar(); }
   if (id === 'lijecnicki') { ljRenderLista(); const s=document.getElementById('lj-clan-sel'); if(s){ s.innerHTML='<option value="">— Odaberite člana —</option>'+state.clanovi.filter(c=>c.status==='aktivan').map(c=>`<option value="${c.id}">${c.ime} ${c.prezime}</option>`).join(''); } }
   if (id === 'obavijesti2') { ob2RenderLista(); }
-  if (id === 'superadmin') { saRenderKlubovi(); }
+  if (id === 'superadmin') { saRenderKlubovi(); saRenderKorisnici(); }
   if (id === 'putni') { pnRenderLista(); document.getElementById('putniForma').style.display='none'; document.getElementById('putniDetalji').style.display='none'; document.getElementById('putniLista').style.display='block'; }
 }
 
@@ -7518,7 +7632,8 @@ async function saRenderKlubovi() {
             </div>
           </div>
           <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0">
-            <button class="btn btn-secondary btn-sm" onclick="saUdiUKlub('${k.id}', '${k.naziv.replace(/'/g, "\'")}')">🔑 Uđi</button>
+            <button class="btn btn-secondary btn-sm" onclick="saUdiUKlub('${k.id}', '${k.naziv.replace(/'/g, "\\'")}')">🔑 Uđi</button>
+            <button class="btn btn-secondary btn-sm" onclick="saUrediKlub('${k.id}','${(k.naziv||'').replace(/'/g,"\\'")}','${(k.oib||'').replace(/'/g,"\\'")}','${(k.kontakt_email||k.email||'').replace(/'/g,"\\'")}','${(k.adresa||'').replace(/'/g,"\\'")}','${(k.kontakt_tel||k.tel||'').replace(/'/g,"\\'")}','${k.plan||'basic'}','${k.datum_isteka||''}',${!!k.aktivan})">✏️ Uredi</button>
             <button class="btn btn-secondary btn-sm" onclick="saToggleAktivan('${k.id}', ${k.aktivan})">${k.aktivan ? '🔴 Deaktiviraj' : '✅ Aktiviraj'}</button>
           </div>
         </div>
@@ -7562,45 +7677,152 @@ async function saUdiUKlub(klubId, klubNaziv) {
   }
 }
 
-function saNoviKlub() {
-  const naziv = prompt('Naziv kluba:');
-  if (!naziv) return;
-  const username = prompt('Korisničko ime admina:');
-  if (!username) return;
-  const lozinka = prompt('Lozinka:');
-  if (!lozinka) return;
-  saKreirajKlub(naziv, username, lozinka);
+// ========== SUPER ADMIN — UPRAVLJANJE KLUBOVIMA ==========
+
+let _saEditKlubId = null;
+
+function saOtvoriNoviKlub() {
+  _saEditKlubId = null;
+  document.getElementById('saKlubModalNaslov').textContent = 'Novi klub';
+  document.getElementById('saKlubNaziv').value = '';
+  document.getElementById('saKlubOib').value = '';
+  document.getElementById('saKlubEmail').value = '';
+  document.getElementById('saKlubAdresa').value = '';
+  document.getElementById('saKlubTel').value = '';
+  document.getElementById('saKlubPlan').value = 'basic';
+  document.getElementById('saKlubAktivan').value = 'true';
+  const godinaDana = new Date();
+  godinaDana.setFullYear(godinaDana.getFullYear() + 1);
+  document.getElementById('saKlubIsteka').value = godinaDana.toISOString().split('T')[0];
+  openModal('modalNoviKlub');
 }
 
-async function saKreirajKlub(naziv, username, lozinka) {
+function saUrediKlub(id, naziv, oib, email, adresa, tel, plan, isteka, aktivan) {
+  _saEditKlubId = id;
+  document.getElementById('saKlubModalNaslov').textContent = 'Uredi klub';
+  document.getElementById('saKlubNaziv').value = naziv || '';
+  document.getElementById('saKlubOib').value = oib || '';
+  document.getElementById('saKlubEmail').value = email || '';
+  document.getElementById('saKlubAdresa').value = adresa || '';
+  document.getElementById('saKlubTel').value = tel || '';
+  document.getElementById('saKlubPlan').value = plan || 'basic';
+  document.getElementById('saKlubAktivan').value = aktivan ? 'true' : 'false';
+  document.getElementById('saKlubIsteka').value = isteka ? isteka.split('T')[0] : '';
+  openModal('modalNoviKlub');
+}
+
+async function saSpremiKlub() {
   if (!sb) return;
+  const naziv = document.getElementById('saKlubNaziv').value.trim();
+  if (!naziv) { toast('Naziv kluba je obavezan!', 'err'); return; }
+  const payload = {
+    naziv,
+    oib: document.getElementById('saKlubOib').value.trim() || null,
+    kontakt_email: document.getElementById('saKlubEmail').value.trim() || null,
+    adresa: document.getElementById('saKlubAdresa').value.trim() || null,
+    kontakt_tel: document.getElementById('saKlubTel').value.trim() || null,
+    plan: document.getElementById('saKlubPlan').value,
+    aktivan: document.getElementById('saKlubAktivan').value === 'true',
+    datum_isteka: document.getElementById('saKlubIsteka').value || null
+  };
   try {
-    // Kreiraj klub
-    const { data: klub, error: klubError } = await sb
-      .from('klubovi')
-      .insert({ naziv, aktivan: true, plan: 'basic', datum_isteka: new Date(Date.now() + 365*24*60*60*1000).toISOString().split('T')[0] })
-      .select()
-      .single();
-
-    if (klubError) { toast('Greška pri kreiranju kluba: ' + klubError.message, 'err'); return; }
-
-    // Kreiraj admin korisnika
-    const { error: userError } = await sb.from('korisnici').insert({
-      klub_id: klub.id,
-      username,
-      ime: naziv + ' Admin',
-      lozinka,
-      uloga: 'admin',
-      napomena: 'Automatski kreiran'
-    });
-
-    if (userError) { toast('Greška pri kreiranju korisnika: ' + userError.message, 'err'); return; }
-
-    toast(`✅ Klub "${naziv}" kreiran! Login: ${username} / ${lozinka}`);
+    if (_saEditKlubId) {
+      const { error } = await sb.from('klubovi').update(payload).eq('id', _saEditKlubId);
+      if (error) { toast('Greška: ' + error.message, 'err'); return; }
+      toast('Klub ažuriran!');
+    } else {
+      const { error } = await sb.from('klubovi').insert(payload);
+      if (error) { toast('Greška: ' + error.message, 'err'); return; }
+      toast(`✅ Klub "${naziv}" kreiran!`);
+    }
+    closeModal('modalNoviKlub');
     saRenderKlubovi();
-  } catch(e) {
-    toast('Greška: ' + e.message, 'err');
-  }
+  } catch(e) { toast('Greška: ' + e.message, 'err'); }
+}
+
+// ========== SUPER ADMIN — UPRAVLJANJE KORISNICIMA ==========
+
+async function saRenderKorisnici() {
+  const el = document.getElementById('sa-lista-korisnika');
+  if (!el || !sb) return;
+  try {
+    const { data: klubovi } = await sb.from('klubovi').select('id, naziv').order('naziv');
+    const { data, error } = await sb.from('korisnici').select('*').order('klub_id');
+    if (error) { el.innerHTML = '<p style="color:var(--red);padding:12px">Greška učitavanja korisnika.</p>'; return; }
+    if (!data || !data.length) {
+      el.innerHTML = '<div class="empty-state"><div class="icon">👥</div><p>Nema kreiranih korisnika.</p></div>';
+      return;
+    }
+    const klubMap = {};
+    (klubovi || []).forEach(k => { klubMap[k.id] = k.naziv; });
+    el.innerHTML = `
+      <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:13px">
+        <thead>
+          <tr style="border-bottom:1px solid var(--border)">
+            <th style="text-align:left;padding:10px 8px;color:var(--muted);font-weight:500">Klub</th>
+            <th style="text-align:left;padding:10px 8px;color:var(--muted);font-weight:500">Username</th>
+            <th style="text-align:left;padding:10px 8px;color:var(--muted);font-weight:500">Ime</th>
+            <th style="text-align:left;padding:10px 8px;color:var(--muted);font-weight:500">Uloga</th>
+            <th style="padding:10px 8px"></th>
+          </tr>
+        </thead>
+        <tbody>
+          ${data.map(u => `
+            <tr style="border-bottom:1px solid var(--border)">
+              <td style="padding:10px 8px;color:#aaa;font-size:12px">${klubMap[u.klub_id] || '—'}</td>
+              <td style="padding:10px 8px;font-weight:600">${u.username}</td>
+              <td style="padding:10px 8px">${u.ime || '—'}</td>
+              <td style="padding:10px 8px"><span class="badge badge-gray">${u.uloga || '—'}</span></td>
+              <td style="padding:10px 8px;text-align:right">
+                <button class="btn btn-sm" style="background:rgba(200,16,46,0.15);color:#ff5a70;border:1px solid rgba(200,16,46,0.2)" onclick="saObrisiKorisnika('${u.id}','${(u.username||'').replace(/'/g,"\\'")}')">✕</button>
+              </td>
+            </tr>`).join('')}
+        </tbody>
+      </table>
+      </div>`;
+  } catch(e) { console.error('saRenderKorisnici:', e); }
+}
+
+async function saOtvoriNoviKorisnik() {
+  if (!sb) return;
+  const { data: klubovi } = await sb.from('klubovi').select('id, naziv').eq('aktivan', true).order('naziv');
+  const sel = document.getElementById('saKorKlub');
+  if (!sel) return;
+  sel.innerHTML = (klubovi || []).map(k => `<option value="${k.id}">${k.naziv}</option>`).join('');
+  document.getElementById('saKorUsername').value = '';
+  document.getElementById('saKorLozinka').value = '';
+  document.getElementById('saKorIme').value = '';
+  document.getElementById('saKorUloga').value = 'admin';
+  openModal('modalSaKorisnik');
+}
+
+async function saSpremiKorisnika() {
+  if (!sb) return;
+  const klub_id = document.getElementById('saKorKlub').value;
+  const username = document.getElementById('saKorUsername').value.trim().toLowerCase();
+  const lozinka = document.getElementById('saKorLozinka').value;
+  const ime = document.getElementById('saKorIme').value.trim();
+  const uloga = document.getElementById('saKorUloga').value;
+  if (!klub_id || !username || !lozinka || !ime) { toast('Sva označena polja su obavezna!', 'err'); return; }
+  if (lozinka.length < 6) { toast('Lozinka mora imati min. 6 znakova!', 'err'); return; }
+  try {
+    const { data: exists } = await sb.from('korisnici').select('id').eq('username', username).limit(1);
+    if (exists && exists.length > 0) { toast('Korisničko ime već postoji!', 'err'); return; }
+    const { error } = await sb.from('korisnici').insert({ klub_id, username, lozinka, ime, uloga, napomena: 'Kreiran iz Super Admin panela' });
+    if (error) { toast('Greška: ' + error.message, 'err'); return; }
+    toast(`✅ Korisnik "${username}" kreiran!`);
+    closeModal('modalSaKorisnik');
+    saRenderKorisnici();
+  } catch(e) { toast('Greška: ' + e.message, 'err'); }
+}
+
+async function saObrisiKorisnika(id, username) {
+  if (!confirm(`Obrisati korisnika "${username}"?`)) return;
+  const { error } = await sb.from('korisnici').delete().eq('id', id);
+  if (error) { toast('Greška pri brisanju!', 'err'); return; }
+  toast(`Korisnik "${username}" obrisan.`);
+  saRenderKorisnici();
 }
 
 // Supabase load se poziva iz prijaviKorisnika

@@ -658,7 +658,6 @@
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.0.4/tesseract.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 </head>
 <body>
 
@@ -1040,7 +1039,36 @@
                 <label>Povratak *</label>
                 <input type="datetime-local" id="pn-povratak" onchange="pnCalc()">
               </div>
+              <div class="form-group">
+                <label>Vrsta putovanja</label>
+                <select id="pn-vrsta-put" onchange="pnToggleZemlja();pnCalc()">
+                  <option value="tuzemno">🇭🇷 Tuzemno (Hrvatska)</option>
+                  <option value="inozemno">🌍 Inozemno</option>
+                </select>
+              </div>
+              <div class="form-group" id="pn-zemlja-group" style="display:none">
+                <label>Država odredišta</label>
+                <select id="pn-zemlja" onchange="pnCalc()">
+                  <option value="it">Italija (80 €)</option>
+                  <option value="si">Slovenija (80 €)</option>
+                  <option value="de">Njemačka (90 €)</option>
+                  <option value="at">Austrija (90 €)</option>
+                  <option value="ba">BiH (50 €)</option>
+                  <option value="rs">Srbija (50 €)</option>
+                  <option value="hu">Mađarska (70 €)</option>
+                  <option value="es">Španjolska (70 €)</option>
+                  <option value="fr">Francuska (90 €)</option>
+                  <option value="gb">UK (80 €)</option>
+                  <option value="nl">Nizozemska (90 €)</option>
+                  <option value="cz">Češka (80 €)</option>
+                  <option value="tr">Turska (70 €)</option>
+                  <option value="us">SAD (100 €)</option>
+                  <option value="me">Crna Gora (50 €)</option>
+                  <option value="ostalo">Ostalo (50 €)</option>
+                </select>
+              </div>
             </div>
+            <div id="pn-dnevnica-info" style="margin-top:10px;padding:10px 12px;background:rgba(240,165,0,0.08);border-left:3px solid var(--gold);border-radius:6px;font-size:12px;color:var(--gold);display:none"></div>
           </div>
 
           <!-- Vozilo -->
@@ -1094,8 +1122,21 @@
                 <input type="number" id="pn-troskovi" value="0" min="0" step="0.01" oninput="pnCalc()">
               </div>
               <div class="form-group">
+                <label>Smještaj (€)</label>
+                <input type="number" id="pn-smjestaj" value="0" min="0" step="0.01" oninput="pnCalc()">
+              </div>
+              <div class="form-group">
                 <label>Predujam (€)</label>
                 <input type="number" id="pn-predujam" value="0" min="0" step="0.01" oninput="pnCalc()">
+              </div>
+              <div class="form-group">
+                <label>Umanjenje dnevnice</label>
+                <select id="pn-obroci" onchange="pnCalc()">
+                  <option value="0">Bez umanjenja</option>
+                  <option value="30">1 obrok (−30%)</option>
+                  <option value="60">2 obroka (−60%)</option>
+                  <option value="100">Puna opskrba (−100%)</option>
+                </select>
               </div>
             </div>
 
@@ -2138,7 +2179,7 @@
   <div class="modal">
     <div class="modal-header">
       <h3>Nova obavijest</h3>
-      <button class="modal-close" onclick="_ob2EditId=null;document.querySelector('#modalNovaObavijest2 .modal-header h3').textContent='Nova obavijest';document.querySelector('#modalNovaObavijest2 .btn-primary').textContent='Objavi';closeModal('modalNovaObavijest2')">✕</button>
+      <button class="modal-close" onclick="closeModal('modalNovaObavijest2')">✕</button>
     </div>
     <div class="modal-body">
       <div class="form-grid">
@@ -2165,21 +2206,13 @@
           </select>
         </div>
         <div class="form-group full">
-          <label>Kratki opis (za AI) — ili unesite tekst direktno ispod</label>
-          <input type="text" id="ob2-opis-ai" placeholder="npr: Trening u petak se otkazuje, sljedeći u utorak...">
-        </div>
-        <div class="form-group full" style="margin-top:-8px">
-          <button class="btn btn-gold btn-sm" onclick="ob2GenerirajAI()" id="ob2-btn-ai">🤖 Napiši s AI tajnikom</button>
-          <span style="font-size:12px;color:var(--muted);margin-left:8px">AI piše profesionalnu obavijest na temelju opisa</span>
-        </div>
-        <div class="form-group full">
           <label>Tekst obavijesti *</label>
-          <textarea id="ob2-tekst" placeholder="Tekst obavijesti..." style="min-height:120px"></textarea>
+          <textarea id="ob2-tekst" placeholder="Tekst obavijesti..." style="min-height:100px"></textarea>
         </div>
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="_ob2EditId=null;document.querySelector('#modalNovaObavijest2 .modal-header h3').textContent='Nova obavijest';document.querySelector('#modalNovaObavijest2 .btn-primary').textContent='Objavi';closeModal('modalNovaObavijest2')">Odustani</button>
+      <button class="btn btn-secondary" onclick="closeModal('modalNovaObavijest2')">Odustani</button>
       <button class="btn btn-primary" onclick="spremiObavijest2()">Objavi</button>
     </div>
   </div>
@@ -2576,29 +2609,6 @@
 
 <script>
 
-// ========== EMAILJS INTEGRACIJA ==========
-const EJS_SERVICE = 'service_hg62jsr';
-const EJS_TEMPLATE = 'template_2oq38d8';
-const EJS_PUBLIC_KEY = 'HtsQTuabxo_LG6_cX';
-let _ejsInited = false;
-
-function ejsInit() {
-  if (_ejsInited) return;
-  try { emailjs.init(EJS_PUBLIC_KEY); _ejsInited = true; }
-  catch(e) { console.error('EmailJS init error:', e); }
-}
-
-async function ejsSendMail(toEmail, toName, subject, body) {
-  ejsInit();
-  try {
-    await emailjs.send(EJS_SERVICE, EJS_TEMPLATE, {
-      to_email: toEmail, to_name: toName, subject: subject,
-      message: body, from_name: 'KK Đurđevac',
-      reply_to: 'karate.djurdjevac@gmail.com'
-    });
-    return true;
-  } catch(e) { console.error('ejsSendMail error:', e); return false; }
-}
 
 // ========== TEMA ==========
 function applyTheme(theme) {
@@ -5724,12 +5734,13 @@ function printPutniNalog(id) {
     <div class="row"><span>Polazak:</span><strong>${polazak}</strong></div>
     <div class="row"><span>Povratak:</span><strong>${povratak}</strong></div>
     <div class="row"><span>Vozilo:</span><strong>${n.vozilo}${n.marka ? ' · ' + n.marka : ''}${n.reg ? ' · ' + n.reg : ''}</strong></div>
-    <div class="row"><span>Prijeđeni km:</span><strong>${km} km × 0,30 €/km = ${kmIznos} €</strong></div>
+    <div class="row"><span>Prijeđeni km:</span><strong>${km} km × 0,40 €/km = ${kmIznos} €</strong></div>
     <h3>OBRAČUN TROŠKOVA</h3>
     <table>
       <tr><th>Stavka</th><th style="text-align:right">Iznos (€)</th></tr>
-      <tr><td>Kilometraža (${km} km × €0,30)</td><td style="text-align:right">${kmIznos}</td></tr>
-      <tr><td>Dnevnica</td><td style="text-align:right">${dnevnica}</td></tr>
+      <tr><td>Kilometraža (${km} km × €0,40)</td><td style="text-align:right">${kmIznos}</td></tr>
+      <tr><td>Dnevnica${parseFloat(n.umanjenjePct||0)>0?' (−'+n.umanjenjePct+'% za obroke)':''}</td><td style="text-align:right">${dnevnica}</td></tr>
+      ${parseFloat(n.smjestaj||0)>0?`<tr><td>Smještaj</td><td style="text-align:right">${parseFloat(n.smjestaj).toFixed(2)}</td></tr>`:''}
       <tr><td>Ostali troškovi</td><td style="text-align:right">${troskovi}</td></tr>
       <tr><td>Predujam (odbitak)</td><td style="text-align:right">−${predujam}</td></tr>
       <tr><td style="font-weight:700">UKUPNO ZA ISPLATU</td><td style="text-align:right;font-weight:700;color:#C8102E;font-size:15px">€ ${ukupno}</td></tr>
@@ -6117,12 +6128,8 @@ function ob2RenderLista() {
           <div style="font-weight:600;color:#EDEDED">${o.naslov}</div>
           <div style="font-size:12px;color:#aaa;margin-top:2px">${new Date(o.datum).toLocaleDateString('hr-HR')} · Prima: ${o.prima}</div>
           <div style="font-size:13px;color:#ccc;margin-top:6px;line-height:1.5">${o.tekst}</div>
-          <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
-            <button class="btn btn-secondary btn-sm" onclick="ob2Uredi('${o.id}')">✏️ Uredi</button>
-            <button class="btn btn-primary btn-sm" onclick="ob2PosaljiMail('${o.id}')">📧 Pošalji mailom</button>
-            <button class="btn btn-sm" style="background:rgba(200,16,46,0.15);color:#ff5a70;border:1px solid rgba(200,16,46,0.2)" onclick="ob2Obrisi('${o.id}')">✕ Obriši</button>
-          </div>
         </div>
+        <button onclick="ob2Obrisi('${o.id}')" style="background:none;border:none;color:#666;cursor:pointer;flex-shrink:0">✕</button>
       </div>
     </div>`).join('');
 }
@@ -6131,123 +6138,25 @@ function spremiObavijest2() {
   const naslov = document.getElementById('ob2-naslov').value.trim();
   const tekst = document.getElementById('ob2-tekst').value.trim();
   if (!naslov || !tekst) { toast('Unesite naslov i tekst!', 'err'); return; }
-
-  if (_ob2EditId) {
-    const idx = ob2Lista.findIndex(o => o.id === _ob2EditId);
-    if (idx >= 0) {
-      ob2Lista[idx] = { ...ob2Lista[idx], naslov, tekst,
-        vrsta: document.getElementById('ob2-vrsta').value,
-        prima: document.getElementById('ob2-prima').value
-      };
-      ob2Save();
-      _ob2EditId = null;
-      closeModal('modalNovaObavijest2');
-      ob2RenderLista();
-      toast('Obavijest ažurirana!');
-    }
-  } else {
-    ob2Lista.push({
-      id: Date.now().toString(),
-      naslov, tekst,
-      vrsta: document.getElementById('ob2-vrsta').value,
-      prima: document.getElementById('ob2-prima').value,
-      datum: new Date().toISOString()
-    });
-    ob2Save();
-    closeModal('modalNovaObavijest2');
-    ob2RenderLista();
-    logActivity('📢', 'Obavijest: ' + naslov);
-    toast('Obavijest objavljena!');
-  }
-
-  // Reset modal
-  document.querySelector('#modalNovaObavijest2 .modal-header h3').textContent = 'Nova obavijest';
-  document.querySelector('#modalNovaObavijest2 .btn-primary').textContent = 'Objavi';
-  ['ob2-naslov','ob2-tekst','ob2-opis-ai'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  ob2Lista.push({
+    id: Date.now().toString(),
+    naslov, tekst,
+    vrsta: document.getElementById('ob2-vrsta').value,
+    prima: document.getElementById('ob2-prima').value,
+    datum: new Date().toISOString()
+  });
+  ob2Save();
+  closeModal('modalNovaObavijest2');
+  ob2RenderLista();
+  logActivity('📢', 'Obavijest: ' + naslov);
+  toast('Obavijest objavljena!');
+  ['ob2-naslov','ob2-tekst'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
 }
 
 function ob2Obrisi(id) {
   if (!confirm('Obrisati obavijest?')) return;
   ob2Lista = ob2Lista.filter(o => o.id !== id);
   ob2Save(); ob2RenderLista();
-}
-
-let _ob2EditId = null;
-
-function ob2Uredi(id) {
-  const o = ob2Lista.find(x => x.id === id);
-  if (!o) return;
-  _ob2EditId = id;
-  document.getElementById('ob2-naslov').value = o.naslov || '';
-  document.getElementById('ob2-tekst').value = o.tekst || '';
-  const setS = (elId, val) => { const el = document.getElementById(elId); if(el) { for(let opt of el.options) if(opt.value===val) { el.value=val; break; } } };
-  setS('ob2-vrsta', o.vrsta);
-  setS('ob2-prima', o.prima);
-  openModal('modalNovaObavijest2');
-  document.querySelector('#modalNovaObavijest2 .modal-header h3').textContent = 'Uredi obavijest';
-  document.querySelector('#modalNovaObavijest2 .btn-primary').textContent = '💾 Spremi izmjene';
-}
-
-async function ob2PosaljiMail(id) {
-  const o = ob2Lista.find(x => x.id === id);
-  if (!o) return;
-  const primatelji = state.clanovi.filter(c => c.email && c.email.trim() && c.status === 'aktivan');
-  if (primatelji.length === 0) { toast('Nema aktivnih članova s email adresom!', 'err'); return; }
-  if (!confirm(`Poslati obavijest "${o.naslov}" na ${primatelji.length} email adresa?`)) return;
-  toast('📧 Šaljem obavijest...');
-  let uspjelo = 0, neuspjelo = 0;
-  for (const c of primatelji) {
-    const ok = await ejsSendMail(c.email.trim(), c.ime + ' ' + c.prezime, o.naslov, o.tekst);
-    if (ok) uspjelo++; else neuspjelo++;
-    await new Promise(r => setTimeout(r, 300));
-  }
-  if (neuspjelo === 0) toast('✅ Obavijest poslana na ' + uspjelo + ' adresa!');
-  else toast('⚠ Poslano ' + uspjelo + ', nije uspjelo ' + neuspjelo, 'err');
-}
-
-async function ob2GenerirajAI() {
-  const opis = document.getElementById('ob2-opis-ai') ? document.getElementById('ob2-opis-ai').value.trim() : '';
-  const vrsta = document.getElementById('ob2-vrsta').value;
-  const prima = document.getElementById('ob2-prima').value;
-  if (!opis) { toast('Unesite kratki opis situacije!', 'err'); return; }
-
-  const btn = document.getElementById('ob2-btn-ai');
-  if (btn) { btn.textContent = '⏳ Generira se...'; btn.disabled = true; }
-
-  const vrstaTekst = { info:'informativna obavijest', hitno:'hitna obavijest', trening:'obavijest o treningu', natjecanje:'obavijest o natjecanju', placanje:'obavijest o plaćanju' };
-  const primaTekst = { svi:'svim članovima i roditeljima', roditelji:'roditeljima', treneri:'trenerima' };
-
-  const prompt = `Ti si tajnik Karate kluba Đurđevac. Napiši ${vrstaTekst[vrsta]||'obavijest'} namijenjena ${primaTekst[prima]||'svima'}.
-
-Situacija: ${opis}
-
-Podaci kluba:
-- Tel: 098/805-555, 098/9078-738
-- E-mail: karate.djurdjevac@gmail.com
-- Predsjednik: Ivan Juričić
-
-Napiši kratku, jasnu obavijest (max 100 riječi) koja:
-- Ima jasan, koncizan naslov (SAMO naslov, bez "Naslov:" prefiksa)
-- Sadržaj koji objašnjava situaciju
-- Završava s pozdravom
-
-Odgovori u formatu:
-NASLOV: [naslov ovdje]
-TEKST: [tekst ovdje]`;
-
-  try {
-    const text = await pozovaiAI(prompt);
-    const naslovMatch = text.match(/NASLOV:\s*(.+)/);
-    const tekstMatch = text.match(/TEKST:\s*([\s\S]+)/);
-    if (naslovMatch) document.getElementById('ob2-naslov').value = naslovMatch[1].trim();
-    if (tekstMatch) document.getElementById('ob2-tekst').value = tekstMatch[1].trim();
-    else document.getElementById('ob2-tekst').value = text;
-    toast('✓ AI napisao obavijest — provjerite i objavite!');
-  } catch(e) {
-    toast('Greška: ' + e.message, 'err');
-  }
-
-  if (btn) { btn.textContent = '🤖 Napiši s AI tajnikom'; btn.disabled = false; }
 }
 
 
@@ -6267,9 +6176,9 @@ function pnSave() {
   }
 }
 
-const PN_KM_CIJENA = 0.30;
-const PN_DNEVNICA_CIJELA = 26.54;
-const PN_DNEVNICA_POLA = 13.27;
+const PN_KM_CIJENA = 0.40;
+const PN_DNEVNICA_CIJELA = 30.00;
+const PN_DNEVNICA_POLA = 15.00;
 
 function noviPutniNalog() {
   pnRacuni = [];
@@ -6328,25 +6237,80 @@ function zatvoriPutniDetalje() {
   document.getElementById('putniLista').style.display = 'block';
 }
 
+// ========== INOZEMNE DNEVNICE 2026 (NN 16/24) ==========
+const PN_INOZEMNE = {
+  it:{naziv:'Italija',puna:80,pola:40}, si:{naziv:'Slovenija',puna:80,pola:40},
+  de:{naziv:'Njemačka',puna:90,pola:45}, at:{naziv:'Austrija',puna:90,pola:45},
+  ba:{naziv:'BiH',puna:50,pola:25}, rs:{naziv:'Srbija',puna:50,pola:25},
+  hu:{naziv:'Mađarska',puna:70,pola:35}, es:{naziv:'Španjolska',puna:70,pola:35},
+  fr:{naziv:'Francuska',puna:90,pola:40}, gb:{naziv:'UK',puna:80,pola:45},
+  nl:{naziv:'Nizozemska',puna:90,pola:40}, cz:{naziv:'Češka',puna:80,pola:35},
+  tr:{naziv:'Turska',puna:70,pola:30}, us:{naziv:'SAD',puna:100,pola:45},
+  me:{naziv:'Crna Gora',puna:50,pola:25}, ostalo:{naziv:'Ostalo',puna:50,pola:25}
+};
+
+function pnToggleZemlja() {
+  const vrsta = document.getElementById('pn-vrsta-put')?.value;
+  const gr = document.getElementById('pn-zemlja-group');
+  if (gr) gr.style.display = vrsta === 'inozemno' ? '' : 'none';
+}
+
 function pnCalc() {
   const pol = document.getElementById('pn-polazak').value;
   const pov = document.getElementById('pn-povratak').value;
-  let dnevnica = 0;
+  const vrsta = document.getElementById('pn-vrsta-put')?.value || 'tuzemno';
+  const zemlja = document.getElementById('pn-zemlja')?.value || 'de';
+  const infoEl = document.getElementById('pn-dnevnica-info');
+
+  let dnevnicaBruto = 0;
+  let dnevnicaOpis = '';
+
   if (pol && pov) {
-    const diff = (new Date(pov) - new Date(pol)) / 3600000;
-    if (diff >= 12) dnevnica = PN_DNEVNICA_CIJELA;
-    else if (diff >= 8) dnevnica = PN_DNEVNICA_POLA;
+    const polD = new Date(pol);
+    const povD = new Date(pov);
+    const ukupnoSati = (povD - polD) / 3600000;
+
+    if (ukupnoSati < 8) {
+      dnevnicaOpis = `⚠ ${ukupnoSati.toFixed(1)}h — manje od 8h, nema dnevnice`;
+    } else {
+      const punih24h = Math.floor(ukupnoSati / 24);
+      const ostatakSati = ukupnoSati % 24;
+      let punaDnevnica, polaDnevnica, naziv;
+      if (vrsta === 'inozemno') {
+        const d = PN_INOZEMNE[zemlja] || PN_INOZEMNE.ostalo;
+        punaDnevnica = d.puna; polaDnevnica = d.pola; naziv = d.naziv;
+      } else {
+        punaDnevnica = PN_DNEVNICA_CIJELA; polaDnevnica = PN_DNEVNICA_POLA; naziv = 'Hrvatska';
+      }
+      dnevnicaBruto = punih24h * punaDnevnica;
+      let ostatakOpis = '';
+      if (ostatakSati >= 12) { dnevnicaBruto += punaDnevnica; ostatakOpis = `+${ostatakSati.toFixed(0)}h=puna`; }
+      else if (ostatakSati >= 8) { dnevnicaBruto += polaDnevnica; ostatakOpis = `+${ostatakSati.toFixed(0)}h=pola`; }
+      else if (ostatakSati > 0) { ostatakOpis = `+${ostatakSati.toFixed(0)}h=nema`; }
+      dnevnicaOpis = `${ukupnoSati.toFixed(1)}h · ${punih24h}×24h(${punaDnevnica}€) ${ostatakOpis} · ${naziv} · bruto: ${dnevnicaBruto.toFixed(2)}€`;
+    }
+    if (infoEl) { infoEl.style.display = dnevnicaOpis ? '' : 'none'; infoEl.textContent = '📅 ' + dnevnicaOpis; }
   }
+
+  // Umanjenje za obroke — max 60% (doručak se NE uračunava)
+  const umanjenjePct = parseInt(document.getElementById('pn-obroci')?.value || 0);
+  const dnevnica = dnevnicaBruto * (1 - umanjenjePct / 100);
+
   const kmS = parseFloat(document.getElementById('pn-km-s').value) || 0;
   const kmE = parseFloat(document.getElementById('pn-km-e').value) || 0;
   const kmT = Math.max(0, kmE - kmS);
   const kmNak = kmT * PN_KM_CIJENA;
   const tro = parseFloat(document.getElementById('pn-troskovi').value) || 0;
+  const smjestaj = parseFloat(document.getElementById('pn-smjestaj')?.value || 0) || 0;
   const pred = parseFloat(document.getElementById('pn-predujam').value) || 0;
-  const ukupno = Math.max(0, kmNak + tro + dnevnica - pred);
+  const ukupno = Math.max(0, kmNak + tro + smjestaj + dnevnica - pred);
   document.getElementById('pn-ukupno-display').textContent = '€ ' + ukupno.toFixed(2);
-  document.getElementById('pn-breakdown').textContent = 
-    `km: €${kmNak.toFixed(2)} | dnevnica: €${dnevnica.toFixed(2)} | troškovi: €${tro.toFixed(2)}${pred > 0 ? ' | −predujam: €'+pred.toFixed(2) : ''}`;
+  let breakdown = `km: €${kmNak.toFixed(2)} (${kmT}km×€0,40)`;
+  if (dnevnica > 0) breakdown += ` | dnevnica: €${dnevnica.toFixed(2)}${umanjenjePct>0?' (−'+umanjenjePct+'%)':''}`;
+  if (smjestaj > 0) breakdown += ` | smještaj: €${smjestaj.toFixed(2)}`;
+  if (tro > 0) breakdown += ` | ostalo: €${tro.toFixed(2)}`;
+  if (pred > 0) breakdown += ` | −predujam: €${pred.toFixed(2)}`;
+  document.getElementById('pn-breakdown').textContent = breakdown;
 }
 
 function pnDodajRacun(input) {
@@ -6382,18 +6346,21 @@ function spremiPutniNalog() {
 
   const pol = document.getElementById('pn-polazak').value;
   const pov = document.getElementById('pn-povratak').value;
-  let dnevnica = 0;
+  let dnevnicaBruto = 0;
   if (pol && pov) {
     const diff = (new Date(pov) - new Date(pol)) / 3600000;
-    if (diff >= 12) dnevnica = PN_DNEVNICA_CIJELA;
-    else if (diff >= 8) dnevnica = PN_DNEVNICA_POLA;
+    if (diff >= 12) dnevnicaBruto = PN_DNEVNICA_CIJELA;
+    else if (diff >= 8) dnevnicaBruto = PN_DNEVNICA_POLA;
   }
+  const umanjenjePct = parseInt(document.getElementById('pn-obroci')?.value || 0);
+  const dnevnica = dnevnicaBruto * (1 - umanjenjePct / 100);
   const kmS = parseFloat(document.getElementById('pn-km-s').value) || 0;
   const kmE = parseFloat(document.getElementById('pn-km-e').value) || 0;
   const kmT = Math.max(0, kmE - kmS);
   const tro = parseFloat(document.getElementById('pn-troskovi').value) || 0;
+  const smjestaj = parseFloat(document.getElementById('pn-smjestaj')?.value || 0) || 0;
   const pred = parseFloat(document.getElementById('pn-predujam').value) || 0;
-  const ukupno = Math.max(0, kmT * PN_KM_CIJENA + tro + dnevnica - pred);
+  const ukupno = Math.max(0, kmT * PN_KM_CIJENA + tro + smjestaj + dnevnica - pred);
 
   const nalog = {
     id: Date.now().toString(),
@@ -6407,7 +6374,9 @@ function spremiPutniNalog() {
     reg: document.getElementById('pn-reg').value.toUpperCase(),
     polazak: pol, povratak: pov,
     kmS, kmE, kmT,
-    troskovi: tro, predujam: pred, dnevnica,
+    troskovi: tro, smjestaj, predujam: pred, dnevnica, umanjenjePct,
+    vrstaPutovanja: document.getElementById('pn-vrsta-put')?.value || 'tuzemno',
+    zemlja: document.getElementById('pn-zemlja')?.value || '',
     ukupno: ukupno.toFixed(2),
     napomena,
     racuni: [...pnRacuni],
@@ -6976,6 +6945,7 @@ initMobileNav();
 </script>
 
 <script>
+// ========== SUPABASE INTEGRACIJA ==========
 const SUPABASE_URL = 'https://hpdnevnfgrwrkqgoohcv.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_vj1fn6UISchRJHo6q_j1QA__2f07mkh';
 const KLUB_ID = '00000000-0000-0000-0000-000000000001';

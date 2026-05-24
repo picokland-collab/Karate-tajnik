@@ -6450,7 +6450,7 @@ function pnPrikaziDetalje(id) {
     ${row('Polazak', new Date(n.polazak).toLocaleString('hr-HR'))}
     ${row('Povratak', new Date(n.povratak).toLocaleString('hr-HR'))}
     ${row('Vozilo', n.vozilo + (n.marka ? ' · ' + n.marka : '') + (n.reg ? ' · ' + n.reg : ''))}
-    ${row('Prijeđeni km', n.kmT + ' km × €0,30')}
+    ${row('Prijeđeni km', n.kmT + ' km × €0,50')}
     ${row('Status', n.status === 'odobreno' ? '✅ Odobreno' : '⏳ Na čekanju')}
     <div style="margin-top:12px;padding:12px;background:#242424;border-radius:8px;font-size:13px;color:#ccc;line-height:1.6">${n.napomena}</div>
     ${n.racuni && n.racuni.length > 0 ? `<div style="margin-top:12px"><div style="font-size:11px;color:#aaa;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px">Računi</div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">${n.racuni.map(src => `<div style="aspect-ratio:1;border-radius:8px;overflow:hidden"><img src="${src}" style="width:100%;height:100%;object-fit:cover"></div>`).join('')}</div></div>` : ''}

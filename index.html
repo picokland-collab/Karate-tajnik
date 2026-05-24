@@ -6471,7 +6471,9 @@ function obrisiPutniNalog() {
   if (!confirm('Obrisati putni nalog?')) return;
   pnNalozi = pnNalozi.filter(x => x.id !== pnCurrentId);
   pnSave();
-  zatvoriPutniDetalje();
+  document.getElementById('putniDetalji').style.display = 'none';
+  document.getElementById('putniLista').style.display = 'block';
+  pnRenderLista();
   toast('Putni nalog obrisan.');
 }
 

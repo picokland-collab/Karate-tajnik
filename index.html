@@ -603,6 +603,15 @@
   .trener-card .tc-status { font-size: 18px; }
 
   /* OIB PROTECTION */
+  input[type="time"] {
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  /* Force 24h display */
+  input[type="time"]::-webkit-datetime-edit-ampm-field {
+    display: none;
+  }
+
   .oib-protected { filter: blur(4px); user-select: none; cursor: pointer; transition: filter 0.2s; }
   .oib-protected:hover { filter: blur(0); }
 
@@ -1347,11 +1356,11 @@
               </div>
               <div class="form-group">
                 <label>Početak</label>
-                <input type="time" id="kal-pocetak" value="18:00">
+                <input type="time" id="kal-pocetak" value="18:00" lang="hr" style="font-variant-numeric:tabular-nums">
               </div>
               <div class="form-group">
                 <label>Kraj</label>
-                <input type="time" id="kal-kraj" value="19:30">
+                <input type="time" id="kal-kraj" value="19:30" lang="hr" style="font-variant-numeric:tabular-nums">
               </div>
               <div class="form-group full">
                 <label>Lokacija</label>

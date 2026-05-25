@@ -4801,6 +4801,7 @@ Možeš pomoći s:
 Uvijek si profesionalan, koncizan i koristan. Kada pišeš formalne dokumente, koristii standardni format s datumom, brojem, pravnom osnovom i potpisima.`;
 
 let chatHistory = [];
+let _msgId = 0;
 // Legacy alias — some paths may still reference it
 const SYSTEM_PROMPT = SYSTEM_PROMPT_KKD;
 
@@ -4851,7 +4852,7 @@ async function sendAI() {
 }
 
 function appendMsg(role, content) {
-  const id = 'msg_' + Date.now();
+  const id = 'msg_' + (++_msgId);
   const msgs = document.getElementById('aiMessages');
   if (role === 'user') {
     msgs.insertAdjacentHTML('beforeend', `

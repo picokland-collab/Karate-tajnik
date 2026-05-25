@@ -1210,6 +1210,14 @@
           <div class="stat-card"><div class="val" id="pn-st-cekanje" style="font-size:28px;color:var(--warn)">0</div><div class="lbl">Na čekanju</div></div>
           <div class="stat-card"><div class="val" id="pn-st-odobreno" style="font-size:28px;color:var(--success)">0</div><div class="lbl">Odobreno</div></div>
         </div>
+        <div class="search-bar" style="margin-bottom:12px">
+          <input type="text" id="pn-search" placeholder="Pretraži po imenu ili odredištu..." oninput="pnRenderLista()">
+          <select id="pn-filter-status" onchange="pnRenderLista()" style="background:#1C1C1C;border:1px solid #333;color:#EDEDED;padding:8px 12px;border-radius:8px;font-size:13px">
+            <option value="">Svi statusi</option>
+            <option value="cekanje">⏳ Na čekanju</option>
+            <option value="odobreno">✓ Odobreno</option>
+          </select>
+        </div>
         <div id="pn-lista-html">
           <div class="empty-state"><div class="icon">🚗</div><p>Nema putnih naloga. Dodajte prvi!</p></div>
         </div>
@@ -1430,6 +1438,17 @@
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px">
           <div class="stat-card"><div class="val" id="ob2-st-ukupno" style="font-size:28px">0</div><div class="lbl">Ukupno</div></div>
           <div class="stat-card"><div class="val" id="ob2-st-hitno" style="font-size:28px;color:var(--red)">0</div><div class="lbl">Hitne</div></div>
+        </div>
+        <div class="search-bar" style="margin-bottom:12px">
+          <input type="text" id="ob2-search" placeholder="Pretraži obavijesti..." oninput="ob2RenderLista()">
+          <select id="ob2-filter-vrsta" onchange="ob2RenderLista()" style="background:#1C1C1C;border:1px solid #333;color:#EDEDED;padding:8px 12px;border-radius:8px;font-size:13px">
+            <option value="">Sve vrste</option>
+            <option value="hitno">🔴 Hitno</option>
+            <option value="trening">🥋 Trening</option>
+            <option value="natjecanje">🏆 Natjecanje</option>
+            <option value="placanje">💶 Plaćanje</option>
+            <option value="info">ℹ️ Info</option>
+          </select>
         </div>
         <div id="ob2-lista-html">
           <div class="empty-state"><div class="icon">📢</div><p>Nema obavijesti.</p></div>
@@ -5455,10 +5474,10 @@ function trRenderLista() {
         </div>
         <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
           <span class="badge ${t.status === 'aktivan' ? 'badge-green' : 'badge-red'}">${t.status}</span>
-          <div style="display:flex;gap:6px">
+          ${trenutniKorisnik?.admin ? `<div style="display:flex;gap:6px">
             <button class="btn btn-secondary btn-sm" onclick="urediTrenera('${t.id}')">✏️</button>
             <button class="btn btn-sm" style="background:rgba(200,16,46,0.15);color:#ff5a70;border:1px solid rgba(200,16,46,0.2)" onclick="obrisiTrenera('${t.id}')">✕</button>
-          </div>
+          </div>` : ''}
         </div>
       </div>
     </div>`;
@@ -6474,7 +6493,18 @@ function ob2RenderLista() {
     el.innerHTML = '<div class="empty-state"><div class="icon">📢</div><p>Nema obavijesti.</p></div>';
     return;
   }
-  el.innerHTML = [...ob2Lista].reverse().map(o => `
+  const q = (document.getElementById('ob2-search')?.value || '').toLowerCase();
+  const fv = document.getElementById('ob2-filter-vrsta')?.value || '';
+  const filtrirane = ob2Lista.filter(o => {
+    const matchQ = !q || (o.naslov||'').toLowerCase().includes(q) || (o.tekst||'').toLowerCase().includes(q);
+    const matchV = !fv || o.vrsta === fv;
+    return matchQ && matchV;
+  });
+  if (filtrirane.length === 0) {
+    el.innerHTML = '<div class="empty-state"><div class="icon">📢</div><p>Nema rezultata.</p></div>';
+    return;
+  }
+  el.innerHTML = [...filtrirane].reverse().map(o => `
     <div class="card" style="margin-bottom:10px;${o.vrsta==='hitno' ? 'border-left:4px solid var(--red)' : ''}">
       <div style="display:flex;align-items:flex-start;gap:10px">
         <span style="font-size:20px;flex-shrink:0">${OB2_EMOJI[o.vrsta]||'ℹ️'}</span>
@@ -6756,7 +6786,18 @@ function pnRenderLista() {
     el.innerHTML = '<div class="empty-state"><div class="icon">🚗</div><p>Nema putnih naloga. Dodajte prvi!</p></div>';
     return;
   }
-  el.innerHTML = [...pnNalozi].reverse().map(n => `
+  const q = (document.getElementById('pn-search')?.value || '').toLowerCase();
+  const fs = document.getElementById('pn-filter-status')?.value || '';
+  const filtrirani = pnNalozi.filter(n => {
+    const matchQ = !q || (n.ime||'').toLowerCase().includes(q) || (n.odrediste||'').toLowerCase().includes(q) || (n.svrha||'').toLowerCase().includes(q);
+    const matchS = !fs || n.status === fs;
+    return matchQ && matchS;
+  });
+  if (filtrirani.length === 0) {
+    el.innerHTML = '<div class="empty-state"><div class="icon">🚗</div><p>Nema rezultata za odabrane filtere.</p></div>';
+    return;
+  }
+  el.innerHTML = [...filtrirani].reverse().map(n => `
     <div class="card" style="cursor:pointer;margin-bottom:10px" onclick="pnPrikaziDetalje('${n.id}')">
       <div class="card-row">
         <div>

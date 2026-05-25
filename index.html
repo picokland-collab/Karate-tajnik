@@ -713,26 +713,26 @@
     <div class="section-label">Upravljanje</div>
     <button class="active" onclick="showSection('dashboard')"><span class="icon">📊</span><span>Pregled</span></button>
     <button onclick="showSection('clanovi')"><span class="icon">👥</span><span>Članovi</span></button>
-    <button onclick="showSection('emailovi')"><span class="icon">📧</span><span>Email adrese</span></button>
+    <button id="navEmailovi" onclick="showSection('emailovi')"><span class="icon">📧</span><span>Email adrese</span></button>
     <button onclick="showSection('korisnici')" id="navKorisnici" style="display:none"><span class="icon">👥</span><span>Korisnici</span></button>
     <button onclick="showSection('treneri')"><span class="icon">🥋</span><span>Treneri</span></button>
-    <button onclick="showSection('gdpr')"><span class="icon">🔒</span><span>GDPR Privole</span></button>
+    <button id="navGdpr" onclick="showSection('gdpr')"><span class="icon">🔒</span><span>GDPR Privole</span></button>
     <button onclick="showSection('rezultati')"><span class="icon">🏅</span><span>Natjecanja</span></button>
-    <button onclick="showSection('financije')"><span class="icon">📊</span><span>Financije</span></button>
-    <div class="section-label">Dokumenti</div>
-    <button onclick="showSection('odluke')"><span class="icon">📜</span><span>Odluke</span></button>
-    <button onclick="showSection('godisnjiplan')"><span class="icon">📋</span><span>Godišnji plan</span></button>
-    <div class="section-label">Financije</div>
-    <button onclick="showSection('uplatnice')"><span class="icon">💳</span><span>Uplatnice</span></button>
-    <div class="section-label">Putovanja</div>
-    <button onclick="showSection('putni')"><span class="icon">🚗</span><span>Putni nalozi</span></button>
+    <button id="navFinancije" onclick="showSection('financije')"><span class="icon">📊</span><span>Financije</span></button>
+    <div class="section-label" id="navLabelDokumenti">Dokumenti</div>
+    <button id="navOdluke" onclick="showSection('odluke')"><span class="icon">📜</span><span>Odluke</span></button>
+    <button id="navGodisnjiPlan" onclick="showSection('godisnjiplan')"><span class="icon">📋</span><span>Godišnji plan</span></button>
+    <div class="section-label" id="navLabelFinancije">Financije</div>
+    <button id="navUplatnice" onclick="showSection('uplatnice')"><span class="icon">💳</span><span>Uplatnice</span></button>
+    <div class="section-label" id="navLabelPutovanja">Putovanja</div>
+    <button id="navPutni" onclick="showSection('putni')"><span class="icon">🚗</span><span>Putni nalozi</span></button>
     <div class="section-label">Trener</div>
-    <button onclick="showSection('dnevnik')"><span class="icon">📋</span><span>Dnevnik rada</span></button>
+    <button id="navDnevnik" onclick="showSection('dnevnik')"><span class="icon">📋</span><span>Dnevnik rada</span></button>
     <button onclick="showSection('kalendar')"><span class="icon">📅</span><span>Kalendar</span></button>
     <div class="section-label">Zdravlje</div>
     <button onclick="showSection('lijecnicki')"><span class="icon">🏥</span><span>Liječnički</span></button>
-    <div class="section-label">Komunikacija</div>
-    <button onclick="showSection('obavijesti2')"><span class="icon">📢</span><span>Obavijesti</span></button>
+    <div class="section-label" id="navLabelKomunikacija">Komunikacija</div>
+    <button id="navObavijesti" onclick="showSection('obavijesti2')"><span class="icon">📢</span><span>Obavijesti</span></button>
     <div class="section-label">AI Asistent</div>
     <button onclick="showSection('ai')"><span class="icon">🤖</span><span>Tajnik AI</span></button>
     <div class="section-label" id="navSuperAdminLabel" style="display:none">Super Admin</div>
@@ -797,9 +797,9 @@
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn btn-secondary" onclick="importHksClanovi()" title="Uvezi iz HKS popisa">📥 Uvezi HKS</button>
-          <button class="btn btn-secondary" onclick="exportClanCSV()">📊 Export CSV</button>
-          <button class="btn btn-secondary" onclick="openModal('modalBulkAzuriranje')">📷 Ažuriraj skenom</button>
-          <button class="btn btn-primary" onclick="otvoriModalDodajClana()">+ Dodaj člana</button>
+          <button class="btn btn-secondary admin-only" onclick="exportClanCSV()">📊 Export CSV</button>
+          <button class="btn btn-secondary admin-only" onclick="openModal('modalBulkAzuriranje')">📷 Ažuriraj skenom</button>
+          <button class="btn btn-primary admin-only" onclick="otvoriModalDodajClana()">+ Dodaj člana</button>
         </div>
       </div>
       <div class="content">
@@ -2948,7 +2948,7 @@ async function loginSubmit() {
           username: user,
           ime: kData.ime,
           uloga: kData.uloga,
-          admin: kData.uloga === 'admin',
+          admin: kData.uloga === 'admin' || kData.uloga === 'tajnik',
           klub_id: kData.klub_id,
           klub_naziv: kData.klubovi?.naziv || '',
           klub_logo: kData.klubovi?.logo_url || null,
@@ -2961,6 +2961,7 @@ async function loginSubmit() {
         localStorage.setItem('kk_session', JSON.stringify({
           username: user,
           vrijeme: Date.now(),
+          uloga: kData.uloga,
           klub_id: kData.klub_id,
           klub_logo: kData.klubovi?.logo_url || null,
           klub_naziv: kData.klubovi?.naziv || ''
@@ -2977,9 +2978,9 @@ async function loginSubmit() {
     const allK = getKorisnici();
     const k = allK[user];
     if (k && k.lozinka === pass) {
-      trenutniKorisnik = { ...k, username: user, klub_id: (window.AKTIVAN_KLUB_ID || '00000000-0000-0000-0000-000000000001') };
+      trenutniKorisnik = { ...k, username: user, admin: ['admin','tajnik'].includes(k.uloga), klub_id: (window.AKTIVAN_KLUB_ID || '00000000-0000-0000-0000-000000000001') };
       window.AKTIVAN_KLUB_ID = '00000000-0000-0000-0000-000000000001';
-      localStorage.setItem('kk_session', JSON.stringify({ username: user, vrijeme: Date.now(), klub_id: (window.AKTIVAN_KLUB_ID || '00000000-0000-0000-0000-000000000001') }));
+      localStorage.setItem('kk_session', JSON.stringify({ username: user, vrijeme: Date.now(), uloga: k.uloga, klub_id: window.AKTIVAN_KLUB_ID }));
       document.getElementById('loginScreen').style.display = 'none';
       prijaviKorisnika();
       if (btn) { btn.disabled = false; btn.textContent = 'Prijava'; }
@@ -2998,9 +2999,9 @@ async function loginSubmit() {
     const allK = getKorisnici();
     const k = allK[user];
     if (k && k.lozinka === pass) {
-      trenutniKorisnik = { ...k, username: user, klub_id: (window.AKTIVAN_KLUB_ID || '00000000-0000-0000-0000-000000000001') };
+      trenutniKorisnik = { ...k, username: user, admin: ['admin','tajnik'].includes(k.uloga), klub_id: (window.AKTIVAN_KLUB_ID || '00000000-0000-0000-0000-000000000001') };
       window.AKTIVAN_KLUB_ID = '00000000-0000-0000-0000-000000000001';
-      localStorage.setItem('kk_session', JSON.stringify({ username: user, vrijeme: Date.now(), klub_id: (window.AKTIVAN_KLUB_ID || '00000000-0000-0000-0000-000000000001') }));
+      localStorage.setItem('kk_session', JSON.stringify({ username: user, vrijeme: Date.now(), uloga: k.uloga, klub_id: window.AKTIVAN_KLUB_ID }));
       document.getElementById('loginScreen').style.display = 'none';
       prijaviKorisnika();
     } else {
@@ -3040,8 +3041,14 @@ function prijaviKorisnika() {
   }
   // Hide admin features for non-admins
   if (!trenutniKorisnik.admin) {
-    // Treneri ne mogu brisati odluke, članove itd.
     document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+  }
+  // Trener: sakriti nedostupne nav stavke i labelove
+  if (trenutniKorisnik.uloga === 'trener') {
+    ['navEmailovi','navGdpr','navFinancije','navOdluke','navGodisnjiPlan',
+     'navUplatnice','navPutni','navDnevnik','navObavijesti',
+     'navLabelDokumenti','navLabelFinancije','navLabelPutovanja','navLabelKomunikacija'
+    ].forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; });
   }
   updateHeaderKlub();
   toast('Dobrodošli, ' + trenutniKorisnik.ime + '! 🥋');
@@ -3096,10 +3103,11 @@ function provjeriSesiju() {
         } else {
           const lokalni = getKorisnici()[sess.username];
           if (lokalni) {
-            trenutniKorisnik = { ...lokalni, username: sess.username, klub_id: sess.klub_id || '00000000-0000-0000-0000-000000000001', klub_logo: sess.klub_logo || null, klub_naziv: sess.klub_naziv || '' };
+            trenutniKorisnik = { ...lokalni, username: sess.username, admin: ['admin','tajnik'].includes(lokalni.uloga), klub_id: sess.klub_id || '00000000-0000-0000-0000-000000000001', klub_logo: sess.klub_logo || null, klub_naziv: sess.klub_naziv || '' };
           } else {
-            // Korisnik iz Supabase - osnovna rekonstrukcija
-            trenutniKorisnik = { username: sess.username, ime: sess.username, uloga: 'tajnik', admin: false, klub_id: sess.klub_id || '00000000-0000-0000-0000-000000000001', klub_logo: sess.klub_logo || null, klub_naziv: sess.klub_naziv || '' };
+            // Korisnik iz Supabase - rekonstrukcija iz sessije
+            const uloga = sess.uloga || 'tajnik';
+            trenutniKorisnik = { username: sess.username, ime: sess.username, uloga, admin: ['admin','tajnik'].includes(uloga), klub_id: sess.klub_id || '00000000-0000-0000-0000-000000000001', klub_logo: sess.klub_logo || null, klub_naziv: sess.klub_naziv || '' };
           }
         }
         document.getElementById('loginScreen').style.display = 'none';
@@ -3377,6 +3385,12 @@ function toast(msg, type='success') {
 
 // ========== NAVIGATION ==========
 function showSection(id) {
+  // Zaštita: trener ne može pristupiti zabranjenim sekcijama
+  const TRENER_ZABRANJENE = ['financije','uplatnice','odluke','godisnjiplan','putni','dnevnik','gdpr','emailovi','obavijesti2','korisnici'];
+  if (trenutniKorisnik?.uloga === 'trener' && TRENER_ZABRANJENE.includes(id)) {
+    toast('Nemate ovlasti za ovu sekciju.', 'err');
+    id = 'dashboard';
+  }
   // Close mobile nav when item selected
   if (window.innerWidth <= 768) closeMobileNav();
   // Hide/show floating AI button and scroll-to-top on AI page
@@ -3599,18 +3613,19 @@ function renderClanovi() {
       : `Ukupno: ${ukupno} ${ukupno === 1 ? 'član' : ukupno < 5 ? 'člana' : 'članova'}`;
   }
   
+  const jeTrener = trenutniKorisnik?.uloga === 'trener';
   el.innerHTML = `<table>
     <thead><tr>
       <th>Ime i prezime</th><th>Kategorija</th><th>Pojas</th>
-      <th>Status</th><th>Članarina</th><th>Učlanjen</th><th></th>
+      <th>Status</th>${!jeTrener ? '<th>Članarina</th>' : ''}<th>Učlanjen</th><th></th>
     </tr></thead>
     <tbody>
     ${lista.map(c => `
       <tr>
         <td>
           <div style="display:flex;align-items:center;gap:10px">
-            ${c.foto 
-              ? `<img src="${c.foto}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid #C8102E;flex-shrink:0">` 
+            ${c.foto
+              ? `<img src="${c.foto}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid #C8102E;flex-shrink:0">`
               : `<div style="width:36px;height:36px;border-radius:50%;background:#2E2E2E;display:flex;align-items:center;justify-content:center;font-size:14px;color:#888;flex-shrink:0;border:2px solid #2E2E2E">${c.ime.charAt(0)}${c.prezime.charAt(0)}</div>`
             }
             <div>
@@ -3622,12 +3637,12 @@ function renderClanovi() {
         <td><span class="badge badge-gray" style="color:var(--text)">${c.kategorija}</span></td>
         <td style="font-size:13px;color:var(--text)">${c.pojas}</td>
         <td><span class="badge ${c.status === 'aktivan' ? 'badge-green' : 'badge-red'}">${c.status}</span></td>
-        <td><span class="badge ${c.clanarina === 'da' ? 'badge-green' : 'badge-red'}" style="cursor:pointer" onclick="toggleClanarina(${c.id})">${c.clanarina === 'da' ? '✓ Plaćeno' : '✗ Nije plaćeno'}</span></td>
+        ${!jeTrener ? `<td><span class="badge ${c.clanarina === 'da' ? 'badge-green' : 'badge-red'}" style="cursor:pointer" onclick="toggleClanarina(${c.id})">${c.clanarina === 'da' ? '✓ Plaćeno' : '✗ Nije plaćeno'}</span></td>` : ''}
         <td style="font-size:12px;color:var(--muted)">${c.datUclan || '—'}</td>
         <td>
           <div style="display:flex;gap:6px">
             <button class="btn btn-secondary btn-sm" onclick="prikaziClana(${c.id})">Detalji</button>
-            <button class="btn btn-sm" style="background:rgba(200,16,46,0.15);color:#ff5a70;border:1px solid rgba(200,16,46,0.2)" onclick="obrisiClana(${c.id})">✕</button>
+            ${!jeTrener ? `<button class="btn btn-sm" style="background:rgba(200,16,46,0.15);color:#ff5a70;border:1px solid rgba(200,16,46,0.2)" onclick="obrisiClana(${c.id})">✕</button>` : ''}
           </div>
         </td>
       </tr>`).join('')}

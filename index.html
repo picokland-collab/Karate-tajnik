@@ -3608,7 +3608,7 @@ function prijaviKorisnika() {
   // Trener: sakriti nedostupne nav stavke i labelove
   if (trenutniKorisnik.uloga === 'trener') {
     ['navEmailovi','navGdpr','navFinancije','navOdluke','navGodisnjiPlan',
-     'navUplatnice','navPutni','navObavijesti',
+     'navUplatnice','navPutni','navDnevnik','navObavijesti',
      'navLabelDokumenti','navLabelFinancije','navLabelPutovanja','navLabelKomunikacija'
     ].forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; });
   }
@@ -3968,7 +3968,7 @@ const NAV_TILES = [
   { id: 'odluke',       icon: '📜', label: 'Odluke',         role: 'admin' },
   { id: 'godisnjiplan', icon: '📋', label: 'Godišnji plan',  role: 'admin' },
   { id: 'putni',        icon: '🚗', label: 'Putni nalozi',   role: 'admin' },
-  { id: 'dnevnik',      icon: '📋', label: 'Dnevnik rada',   role: 'all' },
+  { id: 'dnevnik',      icon: '📋', label: 'Dnevnik rada',   role: 'admin' },
   { id: 'gdpr',         icon: '🔒', label: 'GDPR',           role: 'admin' },
   { id: 'korisnici',    icon: '⚙️',  label: 'Korisnici',      role: 'predsjednik' },
   { id: 'superadmin',   icon: '🔑', label: 'Super Admin',    role: 'superadmin' },
@@ -4083,7 +4083,7 @@ function toast(msg, type='success') {
 // ========== NAVIGATION ==========
 function showSection(id) {
   // Zaštita: trener ne može pristupiti zabranjenim sekcijama
-  const TRENER_ZABRANJENE = ['financije','uplatnice','odluke','godisnjiplan','putni','gdpr','emailovi','obavijesti2','korisnici'];
+  const TRENER_ZABRANJENE = ['financije','uplatnice','odluke','godisnjiplan','putni','dnevnik','gdpr','emailovi','obavijesti2','korisnici'];
   if (trenutniKorisnik?.uloga === 'trener' && TRENER_ZABRANJENE.includes(id)) {
     toast('Nemate ovlasti za ovu sekciju.', 'err');
     id = 'dashboard';

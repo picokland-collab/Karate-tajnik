@@ -4458,7 +4458,7 @@ function genHUB3QR(canvasId, iznos, primatelj, iban, opis, napomena) {
     grad,
     (iban || '').replace(/\s/g, ''),
     'HR99',
-    opisPlacanja, // poziv na broj (polje 12 — neke banke čitaju ovo)
+    '',           // poziv na broj (prazan za HR99 — inače banka izvlači samo brojeve)
     opisPlacanja  // opis plaćanja (polje 13)
   ].join('\n');
 
@@ -4688,7 +4688,7 @@ PODACI O KLUBU:
 - Naziv: Karate klub "Đurđevac" / KK Đurđevac
 - Adresa: Ulica Andrije Hebranga 12, 48350 Đurđevac
 - OIB: 98308789784 | MB: 01076485
-- IBAN: HR88236000011055899908 (Zagrebačka banka)
+- IBAN: HR8823600001102289908 (Zagrebačka banka)
 - Predsjednik: Ivan Juričić (mandat: 30.03.2025–30.03.2029)
 - Tajnica: Jasminka Sinjeri Prevedan (mandat: 30.03.2025–30.03.2029)
 - Likvidator: Slavko Aušperger
@@ -4765,7 +4765,7 @@ PODACI O KLUBU:
 - Naziv: Karate klub Đurđevac (KK Đurđevac)
 - Adresa: Ulica Andrije Hebranga 12, 48350 Đurđevac
 - OIB: 98308789784 | MB: 01076485
-- IBAN: HR88236000011055899908
+- IBAN: HR8823600001102289908
 - Predsjednik: Ivan Juričić (mandat: 30.03.2025–30.03.2029)
 - Tajnica: Jasminka Sinjeri Prevedan (mandat: 30.03.2025–30.03.2029)
 - Tel: 098/805-555, 098/9078-738
@@ -7375,7 +7375,7 @@ function getUpPodaci() {
   const jeKKD = klub === 'KK Đurđevac';
   return {
     primatelj: cfg.primatelj || klub,
-    iban:      cfg.iban      || (jeKKD ? 'HR88236000011055899908' : ''),
+    iban:      cfg.iban      || (jeKKD ? 'HR8823600001102289908' : ''),
     adresa:    cfg.adresa    || (jeKKD ? 'Ulica Andrije Hebranga 12, 48350 Đurđevac' : ''),
     oib:       cfg.oib       || (jeKKD ? '98308789784' : ''),
     tel:       cfg.tel       || (jeKKD ? '098/805-555' : ''),

@@ -3039,10 +3039,16 @@ function prijaviKorisnika() {
   if (headerAI) {
     headerAI.innerHTML = `<span style="margin-right:6px">👤 ${trenutniKorisnik.ime}</span> <button onclick="odjava()" style="background:rgba(255,90,112,0.2);border:1px solid rgba(255,90,112,0.3);color:#ff5a70;border-radius:12px;padding:3px 10px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif">Odjava</button>`;
   }
-  // Hide admin features for non-admins
+  // Reset admin-only elementi, onda sakrij za non-admin
+  document.querySelectorAll('.admin-only').forEach(el => el.style.display = '');
   if (!trenutniKorisnik.admin) {
     document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
   }
+  // Uvijek prvo prikaži sve nav stavke (reset)
+  ['navEmailovi','navGdpr','navFinancije','navOdluke','navGodisnjiPlan',
+   'navUplatnice','navPutni','navDnevnik','navObavijesti',
+   'navLabelDokumenti','navLabelFinancije','navLabelPutovanja','navLabelKomunikacija'
+  ].forEach(id => { const el = document.getElementById(id); if (el) el.style.display = ''; });
   // Trener: sakriti nedostupne nav stavke i labelove
   if (trenutniKorisnik.uloga === 'trener') {
     ['navEmailovi','navGdpr','navFinancije','navOdluke','navGodisnjiPlan',

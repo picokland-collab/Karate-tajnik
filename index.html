@@ -850,6 +850,10 @@
         <button class="btn btn-primary" onclick="novaOdluka()">+ Nova odluka</button>
       </div>
       <div class="content">
+        <div class="search-bar" style="margin-bottom:14px">
+          <input type="text" id="odluke-search" placeholder="Pretraži odluke..." oninput="renderOdluke()">
+        </div>
+        <div id="odluke-count" style="font-size:12px;color:#888;margin-bottom:8px"></div>
         <div id="listaOdluka">
           <div class="empty-state"><div class="icon">📜</div><p>Nema zapisanih odluka.</p></div>
         </div>
@@ -1233,7 +1237,7 @@
         <div><h2>Dnevnik rada</h2><p>Prozivka i plan treninga</p></div>
         <div style="display:flex;gap:8px">
           <button class="btn btn-secondary btn-sm" onclick="dnShowStats()">📊 Statistika</button>
-          <button class="btn btn-secondary btn-sm" onclick="dnOcistiSve()" title="Obriši sve treninge">🗑</button>
+          <button class="btn btn-secondary btn-sm admin-only" onclick="dnOcistiSve()" title="Obriši sve treninge">🗑</button>
           <button class="btn btn-primary" onclick="noviTrening()">+ Novi trening</button>
         </div>
       </div>
@@ -1544,6 +1548,7 @@
           </select>
         </div>
 
+        <div id="rez-count" style="font-size:12px;color:#888;margin-bottom:8px"></div>
         <div id="rez-lista-html">
           <div class="empty-state"><div class="icon">🏅</div><p>Nema unesenih rezultata.</p></div>
         </div>
@@ -1558,12 +1563,14 @@
       </div>
       <div class="content">
 
-        <!-- Godina filter -->
-        <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap">
+        <!-- Godina filter + pretraga -->
+        <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
           <select id="fin-god" onchange="finRenderLista()" style="flex:1;max-width:150px">
           </select>
-          <button class="btn btn-secondary btn-sm" onclick="finGenerirajIzvjesce()">📄 Generiraj izvješće za Skupštinu</button>
-          <button class="btn btn-secondary btn-sm" onclick="printFinancije()">🖨️ Ispis izvješća</button>
+          <input type="text" id="fin-search" placeholder="Pretraži stavke..." oninput="finRenderLista()" style="flex:2;min-width:140px;background:#1C1C1C;border:1px solid #333;color:#EDEDED;padding:8px 12px;border-radius:8px;font-size:13px">
+          <button class="btn btn-secondary btn-sm" onclick="finExportCSV()">📥 Izvoz CSV</button>
+          <button class="btn btn-secondary btn-sm" onclick="finGenerirajIzvjesce()">📄 Skupštinsko izvješće</button>
+          <button class="btn btn-secondary btn-sm" onclick="printFinancije()">🖨️ Ispis</button>
         </div>
 
         <!-- Summary kartice -->
@@ -3254,7 +3261,7 @@ function renderAlerts() {
   const panel = document.getElementById('alertPanel');
   if (!panel) return;
   const danas = new Date();
-  const za15 = new Date(); za15.setDate(za15.getDate() + 7);
+  const za15 = new Date(); za15.setDate(za15.getDate() + 30);
   const alerts = [];
 
   // Istekli liječnički pregledi
@@ -3920,11 +3927,24 @@ function mdStrip(text) {
 
 function renderOdluke() {
   const el = document.getElementById("listaOdluka");
+  const q = (document.getElementById('odluke-search')?.value || '').toLowerCase();
+  const countEl = document.getElementById('odluke-count');
   if (state.odluke.length === 0) {
+    if (countEl) countEl.textContent = '';
     el.innerHTML = '<div class="empty-state"><div class="icon">📜</div><p>Nema zapisanih odluka.</p></div>';
     return;
   }
-  el.innerHTML = state.odluke.slice().reverse().map(o => {
+  const filtrirane = q ? state.odluke.filter(o =>
+    (o.predmet||'').toLowerCase().includes(q) ||
+    (o.vrsta||'').toLowerCase().includes(q) ||
+    (o.sadrzaj||'').toLowerCase().includes(q)
+  ) : state.odluke;
+  if (countEl) countEl.textContent = filtrirane.length + ' od ' + state.odluke.length + ' odluka';
+  if (filtrirane.length === 0) {
+    el.innerHTML = '<div class="empty-state"><div class="icon">📜</div><p>Nema rezultata za "' + q + '"</p></div>';
+    return;
+  }
+  el.innerHTML = filtrirane.slice().reverse().map(o => {
     const preview = o.sadrzaj ? mdStrip(o.sadrzaj).substring(0, 150) + (o.sadrzaj.length > 150 ? '…' : '') : '';
     return `
     <div class="card">
@@ -4281,7 +4301,7 @@ function updateAlerts() {
 
   const alerts = [];
   const danas = new Date();
-  const za15 = new Date(); za15.setDate(za15.getDate() + 7);
+  const za15 = new Date(); za15.setDate(za15.getDate() + 30);
 
   // Neplaćena članarina
   const neplaceni = state.clanovi.filter(c => c.status === 'aktivan' && c.clanarina === 'ne');
@@ -5128,6 +5148,7 @@ function finInitGodine() {
 function finRenderLista() {
   finInitGodine();
   const god = document.getElementById('fin-god')?.value || new Date().getFullYear().toString();
+  const q = (document.getElementById('fin-search')?.value || '').toLowerCase();
   const stavke = finStavke.filter(s => (s.datum||'').startsWith(god));
 
   const prihodi = stavke.filter(s => s.vrsta === 'prihod').reduce((sum, s) => sum + parseFloat(s.iznos||0), 0);
@@ -5161,9 +5182,10 @@ function finRenderLista() {
 
   // Lista
   const el = document.getElementById('fin-lista-html');
-  const sortirane = [...stavke].sort((a,b) => (b.datum||'').localeCompare(a.datum||''));
+  const filtrirane = stavke.filter(s => !q || (s.opis||'').toLowerCase().includes(q) || (s.napomena||'').toLowerCase().includes(q) || (FIN_KAT_LABELS[s.kategorija]||s.kategorija||'').toLowerCase().includes(q));
+  const sortirane = [...filtrirane].sort((a,b) => (b.datum||'').localeCompare(a.datum||''));
   if (sortirane.length === 0) {
-    el.innerHTML = '<div class="empty-state"><div class="icon">📊</div><p>Nema financijskih stavki za ' + god + '. godinu.</p></div>';
+    el.innerHTML = '<div class="empty-state"><div class="icon">📊</div><p>' + (q ? 'Nema rezultata za "' + q + '"' : 'Nema financijskih stavki za ' + god + '. godinu.') + '</p></div>';
     return;
   }
 
@@ -5211,6 +5233,28 @@ function obrisiTransakciju(id) {
   sbObrisi('financije', id);
   finStavke = finStavke.filter(s => s.id !== id);
   finSave(); finRenderLista();
+}
+
+function finExportCSV() {
+  const god = document.getElementById('fin-god')?.value || new Date().getFullYear().toString();
+  const stavke = finStavke.filter(s => (s.datum||'').startsWith(god)).sort((a,b) => (a.datum||'').localeCompare(b.datum||''));
+  if (!stavke.length) { toast('Nema stavki za izvoz.', 'err'); return; }
+  const bom = '﻿';
+  const zaglavlje = ['Datum','Vrsta','Kategorija','Opis','Iznos (€)','Napomena'];
+  const redovi = stavke.map(s => [
+    s.datum || '',
+    s.vrsta === 'prihod' ? 'Prihod' : 'Rashod',
+    FIN_KAT_LABELS[s.kategorija] || s.kategorija || '',
+    '"' + (s.opis||'').replace(/"/g,'""') + '"',
+    (s.vrsta==='prihod'?'+':'-') + parseFloat(s.iznos||0).toFixed(2),
+    '"' + (s.napomena||'').replace(/"/g,'""') + '"'
+  ].join(';'));
+  const csv = bom + zaglavlje.join(';') + '\n' + redovi.join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+  a.download = 'financije_' + god + '.csv';
+  a.click();
+  toast('CSV izvezen!');
 }
 
 function finVrstaChange() {
@@ -5299,6 +5343,8 @@ function rezRenderLista() {
   }).sort((a,b) => (b.datum||'').localeCompare(a.datum||''));
 
   const el = document.getElementById('rez-lista-html');
+  const countEl = document.getElementById('rez-count');
+  if (countEl) countEl.textContent = lista.length > 0 ? lista.length + ' rezultata' : '';
   if (lista.length === 0) {
     el.innerHTML = '<div class="empty-state"><div class="icon">🏅</div><p>Nema rezultata za odabrane filtere.</p></div>';
     return;
@@ -5844,6 +5890,7 @@ function dnRenderLista() {
 
 function dnObrisi(id) {
   if (!confirm('Obrisati trening?')) return;
+  sbObrisi('treninzi', id);
   dnLoad();
   dnTreninzi = dnTreninzi.filter(t => String(t.id) !== String(id));
   dnSave();
@@ -5853,8 +5900,10 @@ function dnObrisi(id) {
 
 function dnOcistiSve() {
   if (!confirm('Obrisati SVE treninge? Ova radnja se ne može poništiti!')) return;
+  dnLoad();
+  dnTreninzi.forEach(t => sbObrisi('treninzi', t.id));
   dnTreninzi = [];
-  localStorage.setItem('kk_treninzi', '[]');
+  dnSave();
   dnRenderLista();
   toast('Svi treninzi obrisani.');
 }
@@ -6317,7 +6366,7 @@ function ljSave() {
 
 function ljRenderLista() {
   const danas = new Date();
-  const za15 = new Date(); za15.setDate(za15.getDate() + 7);
+  const za15 = new Date(); za15.setDate(za15.getDate() + 30);
   let ok = 0, warn = 0, exp = 0;
   const upoz = [];
   const el = document.getElementById('lj-lista-html');

@@ -1147,7 +1147,8 @@
           <button class="btn btn-secondary admin-only" onclick="importHksClanovi()" title="Uvezi iz HKS popisa">📥 Uvezi HKS</button>
           <button class="btn btn-secondary admin-only" onclick="exportClanCSV()">📊 CSV</button>
           <button class="btn btn-secondary admin-only" onclick="printClanovi()">🖨️ Ispis</button>
-          <button class="btn btn-secondary admin-only" onclick="printBlankPristupnica()">📄 Prazna pristupnica</button>
+          <button class="btn btn-secondary admin-only" onclick="printBlankPristupnica()">📄 Pristupnica (&lt;14)</button>
+          <button class="btn btn-secondary admin-only" onclick="printBlankSuglasnost()">📄 Suglasnost (14-18)</button>
           <button class="btn btn-secondary admin-only" onclick="bulkOznaciPlaceno()">💰 Sve platilo</button>
           <button class="btn btn-secondary admin-only" onclick="openModal('modalBulkAzuriranje')">📷 Sken</button>
           <button class="btn btn-primary" onclick="otvoriModalDodajClana()">+ Dodaj člana</button>
@@ -2717,7 +2718,7 @@
       </div>
     </div>
     <div class="modal-footer" style="justify-content:space-between">
-      <button class="btn btn-secondary" onclick="printPristupnica(state.selectedClanId)">🖨️ Pristupnica</button>
+      <button class="btn btn-secondary" id="btnPristupnica" onclick="printPristupnica(state.selectedClanId)">🖨️ Pristupnica</button>
       <div style="display:flex;gap:8px">
         <button class="btn btn-secondary" onclick="closeModal('modalDetaljiClana')">Odustani</button>
         <button class="btn btn-primary" onclick="spremiUrednogClana()">💾 Spremi promjene</button>
@@ -4668,6 +4669,18 @@ function prikaziClana(id) {
   if (!c) return;
   state.selectedClanId = id;
   document.getElementById('detaljiNaslov').textContent = c.ime + ' ' + c.prezime;
+  // Postavi label gumba Pristupnica prema dobi
+  const btnP = document.getElementById('btnPristupnica');
+  if (btnP) {
+    const age = _calcAge(c.datRod);
+    if (age !== null && age >= 14 && age < 18) {
+      btnP.textContent = '🖨️ Suglasnost (14-18)';
+    } else if (age !== null && age < 14) {
+      btnP.textContent = '🖨️ Pristupnica (<14)';
+    } else {
+      btnP.textContent = '🖨️ Pristupnica';
+    }
+  }
   // Populate edit form
   document.getElementById('eIme').value = c.ime || '';
   document.getElementById('ePrezime').value = c.prezime || '';
@@ -7764,12 +7777,164 @@ function _izjavaHTML(c) {
   </body></html>`;
 }
 
+function _calcAge(datRod) {
+  if (!datRod) return null;
+  const today = new Date();
+  const dob = new Date(datRod + 'T12:00:00');
+  let age = today.getFullYear() - dob.getFullYear();
+  const m = today.getMonth() - dob.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
+  return age;
+}
+
+function _izjavaSuglasnostHTML(c) {
+  const naziv = (trenutniKorisnik && trenutniKorisnik.klub_naziv) || 'KK Đurđevac';
+  const up = getUpPodaci ? getUpPodaci() : {};
+  const adresa = up.adresa || 'A. Hebranga 12, 48350 Đurđevac';
+  const oib    = up.oib    || '98308789784';
+  const iban   = up.iban   || 'HR8823600001102289908';
+  const mb     = '01076485';
+  const email  = up.email_klub || 'karate.djurdjevac@gmail.com';
+  const tel    = up.tel    || '098/805-555';
+  const datum  = new Date().toLocaleDateString('hr-HR', { day:'2-digit', month:'long', year:'numeric' });
+
+  const datRodFmt = c && c.datRod ? new Date(c.datRod+'T12:00:00').toLocaleDateString('hr-HR') : '';
+  const datUclan  = c && c.datUclan ? new Date(c.datUclan+'T12:00:00').toLocaleDateString('hr-HR') : '';
+  const imeClana  = c ? `${c.ime} ${c.prezime}` : '';
+  const oibPrikaz = c && c.oib ? (trenutniKorisnik?.admin ? c.oib : c.oib.substring(0,3)+'••••••••') : '';
+
+  const blank = (w) => `<span style="display:inline-block;border-bottom:1px solid #333;min-width:${w||120}px">&nbsp;</span>`;
+  const cell  = (label, val, w) => `<tr><td style="width:160px;padding:5px 8px;font-weight:600;font-size:11px;color:#444;background:#f5f5f5;border:1px solid #ddd">${label}</td><td style="padding:5px 8px;font-size:12px;border:1px solid #ddd">${val || blank(w)}</td></tr>`;
+
+  const logoHtml = up.logo
+    ? `<img src="${up.logo}" style="width:80px;height:80px;object-fit:contain">`
+    : `<div style="width:80px;height:80px;background:#C8102E;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:24px;flex-shrink:0">KK</div>`;
+
+  return `<!DOCTYPE html><html lang="hr"><head><meta charset="UTF-8">
+  <title>Izjava o suglasnosti${c ? ' — '+imeClana : ''}</title>
+  <style>
+    *{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact;margin:0;padding:0}
+    body{font-family:Arial,sans-serif;color:#111;padding:18px 22px;font-size:12px;line-height:1.5}
+    .header{display:flex;align-items:center;gap:14px;border-bottom:3px solid #C8102E;padding-bottom:10px;margin-bottom:14px}
+    .header-info h1{font-size:17px;font-weight:900;letter-spacing:1px;color:#C8102E;text-transform:uppercase}
+    .header-info p{font-size:10px;color:#555;margin-top:2px}
+    h2{text-align:center;font-size:16px;text-transform:uppercase;letter-spacing:2px;margin:10px 0 2px;color:#111}
+    h2 small{display:block;font-size:11px;font-weight:normal;letter-spacing:0;color:#555;margin-top:2px}
+    h3{font-size:12px;font-weight:700;text-transform:uppercase;color:#C8102E;margin:12px 0 5px;letter-spacing:.5px}
+    table{width:100%;border-collapse:collapse;margin-bottom:8px}
+    .box{border:1px solid #bbb;border-radius:4px;padding:9px 11px;background:#fafafa;font-size:11px;line-height:1.75;margin-bottom:8px}
+    .box ol{margin-left:16px}
+    .box li{margin-bottom:3px}
+    .gdpr-table td{padding:4px 7px;border:1px solid #ddd;font-size:10.5px;vertical-align:top}
+    .gdpr-table td:first-child{font-weight:600;width:140px;background:#f5f5f5}
+    .consent-box{border:2px solid #C8102E;border-radius:4px;padding:10px 12px;margin:8px 0;font-size:11px;line-height:1.7}
+    .check{display:inline-block;width:14px;height:14px;border:1.5px solid #333;border-radius:2px;margin-right:5px;vertical-align:middle}
+    .sig{display:flex;justify-content:space-between;margin-top:24px;gap:12px}
+    .sig div{flex:1;text-align:center}
+    .sig .line{border-top:1px solid #999;margin-top:28px;padding-top:4px;font-size:10px;color:#555}
+    .footer{margin-top:16px;border-top:1px solid #ddd;padding-top:6px;font-size:9px;color:#999;text-align:center}
+    @media print{body{padding:10px 14px}@page{margin:1cm}}
+  </style></head><body>
+
+  <div class="header">
+    ${logoHtml}
+    <div class="header-info">
+      <h1>${naziv}</h1>
+      <p>${adresa} &nbsp;|&nbsp; OIB: ${oib} &nbsp;|&nbsp; IBAN: ${iban}<br>
+         MB: ${mb} &nbsp;|&nbsp; ${email} &nbsp;|&nbsp; Tel: ${tel}</p>
+    </div>
+  </div>
+
+  <h2>IZJAVA O SUGLASNOSTI ZA UČLANJENJE<small>(za maloljetne osobe od 14 do 18 godina — čl. 92. Obiteljskog zakona)</small></h2>
+
+  <h3>Osobni podaci maloljetnog/e člana/ice</h3>
+  <table><tbody>
+    ${cell('Ime i prezime', imeClana)}
+    ${cell('Datum i mjesto rođ.', datRodFmt)}
+    ${cell('OIB', oibPrikaz)}
+    ${cell('Adresa stanovanja', c ? c.adresa : '')}
+    ${cell('Pojasni stupanj', c ? (c.pojas||'')+(c.kyu?' ('+c.kyu+')':'') : '')}
+    ${cell('Datum učlanjenja', datUclan)}
+  </tbody></table>
+
+  <h3>Podaci o roditelju / staratelju</h3>
+  <table><tbody>
+    ${cell('Ime i prezime roditelja', c ? c.roditelji : '')}
+    ${cell('OIB roditelja')}
+    ${cell('Telefon / mobitel', c ? c.mobitel : '')}
+    ${cell('E-mail', c ? c.email : '')}
+    ${cell('Srodstvo', '', 80)}
+    ${cell('Napomena (bolesti i sl.)', c ? c.bolest : '', 200)}
+  </tbody></table>
+
+  <h3>Suglasnost roditelja / staratelja</h3>
+  <div class="box">
+    Ja, ${c ? (c.roditelji || blank(140)) : blank(140)}, kao roditelj / zakonski zastupnik maloljetnog/e
+    <strong>${imeClana || blank(140)}</strong>,
+    dajem <strong>suglasnost</strong> za učlanjenje navedene maloljetne osobe u ${naziv} te potvrđujem da:
+    <ol>
+      <li>Sam upoznat/a s pravilima i Statutom ${naziv} te ih u cijelosti prihvaćam u ime maloljetnog/e člana/ice.</li>
+      <li>Ću redovito podmirivati članarinu u iznosima i rokovima utvrđenim odlukom Upravnog odbora kluba.
+          Prestanak članstva moguć je samo na kraju kalendarskog mjeseca pisanim zahtjevom i
+          nakon podmirenja svih financijskih obveza prema klubu.</li>
+      <li>Sam upoznat/a da bavljenje karate sportom uključuje rizike inherentne kontaktnom sportu
+          (modrice, uganuća i sl.) te da su treninzi pod vodstvom stručno osposobljenih trenera
+          uz primjenu odgovarajućih zaštitnih mjera u skladu s pravilima HKS-a.</li>
+      <li>${naziv} zadržava pravo isključenja člana koji krši Statut, pravila ponašanja ili
+          ugrožava sigurnost i dostojanstvo ostalih članova.</li>
+    </ol>
+  </div>
+
+  <h3>Izjava maloljetnog/e člana/ice</h3>
+  <div class="box">
+    Ja, <strong>${imeClana || blank(140)}</strong>, potvrđujem da sam pročitao/la i razumijem pravila
+    i Statut ${naziv} te se obvezujem poštivati ih, redovito pohađati treninge i dostojanstveno
+    nastupati u ime kluba.
+  </div>
+
+  <h3>Obrada osobnih podataka — informacija (čl. 13. Uredbe EU 2016/679)</h3>
+  <table class="gdpr-table"><tbody>
+    <tr><td>Voditelj obrade</td><td>${naziv}, ${adresa}, OIB: ${oib}</td></tr>
+    <tr><td>Svrha i pravna osnova</td><td>Evidencija članstva, organizacija treninga i natjecanja, ispunjavanje zakonskih obveza (Zakon o sportu, Zakon o udrugama). Pravna osnova: izvršenje ugovornog odnosa (čl. 6/1/b GDPR).</td></tr>
+    <tr><td>Primatelji podataka</td><td>HKS (Hrvatski karate savez) i nadležna javna tijela — isključivo po zakonskoj obvezi.</td></tr>
+    <tr><td>Rok čuvanja</td><td>Za trajanja članstva i 5 godina nakon prestanka, sukladno zakonskim obvezama.</td></tr>
+    <tr><td>Prava ispitanika</td><td>Pravo na pristup, ispravak, brisanje, ograničenje obrade, prigovor i prenosivost — zahtjev na: ${email}. Do 18. god. prava ostvaruje roditelj/staratelj. Pravo pritužbe: AZOP (azop.hr).</td></tr>
+  </tbody></table>
+
+  <h3>Posebna suglasnost — fotografiranje i snimanje</h3>
+  <div class="consent-box">
+    <b>Ova suglasnost je dobrovoljna i neovisna o članstvu. Odbijanje ne utječe na pravo učlanjenja.</b><br><br>
+    <span class="check"></span> <b>DA</b> &nbsp;&nbsp;&nbsp;
+    <span class="check"></span> <b>NE</b><br><br>
+    Suglasan/a sam da ${naziv} koristi fotografije i videozapise nastale na treninzima,
+    natjecanjima i aktivnostima kluba, <u>isključivo</u> za promociju kluba i karate sporta
+    (web stranica, društvene mreže, tiskovni materijali). Ovu suglasnost mogu povući pisanim putem
+    u bilo koje doba, bez negativnih posljedica po članstvo.
+  </div>
+
+  <p style="font-size:10px;color:#666;margin-bottom:12px">U Đurđevcu, ${blank(100)}</p>
+
+  <div class="sig">
+    <div><div class="line">Potpis maloljetnog/e člana/ice</div></div>
+    <div><div class="line">Potpis roditelja / staratelja</div></div>
+    <div>
+      <div style="font-size:10px;color:#555;margin-top:28px">M.P.</div>
+      <div class="line">Za ${naziv} — predsjednik: Ivan Juričić</div>
+    </div>
+  </div>
+
+  <div class="footer">Dokument generiran: ${datum} · Digitalni Tajnik · ${naziv}</div>
+  </body></html>`;
+}
+
 function printPristupnica(id) {
   const c = state.clanovi.find(x => x.id === id);
   if (!c) { toast('Član nije pronađen.', 'err'); return; }
+  const age = _calcAge(c.datRod);
+  const html = (age !== null && age >= 14 && age < 18) ? _izjavaSuglasnostHTML(c) : _izjavaHTML(c);
   const w = window.open('', '_blank', 'width=900,height=750');
   if (!w) { toast('Dopustite pop-up prozore za ispis!', 'err'); return; }
-  w.document.write(_izjavaHTML(c));
+  w.document.write(html);
   w.document.close();
   setTimeout(() => { w.focus(); w.print(); }, 400);
 }
@@ -7778,6 +7943,14 @@ function printBlankPristupnica() {
   const w = window.open('', '_blank', 'width=900,height=750');
   if (!w) { toast('Dopustite pop-up prozore za ispis!', 'err'); return; }
   w.document.write(_izjavaHTML(null));
+  w.document.close();
+  setTimeout(() => { w.focus(); w.print(); }, 400);
+}
+
+function printBlankSuglasnost() {
+  const w = window.open('', '_blank', 'width=900,height=750');
+  if (!w) { toast('Dopustite pop-up prozore za ispis!', 'err'); return; }
+  w.document.write(_izjavaSuglasnostHTML(null));
   w.document.close();
   setTimeout(() => { w.focus(); w.print(); }, 400);
 }

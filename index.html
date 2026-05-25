@@ -7542,96 +7542,155 @@ function bulkOznaciPlaceno() {
   toast(aktivni.length + ' članova označeno kao plaćeno!');
 }
 
-// ── Pristupnica za učlanjenje ──
-function _pristupnicaHTML(c) {
+// ── Izjava o učlanjenju ──
+const KKDJ_LOGO = 'data:image/jpeg;base64,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';
+
+function _izjavaHTML(c) {
   const naziv = (trenutniKorisnik && trenutniKorisnik.klub_naziv) || 'KK Đurđevac';
   const up = getUpPodaci ? getUpPodaci() : {};
-  const datum = new Date().toLocaleDateString('hr-HR', { day:'2-digit', month:'long', year:'numeric' });
-  const datUclan = c && c.datUclan ? new Date(c.datUclan + 'T12:00:00').toLocaleDateString('hr-HR') : '____________';
-  const datRodFmt = c && c.datRod ? new Date(c.datRod + 'T12:00:00').toLocaleDateString('hr-HR') : '';
+  const adresa = up.adresa || 'A. Hebranga 12, 48350 Đurđevac';
+  const oib    = up.oib    || '98308789784';
+  const iban   = up.iban   || 'HR8823600001102289908';
+  const mb     = '01076485';
+  const email  = 'karate.djurdjevac@gmail.com';
+  const tel    = '098/805-555';
+  const datum  = new Date().toLocaleDateString('hr-HR', { day:'2-digit', month:'long', year:'numeric' });
 
-  const jeMaloljetan = c && c.datRod && (new Date().getFullYear() - new Date(c.datRod).getFullYear() < 18);
+  const datRodFmt = c && c.datRod ? new Date(c.datRod+'T12:00:00').toLocaleDateString('hr-HR') : '';
+  const datUclan  = c && c.datUclan ? new Date(c.datUclan+'T12:00:00').toLocaleDateString('hr-HR') : '';
 
-  const row = (label, val) => `<div class="row"><span>${label}:</span><strong>${val || '________________________'}</strong></div>`;
-  const blankRow = (label) => `<div class="row"><span>${label}:</span><strong>________________________</strong></div>`;
+  const blank = (w) => `<span style="display:inline-block;border-bottom:1px solid #333;min-width:${w||120}px">&nbsp;</span>`;
+  const cell  = (label, val, w) => `<tr><td style="width:160px;padding:5px 8px;font-weight:600;font-size:11px;color:#444;background:#f5f5f5;border:1px solid #ddd">${label}</td><td style="padding:5px 8px;font-size:12px;border:1px solid #ddd">${val || blank(w)}</td></tr>`;
 
-  const clanData = c ? `
-    ${row('Ime i prezime', c.ime && c.prezime ? c.ime + ' ' + c.prezime : '')}
-    ${row('Datum rođenja', datRodFmt)}
-    ${row('OIB', c.oib && (trenutniKorisnik?.admin) ? c.oib : c ? '***' : '')}
-    ${row('Adresa stanovanja', c.adresa)}
-    ${row('Mobitel', c.mobitel)}
-    ${row('E-mail', c.email)}
-    ${row('Pojasni stupanj', c.pojas ? c.pojas + (c.kyu ? ' (' + c.kyu + ')' : '') : '')}
-    ${row('Datum učlanjenja', datUclan)}
-  ` : `
-    ${blankRow('Ime i prezime')}
-    ${blankRow('Datum rođenja')}
-    ${blankRow('OIB')}
-    ${blankRow('Adresa stanovanja')}
-    ${blankRow('Mobitel')}
-    ${blankRow('E-mail')}
-    ${blankRow('Pojasni stupanj')}
-    ${blankRow('Datum učlanjenja')}
-  `;
+  const logoHtml = `<img src="${KKDJ_LOGO}" style="width:80px;height:80px;object-fit:contain">`;
 
-  const roditeljiSek = (c ? jeMaloljetan : true) ? `
-    <h3>PODACI O RODITELJU / STARATELJU</h3>
-    <p style="font-size:11px;color:#666;margin:-2px 0 8px">(Ispunjava se za osobe mlađe od 18 godina)</p>
-    ${c && c.roditelji ? row('Roditelji / staratelji', c.roditelji) : blankRow('Ime i prezime roditelja/staratelja')}
-    ${blankRow('OIB roditelja/staratelja')}
-    ${blankRow('Mobitel roditelja/staratelja')}
-    <div style="margin:12px 0;font-size:12px;line-height:1.7;border:1px solid #ddd;border-radius:4px;padding:10px;background:#f9f9f9">
-      Ja, niže potpisani roditelj / zakonski zastupnik, dajem suglasnost za upis navedene osobe u ${naziv}
-      te prihvaćam sve obveze i pravila kluba u njeno/njegovo ime.
+  const oibPrikaz = c && c.oib ? (trenutniKorisnik?.admin ? c.oib : c.oib.substring(0,3)+'••••••••') : '';
+
+  return `<!DOCTYPE html><html lang="hr"><head><meta charset="UTF-8">
+  <title>Izjava o učlanjenju${c ? ' — '+c.ime+' '+c.prezime : ''}</title>
+  <style>
+    *{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact;margin:0;padding:0}
+    body{font-family:Arial,sans-serif;color:#111;padding:18px 22px;font-size:12px;line-height:1.5}
+    .header{display:flex;align-items:center;gap:14px;border-bottom:3px solid #C8102E;padding-bottom:10px;margin-bottom:14px}
+    .header-info h1{font-size:17px;font-weight:900;letter-spacing:1px;color:#C8102E;text-transform:uppercase}
+    .header-info p{font-size:10px;color:#555;margin-top:2px}
+    h2{text-align:center;font-size:16px;text-transform:uppercase;letter-spacing:2px;margin:10px 0 2px;color:#111}
+    h2 small{display:block;font-size:11px;font-weight:normal;letter-spacing:0;color:#555;margin-top:2px}
+    h3{font-size:12px;font-weight:700;text-transform:uppercase;color:#C8102E;margin:12px 0 5px;letter-spacing:.5px}
+    table{width:100%;border-collapse:collapse;margin-bottom:8px}
+    .box{border:1px solid #bbb;border-radius:4px;padding:9px 11px;background:#fafafa;font-size:11px;line-height:1.75;margin-bottom:8px}
+    .box ol{margin-left:16px}
+    .box li{margin-bottom:3px}
+    .gdpr-table td{padding:4px 7px;border:1px solid #ddd;font-size:10.5px;vertical-align:top}
+    .gdpr-table td:first-child{font-weight:600;width:140px;background:#f5f5f5}
+    .consent-box{border:2px solid #C8102E;border-radius:4px;padding:10px 12px;margin:8px 0;font-size:11px;line-height:1.7}
+    .check{display:inline-block;width:14px;height:14px;border:1.5px solid #333;border-radius:2px;margin-right:5px;vertical-align:middle}
+    .sig{display:flex;justify-content:space-between;margin-top:24px;gap:16px}
+    .sig div{flex:1;text-align:center}
+    .sig .line{border-top:1px solid #999;margin-top:28px;padding-top:4px;font-size:10px;color:#555}
+    .footer{margin-top:16px;border-top:1px solid #ddd;padding-top:6px;font-size:9px;color:#999;text-align:center}
+    @media print{body{padding:10px 14px}@page{margin:1cm}}
+  </style></head><body>
+
+  <div class="header">
+    ${logoHtml}
+    <div class="header-info">
+      <h1>${naziv}</h1>
+      <p>${adresa} &nbsp;|&nbsp; OIB: ${oib} &nbsp;|&nbsp; IBAN: ${iban}<br>
+         MB: ${mb} &nbsp;|&nbsp; ${email} &nbsp;|&nbsp; Tel: ${tel}</p>
     </div>
-    <div class="sig" style="margin-top:20px">
-      <div><div class="line">Potpis roditelja / staratelja</div></div>
-      <div><div class="line">Datum</div></div>
+  </div>
+
+  <h2>IZJAVA O UČLANJENJU<small>(za članove mlađe od 14 godina)</small></h2>
+
+  <h3>Osobni podaci djeteta</h3>
+  <table><tbody>
+    ${cell('Ime i prezime', c ? c.ime+' '+c.prezime : '')}
+    ${cell('Datum i mjesto rođ.', datRodFmt)}
+    ${cell('OIB', oibPrikaz)}
+    ${cell('Adresa stanovanja', c ? c.adresa : '')}
+    ${cell('Pojasni stupanj', c ? (c.pojas||'')+(c.kyu?' ('+c.kyu+')':'') : '')}
+    ${cell('Datum učlanjenja', datUclan)}
+  </tbody></table>
+
+  <h3>Podaci o roditelju / staratelju</h3>
+  <table><tbody>
+    ${cell('Ime i prezime', c ? c.roditelji : '')}
+    ${cell('OIB roditelja')}
+    ${cell('Telefon / posao')}
+    ${cell('Mobitel')}
+    ${cell('E-mail')}
+    ${cell('Napomena o bolestima', c ? c.bolest : '', 200)}
+  </tbody></table>
+
+  <h3>Izjava o učlanjenju</h3>
+  <div class="box">
+    Ja, ${blank(140)}, roditelj / staratelj djeteta ${blank(140)},
+    suglasan/a sam da moje malodobno dijete postane redoviti/a član/ica ${naziv}.<br><br>
+    Potpisivanjem ove izjave potvrđujem da:
+    <ol>
+      <li>Sam upoznat/a s pravilima i Statutom ${naziv} te ih u cijelosti prihvaćam.</li>
+      <li>Ću redovito podmirivati članarinu u iznosima i rokovima utvrđenim odlukom Upravnog odbora kluba.
+          Prestanak članstva moguć je samo na kraju kalendarskog mjeseca pisanim zahtjevom i
+          nakon podmirenja svih financijskih obveza prema klubu.</li>
+      <li>Sam upoznat/a da bavljenje karate sportom uključuje rizike inherentne kontaktnom sportu
+          (modrice, uganuća i sl.) te da su treninzi pod vodstvom stručno osposobljenih trenera
+          uz primjenu odgovarajućih zaštitnih mjera u skladu s pravilima HKS-a.</li>
+      <li>KK Đurđevac zadržava pravo isključenja člana koji krši Statut, pravila ponašanja ili
+          ugrožava sigurnost i dostojanstvo ostalih članova.</li>
+    </ol>
+  </div>
+
+  <h3>Obrada osobnih podataka — informacija (čl. 13. Uredbe EU 2016/679)</h3>
+  <table class="gdpr-table"><tbody>
+    <tr><td>Voditelj obrade</td><td>${naziv}, ${adresa}, OIB: ${oib}</td></tr>
+    <tr><td>Svrha i pravna osnova</td><td>Evidencija članstva, organizacija treninga i natjecanja, ispunjavanje zakonskih obveza (Zakon o sportu, Zakon o udrugama). Pravna osnova: izvršenje ugovornog odnosa (čl. 6/1/b GDPR).</td></tr>
+    <tr><td>Primatelji podataka</td><td>HKS (Hrvatski karate savez) i nadležna javna tijela — isključivo po zakonskoj obvezi.</td></tr>
+    <tr><td>Rok čuvanja</td><td>Za trajanja članstva i 5 godina nakon prestanka, sukladno zakonskim obvezama.</td></tr>
+    <tr><td>Prava ispitanika</td><td>Pravo na pristup, ispravak, brisanje, ograničenje obrade, prigovor i prenosivost podataka — zahtjev na: ${email}. Pravo na pritužbu: AZOP (azop.hr).</td></tr>
+  </tbody></table>
+
+  <h3>Posebna suglasnost — fotografiranje i snimanje</h3>
+  <div class="consent-box">
+    <b>Ova suglasnost je dobrovoljna i neovisna o članstvu u klubu. Odbijanje ne utječe na pravo učlanjenja.</b><br><br>
+    <span class="check"></span> <b>DA</b> &nbsp;&nbsp;&nbsp;
+    <span class="check"></span> <b>NE</b><br><br>
+    Suglasan/a sam da ${naziv} koristi fotografije i videozapise mog/moje djeteta nastale na treninzima,
+    natjecanjima i aktivnostima kluba, <u>isključivo</u> za promociju kluba i karate sporta
+    (web stranica, društvene mreže, tiskovni materijali). Ovu suglasnost mogu povući pisanim putem u bilo koje doba,
+    bez negativnih posljedica po članstvo.
+  </div>
+
+  <p style="font-size:10px;color:#666;margin-bottom:12px">U Đurđevcu, ${blank(100)}</p>
+
+  <div class="sig">
+    <div><div class="line">Potpis roditelja / staratelja</div></div>
+    <div>
+      <div style="font-size:10px;color:#555;margin-top:28px">M.P.</div>
+      <div class="line">Za ${naziv} — predsjednik: Ivan Juričić</div>
     </div>
-  ` : '';
+  </div>
 
-  return `
-    <h2 style="text-align:center;text-transform:uppercase;letter-spacing:2px;margin-bottom:4px">PRISTUPNICA ZA UČLANJENJE</h2>
-    <p style="text-align:center;color:#666;margin:0 0 18px;font-size:12px">${naziv}${up.adresa ? ' &nbsp;·&nbsp; ' + up.adresa : ''}</p>
-
-    <h3>OSOBNI PODACI ČLANA</h3>
-    ${clanData}
-
-    ${roditeljiSek}
-
-    <h3>PRIVOLA ZA OBRADU OSOBNIH PODATAKA (GDPR)</h3>
-    <div style="font-size:11px;line-height:1.7;border:1px solid #ddd;border-radius:4px;padding:10px;background:#f9f9f9;margin-bottom:10px">
-      Upisom u ${naziv} potpisnik pristupnice suglasan je da klub obrađuje njegove osobne podatke
-      (ime, prezime, datum rođenja, OIB, adresa, kontakt podaci) isključivo u svrhu evidencije članstva,
-      organizacije treninga, natjecanja i ispunjavanja zakonskih obveza. Podaci se ne ustupaju trećim stranama
-      bez izričite suglasnosti, osim nadležnim savezima (HKS) i tijelima državne vlasti temeljem zakona.
-      Privolu možete povući pisanim putem u bilo koje doba.
-    </div>
-
-    <h3>IZJAVA O PRIHVAĆANJU PRAVILA KLUBA</h3>
-    <div style="font-size:11px;line-height:1.7;border:1px solid #ddd;border-radius:4px;padding:10px;background:#f9f9f9;margin-bottom:10px">
-      Potpisom ove pristupnice izjavljujem da prihvaćam Statut i Pravilnik ${naziv},
-      obvezujem se redovito plaćati članarinu, poštovati upute trenera i pravila fair playa,
-      te da sam upoznat/a s rizicima bavljenja karate sportom.
-    </div>
-
-    <div class="sig">
-      <div><div class="line">${jeMaloljetan && c ? 'Potpis roditelja/staratelja' : 'Potpis člana'}</div></div>
-      <div><div class="line">Predsjednik kluba</div></div>
-      <div><div class="line">Datum: ${datum}</div></div>
-    </div>
-  `;
+  <div class="footer">Dokument generiran: ${datum} · Digitalni Tajnik · ${naziv}</div>
+  </body></html>`;
 }
 
 function printPristupnica(id) {
   const c = state.clanovi.find(x => x.id === id);
   if (!c) { toast('Član nije pronađen.', 'err'); return; }
-  printDoc(_pristupnicaHTML(c), 'Pristupnica — ' + c.ime + ' ' + c.prezime);
+  const w = window.open('', '_blank', 'width=900,height=750');
+  if (!w) { toast('Dopustite pop-up prozore za ispis!', 'err'); return; }
+  w.document.write(_izjavaHTML(c));
+  w.document.close();
+  setTimeout(() => { w.focus(); w.print(); }, 400);
 }
 
 function printBlankPristupnica() {
-  printDoc(_pristupnicaHTML(null), 'Prazna pristupnica');
+  const w = window.open('', '_blank', 'width=900,height=750');
+  if (!w) { toast('Dopustite pop-up prozore za ispis!', 'err'); return; }
+  w.document.write(_izjavaHTML(null));
+  w.document.close();
+  setTimeout(() => { w.focus(); w.print(); }, 400);
 }
 
 // ========== MODUL 3: KALENDAR ==========

@@ -833,6 +833,9 @@
         <button class="btn btn-primary" onclick="openModal('modalKomunikacija')">+ Nova obavijest</button>
       </div>
       <div class="content">
+        <div class="search-bar" style="margin-bottom:12px">
+          <input type="text" id="kom-search" placeholder="Pretraži obavijesti..." oninput="renderKomunikacija()">
+        </div>
         <div id="listaKomunikacija">
           <div class="empty-state"><div class="icon">✉️</div><p>Nema poslanih obavijesti.</p></div>
         </div>
@@ -869,6 +872,10 @@
         <button class="btn btn-primary" onclick="openModal('modalIzvjestaj')">+ Novi izvještaj</button>
       </div>
       <div class="content">
+        <div class="search-bar" style="margin-bottom:12px">
+          <input type="text" id="izv-search" placeholder="Pretraži po nazivu ili datumu..." oninput="renderIzvjestaji()">
+        </div>
+        <div id="izv-count" style="font-size:12px;color:#888;margin-bottom:8px"></div>
         <div id="listaIzvjestaja">
           <div class="empty-state"><div class="icon">🏆</div><p>Nema unesenih izvještaja.</p></div>
         </div>
@@ -1461,7 +1468,7 @@
       </div>
       <div class="content">
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px">
-          <div class="stat-card" style="cursor:pointer" onclick="ljSetFilter('')"><div class="val" id="lj-st-ok" style="font-size:24px;color:var(--success)">0</div><div class="lbl">Valjani</div></div>
+          <div class="stat-card" style="cursor:pointer" onclick="ljSetFilter('ok')"><div class="val" id="lj-st-ok" style="font-size:24px;color:var(--success)">0</div><div class="lbl">Valjani</div></div>
           <div class="stat-card" style="cursor:pointer" onclick="ljSetFilter('warn')"><div class="val" id="lj-st-warn" style="font-size:24px;color:var(--warn)">0</div><div class="lbl">Uskoro ističu</div></div>
           <div class="stat-card" style="cursor:pointer" onclick="ljSetFilter('exp')"><div class="val" id="lj-st-exp" style="font-size:24px;color:var(--red)">0</div><div class="lbl">Istekli</div></div>
         </div>
@@ -3981,16 +3988,10 @@ async function generirajOdluku() {
   btn.textContent = '⏳ Generira se...';
   btn.disabled = true;
   
-  const prompt = `Ti si tajnik Karate kluba Đurđevac (KK Đurđevac). Napiši formalnu "${vrsta}" na hrvatskom jeziku.
+  const prompt = `Ti si tajnik karate kluba. Napiši formalnu "${vrsta}" na hrvatskom jeziku.
 
 Podaci kluba:
-- Naziv: Karate klub Đurđevac (KK Đurđevac)
-- Adresa: Ulica Andrije Hebranga 12, 48350 Đurđevac
-- OIB: 98308789784
-- Predsjednik: Ivan Juričić
-- Tajnica: Jasminka Sinjeri Prevedan
-- Datum osnivanja: 31.03.1995.
-- Registrski broj: 06000441
+${getKlubAIInfo()}
 
 Predmet odluke: ${predmet}
 Datum: ${datum || new Date().toLocaleDateString('hr-HR')}
@@ -4204,11 +4205,19 @@ function spremiIzvjestaj() {
 
 function renderIzvjestaji() {
   const el = document.getElementById('listaIzvjestaja');
-  if (state.izvjestaji.length === 0) {
-    el.innerHTML = '<div class="empty-state"><div class="icon">🏆</div><p>Nema unesenih izvještaja.</p></div>';
+  const q = (document.getElementById('izv-search')?.value || '').toLowerCase();
+  const filtered = q
+    ? state.izvjestaji.filter(iz => (iz.naziv+' '+(iz.datum||'')+' '+(iz.mjesto||'')).toLowerCase().includes(q))
+    : state.izvjestaji;
+  const countEl = document.getElementById('izv-count');
+  if (countEl) countEl.textContent = q ? `Prikazano ${filtered.length} od ${state.izvjestaji.length}` : '';
+  if (filtered.length === 0) {
+    el.innerHTML = state.izvjestaji.length === 0
+      ? '<div class="empty-state"><div class="icon">🏆</div><p>Nema unesenih izvještaja.</p></div>'
+      : '<div class="empty-state"><div class="icon">🔍</div><p>Nema rezultata za pretragu.</p></div>';
     return;
   }
-  el.innerHTML = state.izvjestaji.slice().reverse().map(iz => `
+  el.innerHTML = filtered.slice().reverse().map(iz => `
     <div class="card" style="margin-bottom:10px">
       <div style="font-weight:600;color:#EDEDED;margin-bottom:4px">${iz.naziv}</div>
       <div style="font-size:12px;color:#aaa;margin-bottom:8px">${iz.datum || '—'} · ${iz.mjesto || '—'} · <span style="color:var(--gold)">${iz.medalje} medalja</span></div>
@@ -4244,17 +4253,14 @@ async function generirajObavijest() {
   btn.textContent = '⏳ Generira se...';
   btn.disabled = true;
   
-  const prompt = `Ti si tajnik Karate kluba Đurđevac. Napiši "${vrsta}" na hrvatskom jeziku.
+  const prompt = `Ti si tajnik karate kluba. Napiši "${vrsta}" na hrvatskom jeziku.
 
 Situacija: ${opis}
 Datum/rok: ${datum || 'nije naveden'}
 Ton: ${ton}
 
 Podaci kluba za kontakt:
-- Tel: 098/805-555 ili 098/9078-738
-- E-mail: karate.djurdjevac@gmail.com
-- Facebook: facebook.com/KarateKlubDurdevac
-- Predsjednik: Ivan Juričić
+${getKlubAIInfo()}
 
 Napiši kratku, jasnu obavijest koja:
 - Ima jasan naslov
@@ -4293,11 +4299,17 @@ function spremiObavijest() {
 
 function renderKomunikacija() {
   const el = document.getElementById('listaKomunikacija');
-  if (state.obavijesti.length === 0) {
-    el.innerHTML = '<div class="empty-state"><div class="icon">✉️</div><p>Nema poslanih obavijesti.</p></div>';
+  const q = (document.getElementById('kom-search')?.value || '').toLowerCase();
+  const filtered = q
+    ? state.obavijesti.filter(ob => (ob.vrsta+' '+(ob.tekst||'')).toLowerCase().includes(q))
+    : state.obavijesti;
+  if (filtered.length === 0) {
+    el.innerHTML = state.obavijesti.length === 0
+      ? '<div class="empty-state"><div class="icon">✉️</div><p>Nema poslanih obavijesti.</p></div>'
+      : '<div class="empty-state"><div class="icon">🔍</div><p>Nema rezultata za pretragu.</p></div>';
     return;
   }
-  el.innerHTML = state.obavijesti.slice().reverse().map(ob => `
+  el.innerHTML = filtered.slice().reverse().map(ob => `
     <div class="card">
       <div class="card-row">
         <div>
@@ -4881,7 +4893,8 @@ async function generirajIzjavu() {
   const god = c.datRod ? new Date().getFullYear() - new Date(c.datRod).getFullYear() : 18;
   const vrstaIzjave = god < 14 ? 'Izjava o učlanjenju (za članove mlađe od 14 god.)' : 'Izjava o suglasnosti (za maloljetne članove od 14 do 18 god.)';
   
-  const prompt = `Napiši popunjenu "${vrstaIzjave}" za KARATE klub Đurđevac (KK Đurđevac, sport: KARATE) na temelju ovih podataka:
+  const upI = getUpPodaci();
+  const prompt = `Napiši popunjenu "${vrstaIzjave}" za karate klub (sport: KARATE) na temelju ovih podataka:
 
 Ime i prezime djeteta: ${c.ime} ${c.prezime}
 Datum rođenja: ${c.datRod || '—'}
@@ -4892,9 +4905,10 @@ Mobitel: ${c.mobitel || '—'}
 Napomena o bolestima: ${c.bolest || 'Nema posebnih napomena'}
 Datum učlanjenja: ${c.datUclan || new Date().toLocaleDateString('hr-HR')}
 
-Podaci kluba: KK Đurđevac, Ulica Andrije Hebranga 12, 48350 Đurđevac, OIB: 98308789784, IBAN: HR8823600001102289908
+Podaci kluba:
+${getKlubAIInfo()}${upI.iban ? '\n- IBAN: ' + upI.iban : ''}
 
-Napiši kompletnu, formalnu izjavu s popunjenim podacima. Na kraju navedi mjesto za potpis roditelja/staratelja i predsjednika Ivana Juričića.`;
+Napiši kompletnu, formalnu izjavu s popunjenim podacima. Na kraju navedi mjesto za potpis roditelja/staratelja i predsjednika kluba.`;
 
   try {
     const text = await pozovaiAI(prompt);
@@ -5272,8 +5286,9 @@ function planPrikaziDetalje(id) {
   const p = planLista.find(x => x.id === id);
   if (!p) return;
   const nl = '\n';
+  const upPlan = getUpPodaci();
   const tekst = (PLAN_VRSTA_LABEL[p.vrsta]||p.vrsta) + ' — ' + p.god + '. GODINA' + nl
-    + 'KK Đurđevac | OIB: 98308789784' + nl
+    + (upPlan.primatelj || (trenutniKorisnik?.klub_naziv||'KK Đurđevac')) + (upPlan.oib ? ' | OIB: ' + upPlan.oib : '') + nl
     + (p.datum ? 'Usvojeno: ' + new Date(p.datum+'T12:00:00').toLocaleDateString('hr-HR') + nl : '')
     + 'Status: ' + (p.status === 'usvojen' ? 'Usvojen na Skupštini' : 'Nacrt') + nl + nl
     + 'CILJEVI I AKTIVNOSTI:' + nl + p.ciljevi + nl + nl
@@ -5290,7 +5305,9 @@ async function planGenerirajAI() {
   const btn = document.querySelector('#modalNoviPlan .btn-gold');
   if (btn) { btn.textContent = '⏳ Generira se...'; btn.disabled = true; }
   try {
-    const text = await pozovaiAI(`Napiši ${PLAN_VRSTA_LABEL[vrsta]} za Karate klub Đurđevac za ${god}. godinu. Klub ima ~60 članova, djeca i mladi, karate sport. Temelji se na statutu kluba i Zakonu o udrugama. Budi koncizan i konkretan.`);
+    const naziv = (trenutniKorisnik?.klub_naziv) || 'KK Đurđevac';
+    const brCl = state.clanovi.filter(c => c.status === 'aktivan').length || 60;
+    const text = await pozovaiAI(`Napiši ${PLAN_VRSTA_LABEL[vrsta]} za ${naziv} za ${god}. godinu. Klub ima ~${brCl} članova, djeca i mladi, karate sport. Temelji se na statutu kluba i Zakonu o udrugama. Budi koncizan i konkretan.`);
     document.getElementById('plan-ai-tekst').textContent = text;
     document.getElementById('plan-ai-output').style.display = 'block';
     document.getElementById('plan-ciljevi').value = text.substring(0, 500);
@@ -5457,8 +5474,9 @@ function finGenerirajIzvjesce() {
   const rashodi = stavke.filter(s => s.vrsta === 'rashod').reduce((sum,s) => sum+parseFloat(s.iznos||0), 0);
   const saldo = prihodi - rashodi;
 
+  const upFin = getUpPodaci();
   const tekst = `FINANCIJSKO IZVJEŠĆE ZA ${god}. GODINU
-Karate klub Đurđevac | OIB: 98308789784
+${upFin.primatelj || (trenutniKorisnik?.klub_naziv||'KK Đurđevac')}${upFin.oib ? ' | OIB: ' + upFin.oib : ''}
 
 ══════════════════════════════════════
 UKUPNI PRIHODI:  ${prihodi.toFixed(2)} EUR
@@ -5476,8 +5494,8 @@ ${Object.entries(stavke.filter(s=>s.vrsta==='rashod').reduce((acc,s) => { acc[FI
 Izvješće pripremio: Tajnik kluba
 Datum: ${new Date().toLocaleDateString('hr-HR')}
 
-Za KK Đurđevac
-Ivan Juričić — predsjednik`;
+Za ${upFin.primatelj || (trenutniKorisnik?.klub_naziv||'KK Đurđevac')}
+Predsjednik kluba`;
 
   navigator.clipboard.writeText(tekst);
   toast('Financijsko izvješće kopirano! Možete ga zalijepiti u Word ili mail.');
@@ -5810,11 +5828,12 @@ function gdprPrikaziPrivolu(id) {
   const maloljetan = god < 18;
   document.getElementById('gdprModalNaslov').textContent = 'GDPR Privola — ' + c.ime + ' ' + c.prezime;
 
+  const upGdpr = getUpPodaci();
   const privola = `IZJAVA O PRIVOLI ZA OBRADU OSOBNIH PODATAKA
 (sukladno Uredbi EU 2016/679 - GDPR)
 
-Karate klub Đurđevac, Ulica Andrije Hebranga 12, 48350 Đurđevac
-OIB: 98308789784
+${upGdpr.primatelj || (trenutniKorisnik?.klub_naziv||'KK Đurđevac')}${upGdpr.adresa ? ', ' + upGdpr.adresa : ''}
+${upGdpr.oib ? 'OIB: ' + upGdpr.oib : ''}
 
 ${maloljetan ? 'Ja, roditelj/staratelj člana:' : 'Ja,'}
 
@@ -5834,11 +5853,11 @@ Osobni podaci koji se obrađuju: ime i prezime, OIB, datum rođenja, adresa, kon
 
 Privolu mogu povući u svako doba pisanim putem na adresu kluba.
 
-U Đurđevcu, _______________
+U _______________, _______________
 
 ${maloljetan ? 'Potpis roditelja/staratelja: ______________________________' : 'Potpis člana: ______________________________'}
 
-Za KK Đurđevac — Ivan Juričić, predsjednik`;
+Za ${upGdpr.primatelj || (trenutniKorisnik?.klub_naziv||'KK Đurđevac')} — predsjednik kluba`;
 
   document.getElementById('gdprPrivolaBody').innerHTML =
     '<pre style="font-size:12px;white-space:pre-wrap;line-height:1.6;color:#EDEDED;background:#1C1C1C;padding:14px;border-radius:8px;border:1px solid #2E2E2E">' + privola + '</pre>' +
@@ -6617,7 +6636,7 @@ let ljFilter = '';
 try { ljPregledi = JSON.parse(localStorage.getItem('kk_lijecnicki') || '[]'); } catch(e){}
 
 function ljSetFilter(f) {
-  ljFilter = f;
+  ljFilter = (ljFilter === f && f !== '') ? '' : f;
   ljRenderLista();
 }
 function ljSave() {
@@ -7278,6 +7297,21 @@ function getUpPodaci() {
 }
 function saveUpPodaci(data) {
   localStorage.setItem('kk_uplatnice_cfg', JSON.stringify(data));
+}
+
+function getKlubAIInfo() {
+  const up = getUpPodaci();
+  const naziv = (trenutniKorisnik && trenutniKorisnik.klub_naziv) || 'KK Đurđevac';
+  const jeKKD = naziv === 'KK Đurđevac';
+  const linije = [
+    `- Naziv: ${up.primatelj || naziv}`,
+    up.adresa    ? `- Adresa: ${up.adresa}` : null,
+    up.oib       ? `- OIB: ${up.oib}` : null,
+    up.tel       ? `- Tel: ${up.tel}` : null,
+    up.email_klub? `- E-mail: ${up.email_klub}` : null,
+    jeKKD        ? `- Predsjednik: Ivan Juričić\n- Tajnica: Jasminka Sinjeri Prevedan\n- Datum osnivanja: 31.03.1995.\n- Registrski broj: 06000441` : null
+  ].filter(Boolean);
+  return linije.join('\n');
 }
 
 function izracunajClanarinu(clanovi_obitelji) {

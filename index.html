@@ -4855,9 +4855,9 @@ function appendMsg(role, content) {
   const msgs = document.getElementById('aiMessages');
   if (role === 'user') {
     msgs.insertAdjacentHTML('beforeend', `
-      <div class="msg ${role}" id="${id}" style="flex-direction:row-reverse">
+      <div class="msg user" id="${id}">
         <div class="msg-avatar">👤</div>
-        <div class="msg-bubble" style="background:rgba(200,16,46,0.2);border:1px solid rgba(200,16,46,0.4);color:#EDEDED">${content}</div>
+        <div class="msg-bubble">${content}</div>
       </div>`);
   } else {
     msgs.insertAdjacentHTML('beforeend', `

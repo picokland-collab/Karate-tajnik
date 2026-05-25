@@ -425,6 +425,19 @@
   .badge-red { background: rgba(200,16,46,0.15); color: #ff5a70; }
   .badge-gold { background: rgba(240,165,0,0.15); color: var(--gold); }
   .badge-gray { background: rgba(136,136,136,0.15); color: var(--muted); }
+  .pojas-badge { display:inline-block; padding:2px 9px; border-radius:20px; font-size:11px; font-weight:700; white-space:nowrap; border:1px solid rgba(0,0,0,0.25); }
+
+  /* POJASEVI SECTION */
+  .pojas-stat-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(110px,1fr)); gap:8px; margin-bottom:20px; }
+  .pojas-stat-card { border-radius:10px; padding:10px 8px; text-align:center; border:1px solid rgba(0,0,0,0.2); cursor:pointer; transition:opacity .15s; }
+  .pojas-stat-card:hover { opacity:.85; }
+  .pojas-stat-card .ps-count { font-size:22px; font-weight:700; line-height:1; }
+  .pojas-stat-card .ps-name { font-size:10px; margin-top:4px; opacity:.9; line-height:1.2; }
+  .pojas-grp-header { display:flex; align-items:center; gap:8px; margin:16px 0 8px; padding-bottom:6px; border-bottom:1px solid var(--border); }
+  .ispit-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:14px 16px; margin-bottom:10px; }
+  .ispit-card-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+  .ispit-rezultat-row { display:flex; align-items:center; gap:8px; padding:5px 0; border-bottom:1px solid var(--border); font-size:13px; }
+  .ispit-rezultat-row:last-child { border-bottom:none; }
 
   /* MODAL */
   .modal-overlay {
@@ -1158,6 +1171,26 @@
         <div id="tableClanovi">
           <div class="empty-state"><div class="icon">👥</div><p>Nema članova. Dodajte prvog člana!</p></div>
         </div>
+      </div>
+    </div>
+
+    <!-- POJASEVI -->
+    <div id="pojasevi" class="section">
+      <div class="page-header">
+        <div>
+          <h2>Pojasevi</h2>
+          <p>Evidencija pojasnih stupnjeva i ispita</p>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-secondary" onclick="pojaseviSetTab('lista')" id="pojTabListaBtn">👥 Lista</button>
+          <button class="btn btn-secondary" onclick="pojaseviSetTab('ispiti')" id="pojTabIspitBtn">📋 Ispiti</button>
+          <button class="btn btn-primary admin-only" onclick="otvoriNoviIspit()">+ Novi ispit</button>
+        </div>
+      </div>
+      <div class="content">
+        <div id="pojasevi-stats" class="pojas-stat-grid"></div>
+        <div id="pojasevi-lista-html"></div>
+        <div id="pojasevi-ispiti-html" style="display:none"></div>
       </div>
     </div>
 
@@ -2285,11 +2318,26 @@
             <option>Narančasti pojas</option>
             <option>Zeleni pojas</option>
             <option>Plavi pojas</option>
+            <option>Ljubičasti pojas</option>
             <option>Smeđi pojas</option>
             <option>Crni pojas 1. dan</option>
             <option>Crni pojas 2. dan</option>
             <option>Crni pojas 3. dan</option>
           </select>
+        </div>
+        <div class="form-group">
+          <label>KYU / DAN oznaka</label>
+          <select id="cKyu">
+            <option value="">—</option>
+            <option>9. KYU</option><option>8. KYU</option><option>7. KYU</option>
+            <option>6. KYU</option><option>5. KYU</option><option>4. KYU</option>
+            <option>3. KYU</option><option>2. KYU</option><option>1. KYU</option>
+            <option>1. DAN</option><option>2. DAN</option><option>3. DAN</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Datum polaganja pojasa</label>
+          <input type="date" id="cDatPolaganja">
         </div>
         <div class="form-group">
           <label>Status</label>
@@ -2591,6 +2639,7 @@
             <option>Narančasti pojas</option>
             <option>Zeleni pojas</option>
             <option>Plavi pojas</option>
+            <option>Ljubičasti pojas</option>
             <option>Smeđi pojas</option>
             <option>Crni pojas 1. dan</option>
             <option>Crni pojas 2. dan</option>
@@ -2598,13 +2647,18 @@
           </select>
         </div>
         <div class="form-group">
-          <label>KYU oznaka</label>
+          <label>KYU / DAN oznaka</label>
           <select id="eKyu">
             <option value="">—</option>
             <option>9. KYU</option><option>8. KYU</option><option>7. KYU</option>
             <option>6. KYU</option><option>5. KYU</option><option>4. KYU</option>
             <option>3. KYU</option><option>2. KYU</option><option>1. KYU</option>
+            <option>1. DAN</option><option>2. DAN</option><option>3. DAN</option>
           </select>
+        </div>
+        <div class="form-group">
+          <label>Datum polaganja pojasa</label>
+          <input type="date" id="eDatPolaganja">
         </div>
         <div class="form-group">
           <label>Status</label>
@@ -2905,6 +2959,44 @@
   </div>
 </div>
 
+
+<!-- MODAL: NOVI ISPIT ZA POJASEVE -->
+<div class="modal-overlay" id="modalNoviIspit">
+  <div class="modal" style="max-width:700px">
+    <div class="modal-header">
+      <h3>Ispit za pojaseve</h3>
+      <button class="modal-close" onclick="closeModal('modalNoviIspit')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid" style="margin-bottom:16px">
+        <div class="form-group">
+          <label>Datum ispita *</label>
+          <input type="date" id="ispit-datum">
+        </div>
+        <div class="form-group">
+          <label>Lokacija</label>
+          <input type="text" id="ispit-lokacija" placeholder="Dvorana, klub...">
+        </div>
+        <div class="form-group">
+          <label>Ispitivač</label>
+          <input type="text" id="ispit-ispitivac" placeholder="Ime Prezime, dan">
+        </div>
+        <div class="form-group">
+          <label>Napomena</label>
+          <input type="text" id="ispit-napomena" placeholder="Slobodna napomena">
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:8px">
+        Za svakog kandidata odaberite novi pojas (ostavite prazno za one koji ne polažu):
+      </div>
+      <div id="ispit-kandidati-lista" style="max-height:340px;overflow-y:auto"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modalNoviIspit')">Odustani</button>
+      <button class="btn btn-primary" onclick="spremiIspit()">💾 Spremi ispit</button>
+    </div>
+  </div>
+</div>
 
 <!-- MODAL: NOVI REZULTAT -->
 <div class="modal-overlay" id="modalNoviRezultat">
@@ -3846,6 +3938,7 @@ const NAV_TILES = [
   { id: 'ai',           icon: '🤖', label: 'AI Tajnik',     role: 'all' },
   { id: 'dashboard',    icon: '📊', label: 'Pregled',        role: 'all' },
   { id: 'clanovi',      icon: '👥', label: 'Članovi',        role: 'all' },
+  { id: 'pojasevi',     icon: '🔰', label: 'Pojasevi',       role: 'all' },
   { id: 'treneri',      icon: '🥋', label: 'Treneri',        role: 'all' },
   { id: 'rezultati',    icon: '🏅', label: 'Natjecanja',     role: 'all' },
   { id: 'kalendar',     icon: '📅', label: 'Kalendar',       role: 'all' },
@@ -4014,6 +4107,7 @@ function showSection(id) {
   if (id === 'kalendar') { renderKalendar(); }
   if (id === 'lijecnicki') { ljRenderLista(); const s=document.getElementById('lj-clan-sel'); if(s){ s.innerHTML='<option value="">— Odaberite člana —</option>'+state.clanovi.filter(c=>c.status==='aktivan').map(c=>`<option value="${c.id}">${c.ime} ${c.prezime}</option>`).join(''); } }
   if (id === 'obavijesti2') { ob2RenderLista(); }
+  if (id === 'pojasevi') { renderPojasevi(); }
   if (id === 'superadmin') { saRenderKlubovi(); saRenderKorisnici(); }
   if (id === 'putni') { pnRenderLista(); document.getElementById('putniForma').style.display='none'; document.getElementById('putniDetalji').style.display='none'; document.getElementById('putniLista').style.display='block'; }
 }
@@ -4150,6 +4244,228 @@ function logActivity(icon, text) {
   updateStats();
 }
 
+// ========== POJASEVI ==========
+const POJASEVI = [
+  { naziv: 'Bijeli pojas',      kyu: '9. KYU', boja: '#FFFFFF', txt: '#222222' },
+  { naziv: 'Žuti pojas',        kyu: '8. KYU', boja: '#FFD700', txt: '#222222' },
+  { naziv: 'Narančasti pojas',  kyu: '7. KYU', boja: '#E67E22', txt: '#ffffff' },
+  { naziv: 'Zeleni pojas',      kyu: '6. KYU', boja: '#27AE60', txt: '#ffffff' },
+  { naziv: 'Plavi pojas',       kyu: '5. KYU', boja: '#2980B9', txt: '#ffffff' },
+  { naziv: 'Ljubičasti pojas',  kyu: '4. KYU', boja: '#8E44AD', txt: '#ffffff' },
+  { naziv: 'Smeđi pojas',       kyu: '1-3. KYU', boja: '#8B4513', txt: '#ffffff' },
+  { naziv: 'Crni pojas 1. dan', kyu: '1. DAN', boja: '#111111', txt: '#FFD700' },
+  { naziv: 'Crni pojas 2. dan', kyu: '2. DAN', boja: '#111111', txt: '#FFD700' },
+  { naziv: 'Crni pojas 3. dan', kyu: '3. DAN', boja: '#111111', txt: '#FFD700' },
+];
+
+let kk_ispiti = [];
+try { kk_ispiti = JSON.parse(localStorage.getItem('kk_ispiti') || '[]'); } catch(e){}
+function ispitiSave() { localStorage.setItem('kk_ispiti', JSON.stringify(kk_ispiti)); }
+
+function pojasInfo(naziv) {
+  return POJASEVI.find(p => p.naziv === naziv) || { boja: '#555', txt: '#fff' };
+}
+function pojasHTML(naziv, small) {
+  if (!naziv) return '<span style="color:var(--muted)">—</span>';
+  const p = pojasInfo(naziv);
+  const sz = small ? 'font-size:10px;padding:2px 7px' : 'font-size:12px;padding:3px 10px';
+  return `<span class="pojas-badge" style="background:${p.boja};color:${p.txt};${sz}">${naziv}</span>`;
+}
+function pojasRedoslijed(naziv) {
+  const i = POJASEVI.findIndex(p => p.naziv === naziv);
+  return i === -1 ? 99 : i;
+}
+
+let _pojaseviTab = 'lista';
+function pojaseviSetTab(tab) {
+  _pojaseviTab = tab;
+  const listaEl = document.getElementById('pojasevi-lista-html');
+  const ispitiEl = document.getElementById('pojasevi-ispiti-html');
+  if (listaEl) listaEl.style.display = tab === 'lista' ? '' : 'none';
+  if (ispitiEl) ispitiEl.style.display = tab === 'ispiti' ? '' : 'none';
+  const btnL = document.getElementById('pojTabListaBtn');
+  const btnI = document.getElementById('pojTabIspitBtn');
+  if (btnL) btnL.style.borderColor = tab === 'lista' ? 'var(--red)' : '';
+  if (btnI) btnI.style.borderColor = tab === 'ispiti' ? 'var(--red)' : '';
+  if (tab === 'ispiti') renderIspiti();
+  else renderPojaseviLista();
+}
+
+function renderPojasevi() {
+  renderPojaseviStats();
+  if (_pojaseviTab === 'lista') renderPojaseviLista();
+  else renderIspiti();
+  pojaseviSetTab(_pojaseviTab);
+}
+
+function renderPojaseviStats() {
+  const el = document.getElementById('pojasevi-stats');
+  if (!el) return;
+  const aktivni = state.clanovi.filter(c => c.status === 'aktivan');
+  el.innerHTML = POJASEVI.map(p => {
+    const br = aktivni.filter(c => c.pojas === p.naziv).length;
+    if (br === 0) return '';
+    return `<div class="pojas-stat-card" style="background:${p.boja}20;border-color:${p.boja}50" onclick="pojaseviFilterPojas('${p.naziv}')">
+      <div class="ps-count" style="color:${p.boja === '#FFFFFF' ? '#ccc' : p.boja}">${br}</div>
+      <div class="ps-name" style="color:var(--text)">${p.naziv}</div>
+    </div>`;
+  }).join('') + `<div class="pojas-stat-card" style="background:var(--surface);border-color:var(--border)" onclick="pojaseviFilterPojas('')">
+    <div class="ps-count" style="color:var(--text)">${aktivni.length}</div>
+    <div class="ps-name" style="color:var(--muted)">Ukupno</div>
+  </div>`;
+}
+
+let _pojaseviFilter = '';
+function pojaseviFilterPojas(naziv) {
+  _pojaseviFilter = naziv;
+  _pojaseviTab = 'lista';
+  pojaseviSetTab('lista');
+}
+
+function renderPojaseviLista() {
+  const el = document.getElementById('pojasevi-lista-html');
+  if (!el) return;
+  let aktivni = state.clanovi.filter(c => c.status === 'aktivan');
+  if (_pojaseviFilter) aktivni = aktivni.filter(c => c.pojas === _pojaseviFilter);
+  aktivni.sort((a, b) => pojasRedoslijed(a.pojas) - pojasRedoslijed(b.pojas) || (a.prezime||'').localeCompare(b.prezime||''));
+
+  if (aktivni.length === 0) {
+    el.innerHTML = '<div class="empty-state"><div class="icon">🔰</div><p>Nema članova za prikaz.</p></div>';
+    return;
+  }
+
+  // Grupiraj po pojasu
+  const grupe = {};
+  aktivni.forEach(c => {
+    const k = c.pojas || 'Nepoznato';
+    if (!grupe[k]) grupe[k] = [];
+    grupe[k].push(c);
+  });
+
+  let html = _pojaseviFilter ? `<div style="margin-bottom:12px"><button class="btn btn-secondary btn-sm" onclick="pojaseviFilterPojas('')">← Svi pojasevi</button></div>` : '';
+  for (const [pojas, clanovi] of Object.entries(grupe)) {
+    const pi = pojasInfo(pojas);
+    html += `<div class="pojas-grp-header">
+      ${pojasHTML(pojas)}
+      <span style="color:var(--muted);font-size:12px">${clanovi.length} ${clanovi.length===1?'član':'člana'}</span>
+    </div>
+    <div class="mobile-table-wrap"><table>
+      <thead><tr><th>Član</th><th>Kategorija</th><th>KYU/DAN</th><th>Datum polaganja</th><th></th></tr></thead>
+      <tbody>
+      ${clanovi.map(c => `<tr>
+        <td><div style="font-weight:600">${c.ime} ${c.prezime}</div></td>
+        <td><span class="badge badge-gray">${c.kategorija||'—'}</span></td>
+        <td style="font-size:12px;color:var(--muted)">${c.kyu||'—'}</td>
+        <td style="font-size:12px;color:var(--muted)">${c.datPolaganja ? new Date(c.datPolaganja).toLocaleDateString('hr-HR') : '—'}</td>
+        <td><button class="btn btn-secondary btn-sm" onclick="prikaziClana(${c.id})">Uredi</button></td>
+      </tr>`).join('')}
+      </tbody>
+    </table></div>`;
+  }
+  el.innerHTML = html;
+}
+
+function renderIspiti() {
+  const el = document.getElementById('pojasevi-ispiti-html');
+  if (!el) return;
+  if (kk_ispiti.length === 0) {
+    el.innerHTML = '<div class="empty-state"><div class="icon">📋</div><p>Nema zapisanih ispita. Dodajte prvi ispit.</p></div>';
+    return;
+  }
+  const sorted = [...kk_ispiti].sort((a,b) => (b.datum||'').localeCompare(a.datum||''));
+  el.innerHTML = sorted.map(ispit => {
+    const prosli = ispit.rezultati ? ispit.rezultati.filter(r => r.prosao) : [];
+    return `<div class="ispit-card">
+      <div class="ispit-card-header">
+        <div>
+          <div style="font-weight:700;font-size:15px">${ispit.datum ? new Date(ispit.datum).toLocaleDateString('hr-HR') : '—'}</div>
+          <div style="font-size:12px;color:var(--muted)">${ispit.lokacija||''} ${ispit.ispitivac ? '· Ispitivač: '+ispit.ispitivac : ''}</div>
+          ${ispit.napomena ? `<div style="font-size:12px;color:var(--muted);margin-top:2px">${ispit.napomena}</div>` : ''}
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="badge badge-green">${prosli.length} položilo</span>
+          ${trenutniKorisnik?.admin ? `<button class="btn btn-sm" style="background:rgba(200,16,46,0.15);color:#ff5a70;border:1px solid rgba(200,16,46,0.2)" onclick="obrisiIspit(${ispit.id})">✕</button>` : ''}
+        </div>
+      </div>
+      ${prosli.length > 0 ? `<div style="margin-top:8px">
+        ${prosli.map(r => `<div class="ispit-rezultat-row">
+          <span style="font-weight:500;min-width:140px">${r.ime||'—'}</span>
+          ${pojasHTML(r.stariPojas, true)}
+          <span style="color:var(--muted);font-size:12px">→</span>
+          ${pojasHTML(r.noviPojas, true)}
+        </div>`).join('')}
+      </div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function otvoriNoviIspit() {
+  const datum = document.getElementById('ispit-datum');
+  if (datum) datum.value = new Date().toISOString().split('T')[0];
+  ['ispit-lokacija','ispit-ispitivac','ispit-napomena'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  const lista = document.getElementById('ispit-kandidati-lista');
+  if (!lista) { openModal('modalNoviIspit'); return; }
+  const aktivni = state.clanovi.filter(c => c.status === 'aktivan')
+    .sort((a,b) => pojasRedoslijed(a.pojas) - pojasRedoslijed(b.pojas) || (a.prezime||'').localeCompare(b.prezime||''));
+  const pojasiOpcije = POJASEVI.map(p => `<option value="${p.naziv}">${p.naziv}</option>`).join('');
+  lista.innerHTML = aktivni.map(c => `
+    <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)">
+      <div style="min-width:150px;font-size:13px;font-weight:500">${c.ime} ${c.prezime}</div>
+      <div style="min-width:110px">${pojasHTML(c.pojas, true)}</div>
+      <div style="font-size:11px;color:var(--muted);flex:1">→</div>
+      <select id="ispit-novi-${c.id}" style="font-size:12px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:4px 8px">
+        <option value="">— ne polaže —</option>
+        ${pojasiOpcije}
+      </select>
+    </div>`).join('');
+  openModal('modalNoviIspit');
+}
+
+function spremiIspit() {
+  const datum = document.getElementById('ispit-datum')?.value;
+  if (!datum) { toast('Unesite datum ispita!', 'err'); return; }
+  const aktivni = state.clanovi.filter(c => c.status === 'aktivan');
+  const rezultati = [];
+  aktivni.forEach(c => {
+    const sel = document.getElementById('ispit-novi-' + c.id);
+    if (!sel || !sel.value) return;
+    const noviPojas = sel.value;
+    rezultati.push({ clanId: c.id, ime: c.ime + ' ' + c.prezime, stariPojas: c.pojas, noviPojas, prosao: true });
+    c.pojas = noviPojas;
+    c.datPolaganja = datum;
+    const pi = POJASEVI.find(p => p.naziv === noviPojas);
+    if (pi && pi.kyu && !pi.kyu.includes('-')) c.kyu = pi.kyu;
+  });
+  if (rezultati.length === 0) { toast('Niste odabrali niti jednog kandidata!', 'err'); return; }
+  const ispit = {
+    id: Date.now(),
+    datum,
+    lokacija: document.getElementById('ispit-lokacija')?.value || '',
+    ispitivac: document.getElementById('ispit-ispitivac')?.value || '',
+    napomena: document.getElementById('ispit-napomena')?.value || '',
+    rezultati
+  };
+  kk_ispiti.push(ispit);
+  ispitiSave();
+  save();
+  closeModal('modalNoviIspit');
+  renderClanovi();
+  renderPojasevi();
+  logActivity('🔰', `Ispit za pojaseve: ${rezultati.length} kandidata položilo`);
+  toast(`Ispit spremljen — ${rezultati.length} članova napredovalo!`);
+}
+
+function obrisiIspit(id) {
+  const ispit = kk_ispiti.find(x => x.id === id);
+  if (!ispit || !confirm(`Obrisati ispit od ${new Date(ispit.datum).toLocaleDateString('hr-HR')}?\nNapomena: pojasevi članova neće biti vraćeni na staro.`)) return;
+  kk_ispiti = kk_ispiti.filter(x => x.id !== id);
+  ispitiSave();
+  renderIspiti();
+  toast('Ispit obrisan.');
+}
+
 // ========== ČLANOVI ==========
 function kategorija(datRod) {
   if (!datRod) return 'nepoznato';
@@ -4165,11 +4481,12 @@ function capitalizeName(s) {
 
 function otvoriModalDodajClana() {
   // Reset form
-  ['cIme','cPrezime','cDatRod','cOIB','cAdresa','cRoditelji','cMobitel','cEmail','cBolest'].forEach(id => {
+  ['cIme','cPrezime','cDatRod','cOIB','cAdresa','cRoditelji','cMobitel','cEmail','cBolest','cDatPolaganja'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
   });
   const kp = document.getElementById('kategorijaPreview');
   if (kp) kp.textContent = '';
+  const ckyu = document.getElementById('cKyu'); if (ckyu) ckyu.value = '';
   // Auto-postavi datum učlanjenja = danas
   const datUclan = document.getElementById('cDatUclan');
   if (datUclan) datUclan.value = new Date().toISOString().split('T')[0];
@@ -4221,6 +4538,8 @@ function dodajClana() {
     mobitel: document.getElementById('cMobitel').value,
     email: document.getElementById('cEmail').value,
     pojas: document.getElementById('cPojas').value,
+    kyu: document.getElementById('cKyu')?.value || '',
+    datPolaganja: document.getElementById('cDatPolaganja')?.value || '',
     status: document.getElementById('cStatus').value,
     bolest: document.getElementById('cBolest').value,
     datUclan: document.getElementById('cDatUclan').value,
@@ -4292,7 +4611,7 @@ function renderClanovi() {
           </div>
         </td>
         <td data-label="Kategorija"><span class="badge badge-gray" style="color:var(--text)">${c.kategorija}</span></td>
-        <td data-label="Pojas" style="font-size:13px;color:var(--text)">${c.pojas}</td>
+        <td data-label="Pojas">${pojasHTML(c.pojas, true)}</td>
         <td data-label="Status"><span class="badge ${c.status === 'aktivan' ? 'badge-green' : 'badge-red'}">${c.status}</span></td>
         ${!jeTrener ? `<td data-label="Članarina"><span class="badge ${c.clanarina === 'da' ? 'badge-green' : 'badge-red'}" style="cursor:pointer" onclick="toggleClanarina(${c.id})">${c.clanarina === 'da' ? '✓ Plaćeno' : '✗ Nije plaćeno'}</span></td>` : ''}
         <td data-label="Učlanjen" style="font-size:12px;color:var(--muted)">${c.datUclan || '—'}</td>
@@ -4346,6 +4665,7 @@ function prikaziClana(id) {
   const setSelect = (id, val) => { const el = document.getElementById(id); if(el) { for(let o of el.options) { if(o.value === val || o.text === val) { el.value = o.value; break; } } } };
   setSelect('ePojas', c.pojas || 'Bijeli pojas');
   setSelect('eKyu', c.kyu || '');
+  const edp = document.getElementById('eDatPolaganja'); if (edp) edp.value = c.datPolaganja || '';
   setSelect('eStatus', c.status || 'aktivan');
   setSelect('eClanarina', c.clanarina || 'ne');
   setSelect('eIzjava', c.izjava || 'ne');
@@ -4388,6 +4708,7 @@ function spremiUrednogClana() {
   c.datUclan = document.getElementById('eDatUclan').value;
   c.pojas = document.getElementById('ePojas').value;
   c.kyu = document.getElementById('eKyu').value;
+  c.datPolaganja = document.getElementById('eDatPolaganja')?.value || c.datPolaganja || '';
   c.status = document.getElementById('eStatus').value;
   c.clanarina = document.getElementById('eClanarina').value;
   c.izjava = document.getElementById('eIzjava').value;

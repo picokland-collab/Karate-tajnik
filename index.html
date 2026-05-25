@@ -630,19 +630,42 @@
   .oib-protected { filter: blur(4px); user-select: none; cursor: pointer; transition: filter 0.2s; }
   .oib-protected:hover { filter: blur(0); }
 
-  /* ========== HAMBURGER & MOBILE OVERLAY ========== */
+  /* ========== HAMBURGER & BACK BUTTON ========== */
   #hamburgerBtn {
-    display: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     background: none;
     border: 1px solid var(--border);
-    border-radius: 6px;
+    border-radius: 8px;
     color: var(--text);
     font-size: 20px;
-    padding: 5px 10px;
+    width: 38px;
+    height: 38px;
     cursor: pointer;
-    line-height: 1;
     flex-shrink: 0;
+    transition: background 0.15s;
   }
+  #hamburgerBtn:hover { background: var(--surface2); }
+  #btnBack {
+    display: none;
+    align-items: center;
+    gap: 5px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    padding: 0 12px;
+    height: 38px;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.15s;
+  }
+  #btnBack:hover { background: var(--border); }
+  nav { display: none !important; }
   #mobileOverlay {
     display: none;
     position: fixed;
@@ -655,8 +678,6 @@
 
   /* ========== MOBILE — ekrani uži od 768px ========== */
   @media (max-width: 768px) {
-    /* Hamburger vidljiv, header kompaktniji */
-    #hamburgerBtn { display: block; }
     header { padding: 0 12px; gap: 8px; }
     .logo-text h1 { font-size: 16px; letter-spacing: 1px; }
     .logo-text span { display: none; }
@@ -946,7 +967,8 @@
 </div>
 
 <header>
-  <button id="hamburgerBtn" onclick="toggleMobileNav()" aria-label="Otvori meni">☰</button>
+  <button id="hamburgerBtn" onclick="toggleMobileNav()" aria-label="Izbornik">☰</button>
+  <button id="btnBack" onclick="showSection('dashboard')" aria-label="Natrag na početnu">← Pregled</button>
   <div class="logo">
     <div id="headerLogoWrap" style="width:48px;height:48px;border-radius:50%;overflow:hidden;border:2px solid #F0A500;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:var(--surface2)">
       <img id="headerLogoImg" src="" style="width:100%;height:100%;object-fit:cover;display:none" alt="Logo kluba">
@@ -3718,22 +3740,12 @@ function initMobileNav() {
 }
 
 function toggleMobileNav() {
-  if (window.innerWidth <= 768) {
-    const grid = document.getElementById('mobileNavGrid');
-    if (grid && grid.classList.contains('open')) {
-      closeMobileGrid();
-    } else {
-      openMobileGrid();
-    }
-    return;
+  const grid = document.getElementById('mobileNavGrid');
+  if (grid && grid.classList.contains('open')) {
+    closeMobileGrid();
+  } else {
+    openMobileGrid();
   }
-  const nav = document.querySelector('nav');
-  const overlay = document.getElementById('mobileOverlay');
-  if (!nav) return;
-  nav.classList.toggle('mobile-open');
-  const isOpen = nav.classList.contains('mobile-open');
-  if (overlay) overlay.classList.toggle('show', isOpen);
-  document.body.classList.toggle('nav-open', isOpen);
 }
 
 function closeMobileNav() {
@@ -3881,8 +3893,11 @@ function showSection(id) {
     toast('Nemate ovlasti za ovu sekciju.', 'err');
     id = 'dashboard';
   }
+  // Back button: visible on all sections except dashboard
+  const btnBack = document.getElementById('btnBack');
+  if (btnBack) btnBack.style.display = (id === 'dashboard') ? 'none' : 'flex';
   // Close mobile nav when item selected
-  if (window.innerWidth <= 768) closeMobileNav();
+  closeMobileNav();
   // Hide/show floating AI button and scroll-to-top on AI page
   const fab = document.getElementById('floatingAI');
   if (fab) fab.style.display = id === 'ai' ? 'none' : 'flex';

@@ -746,16 +746,12 @@
       <div class="page-header">
         <div>
           <h2>Pregled kluba</h2>
-          <p>KK Đurđevac — sezona 2025/2026</p>
+          <p id="dashSubtitle">—</p>
         </div>
         <button class="btn btn-secondary btn-sm admin-only" onclick="manualSyncAll()" id="btnSync" style="margin-right:8px">☁️ Sync u oblak</button><button class="btn btn-gold" onclick="showSection('ai')">🤖 Pitaj AI tajnika</button>
       </div>
       <div class="content">
-        <!-- ALERT PANEL -->
         <div id="alertPanel" style="margin-bottom:16px"></div>
-
-        <!-- ALERT PANEL -->
-        <div id="alertPanel" style="margin-bottom:18px"></div>
 
         <div class="stats-row" id="statsRow">
           <div class="stat-card" onclick="showSection('clanovi')" style="cursor:pointer" title="Svi članovi">
@@ -771,6 +767,9 @@
             <div class="val" id="statNatjecanja">0</div><div class="lbl">Natjecanja</div>
           </div>
         </div>
+
+        <div id="dash-nadolazeci" style="margin-bottom:16px"></div>
+        <div id="dash-rodendani" style="margin-bottom:16px"></div>
 
         <h3 style="font-family:'Bebas Neue',sans-serif;letter-spacing:1px;font-size:18px;margin-bottom:12px;color:var(--muted)">NEDAVNE AKTIVNOSTI</h3>
         <div id="recentActivity">
@@ -927,6 +926,40 @@
         </div>
       </div>
       <div class="content">
+
+        <!-- Podaci kluba za uplatnice (admin-only) -->
+        <div class="card admin-only" id="upKlubPodaciCard" style="margin-bottom:20px;border-left:3px solid var(--gold)">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;margin-bottom:14px;color:var(--muted)">⚙ PODACI KLUBA ZA UPLATNICE</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Primatelj (naziv kluba)</label>
+              <input type="text" id="upCfgPrimatelj" placeholder="npr. Karate klub Đurđevac">
+            </div>
+            <div class="form-group">
+              <label>IBAN</label>
+              <input type="text" id="upCfgIBAN" placeholder="HR...">
+            </div>
+            <div class="form-group">
+              <label>Adresa kluba</label>
+              <input type="text" id="upCfgAdresa" placeholder="Ulica, Grad">
+            </div>
+            <div class="form-group">
+              <label>OIB kluba</label>
+              <input type="text" id="upCfgOIB" placeholder="11 znamenki">
+            </div>
+            <div class="form-group">
+              <label>Telefon</label>
+              <input type="text" id="upCfgTel" placeholder="09x/xxx-xxx">
+            </div>
+            <div class="form-group">
+              <label>E-mail kluba</label>
+              <input type="email" id="upCfgEmail" placeholder="klub@email.hr">
+            </div>
+          </div>
+          <div style="margin-top:12px">
+            <button class="btn btn-secondary btn-sm" onclick="upSpremiCfg()">💾 Spremi podatke kluba</button>
+          </div>
+        </div>
 
         <!-- Postavke -->
         <div class="card" style="margin-bottom:20px">
@@ -3106,7 +3139,7 @@ function prijaviKorisnika() {
     if (trenutniKorisnik.uloga === 'trener') {
       aiWelcome.innerHTML = `Dobar dan, ${trenutniKorisnik.ime}! Ovdje sam kao pomoć pri pisanju <strong>izvještaja s natjecanja</strong> za web i društvene mreže.<br><br>🏆 <strong>Izvještaj s natjecanja</strong> – recite mi naziv natjecanja, kada je bilo, koji su natjecatelji sudjelovali i koji su rezultati.<br><br>Za ostale administrativne poslove obratite se predsjedniku ili tajniku kluba.`;
     } else {
-      aiWelcome.innerHTML = `Dobar dan! Ja sam digitalni tajnik <strong>KK Đurđevac</strong>. Mogu vam pomoći s:<br><br>📜 <strong>Pisanjem odluka</strong> – skupštinske, upravnog odbora<br>✉️ <strong>Obavijestima roditeljima/trenerima</strong> – pozivi, obavijesti o treninzima, promjene<br>🏆 <strong>Izvještajima s natjecanja</strong> – za web, Facebook, portale<br>👥 <strong>Pitanjima o statutu</strong> – prava, obveze, procedure<br>📋 <strong>Administrativnim poslovima</strong> – zahtjevi, dopisi, izjave<br><br>Što trebate danas?`;
+      aiWelcome.innerHTML = `Dobar dan! Ja sam digitalni tajnik <strong>${(trenutniKorisnik && trenutniKorisnik.klub_naziv) || 'KK Đurđevac'}</strong>. Mogu vam pomoći s:<br><br>📜 <strong>Pisanjem odluka</strong> – skupštinske, upravnog odbora<br>✉️ <strong>Obavijestima roditeljima/trenerima</strong> – pozivi, obavijesti o treninzima, promjene<br>🏆 <strong>Izvještajima s natjecanja</strong> – za web, Facebook, portale<br>👥 <strong>Pitanjima o statutu</strong> – prava, obveze, procedure<br>📋 <strong>Administrativnim poslovima</strong> – zahtjevi, dopisi, izjave<br><br>Što trebate danas?`;
     }
   }
   toast('Dobrodošli, ' + trenutniKorisnik.ime + '! 🥋');
@@ -3117,6 +3150,12 @@ function updateHeaderKlub() {
   const logo = (trenutniKorisnik && trenutniKorisnik.klub_logo) || null;
   const el = document.getElementById('headerKlubNaziv');
   if (el) el.textContent = naziv;
+  const sub = document.getElementById('dashSubtitle');
+  if (sub) {
+    const now = new Date();
+    const god = now.getMonth() >= 8 ? now.getFullYear() : now.getFullYear() - 1;
+    sub.textContent = naziv + ' — sezona ' + god + '/' + (god + 1);
+  }
   const img = document.getElementById('headerLogoImg');
   const initials = document.getElementById('headerLogoInitials');
   if (logo && img) {
@@ -3469,7 +3508,7 @@ function showSection(id) {
   if (id === 'odluke') renderOdluke();
   if (id === 'izvjestaji') renderIzvjestaji();
   if (id === 'komunikacija') renderKomunikacija();
-  if (id === 'uplatnice') initUplatnice();
+  if (id === 'uplatnice') { initUplatnice(); upUcitajCfg(); }
   if (id === 'emailovi') { renderEmailForma(); }
   if (id === 'treneri') { trRenderLista(); }
   if (id === 'korisnici') { if(trenutniKorisnik?.uloga==='admin') korisnikRenderLista(); else { toast('Nemate ovlasti!','err'); showSection('dashboard'); } }
@@ -3512,6 +3551,7 @@ document.querySelectorAll('.modal-overlay').forEach(m => {
 function updateStats() {
   setTimeout(renderAlerts, 100);
   updateAlerts();
+  renderDashboardWidgets();
   const ukupno = state.clanovi.length;
   const aktivni = state.clanovi.filter(c => c.status === 'aktivan').length;
   const neaktivni = ukupno - aktivni;
@@ -3542,6 +3582,71 @@ function updateStats() {
         </div>
       </div>`
     ).join('');
+  }
+}
+
+function renderDashboardWidgets() {
+  // Nadolazeci dogadaji
+  const daEl = document.getElementById('dash-nadolazeci');
+  if (daEl) {
+    const danas = new Date().toISOString().split('T')[0];
+    try { kalDogadaji = JSON.parse(localStorage.getItem('kk_kalendar') || '[]'); } catch(e){}
+    const nadolazeci = kalDogadaji.filter(e => e.datum >= danas).sort((a,b) => a.datum.localeCompare(b.datum)).slice(0, 5);
+    if (nadolazeci.length === 0) {
+      daEl.innerHTML = '';
+    } else {
+      const KAL_EMOJI_W = { trening:'🥋', natjecanje:'🏆', sastanak:'👥', ostalo:'📌' };
+      const KAL_BOJE_W  = { trening:'#C8102E', natjecanje:'#F0A500', sastanak:'#3b82f6', ostalo:'#888' };
+      daEl.innerHTML = `<div class="card" style="padding:14px 16px;margin-bottom:8px">
+        <div style="font-weight:700;font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px">📅 Nadolazeći događaji</div>
+        ${nadolazeci.map(e => `<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid #2a2a2a">
+          <span style="font-size:16px">${KAL_EMOJI_W[e.vrsta]||'📌'}</span>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:600;color:#EDEDED;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${e.naziv}</div>
+            <div style="font-size:11px;color:var(--muted)">${new Date(e.datum+'T12:00:00').toLocaleDateString('hr-HR',{weekday:'short',day:'numeric',month:'short'})}${e.lokacija ? ' · '+e.lokacija : ''}</div>
+          </div>
+          <div style="width:3px;border-radius:2px;height:32px;background:${KAL_BOJE_W[e.vrsta]||'#888'};flex-shrink:0"></div>
+        </div>`).join('')}
+      </div>`;
+    }
+  }
+
+  // Rodjendani u sljedećih 14 dana
+  const rdEl = document.getElementById('dash-rodendani');
+  if (rdEl) {
+    const danas2 = new Date();
+    const godDanas = danas2.getFullYear();
+    const rodendani = (state.clanovi || []).filter(c => {
+      if (!c.datRod || c.status !== 'aktivan') return false;
+      const dr = new Date(c.datRod);
+      let bday = new Date(godDanas, dr.getMonth(), dr.getDate());
+      if (bday < danas2) bday = new Date(godDanas + 1, dr.getMonth(), dr.getDate());
+      const diff = (bday - danas2) / 86400000;
+      c._bdayDiff = diff;
+      c._bdayDate = bday;
+      return diff >= 0 && diff < 14;
+    }).sort((a, b) => a._bdayDiff - b._bdayDiff);
+
+    if (rodendani.length === 0) {
+      rdEl.innerHTML = '';
+    } else {
+      rdEl.innerHTML = `<div class="card" style="padding:14px 16px;margin-bottom:8px">
+        <div style="font-weight:700;font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px">🎂 Nadolazeći rođendani (14 dana)</div>
+        ${rodendani.map(c => {
+          const dr = new Date(c.datRod);
+          const god = godDanas - dr.getFullYear();
+          const label = Math.round(c._bdayDiff) === 0 ? '🎉 Danas!' : Math.round(c._bdayDiff) === 1 ? 'Sutra' : 'Za ' + Math.round(c._bdayDiff) + ' dana';
+          return `<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid #2a2a2a">
+            <span style="font-size:16px">🎂</span>
+            <div style="flex:1">
+              <div style="font-size:13px;font-weight:600;color:#EDEDED">${c.ime} ${c.prezime}</div>
+              <div style="font-size:11px;color:var(--muted)">${c._bdayDate.toLocaleDateString('hr-HR',{day:'numeric',month:'long'})} · puni ${god} god.</div>
+            </div>
+            <div style="font-size:11px;color:#F0A500;font-weight:600">${label}</div>
+          </div>`;
+        }).join('')}
+      </div>`;
+    }
   }
 }
 
@@ -4508,7 +4613,15 @@ function stopMic() {
 // ========== AI CHAT ==========
 const today = new Date();
 const todayStr = today.toLocaleDateString('hr-HR', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
-const SYSTEM_PROMPT = `Ti si DIGITALNI TAJNIK Karate kluba Đurđevac (KK Đurđevac). 
+function getSystemPrompt() {
+  const klubNaziv = (trenutniKorisnik && trenutniKorisnik.klub_naziv) || 'KK Đurđevac';
+  const jeDjurdjevac = !trenutniKorisnik || !trenutniKorisnik.klub_naziv || trenutniKorisnik.klub_naziv === 'KK Đurđevac';
+  if (!jeDjurdjevac) {
+    return `Ti si DIGITALNI TAJNIK ${klubNaziv}. Odgovaraš ISKLJUČIVO na hrvatskom jeziku. NIKADA ne govori da ne možeš nešto napraviti. Uvijek budi kratki i konkretan. Danas je ${todayStr}. Tvoja uloga je pomagati tajniku i predsjedniku kluba s administrativnim poslovima: pisanjem odluka, obavijesti, izvještaja s natjecanja, dopisa i ostalih administrativnih dokumenata. Uvijek si profesionalan i koristan.`;
+  }
+  return SYSTEM_PROMPT_KKD;
+}
+const SYSTEM_PROMPT_KKD = `Ti si DIGITALNI TAJNIK Karate kluba Đurđevac (KK Đurđevac).
 Odgovaraš ISKLJUČIVO na hrvatskom jeziku.
 NIKADA ne govori da ne možeš nešto napraviti.
 NIKADA ne spominji da nemaš pristup internetu, email računu ili sustavima.
@@ -4643,6 +4756,8 @@ Možeš pomoći s:
 Uvijek si profesionalan, koncizan i koristan. Kada pišeš formalne dokumente, koristii standardni format s datumom, brojem, pravnom osnovom i potpisima.`;
 
 let chatHistory = [];
+// Legacy alias — some paths may still reference it
+const SYSTEM_PROMPT = SYSTEM_PROMPT_KKD;
 
 async function sendAI() {
   const input = document.getElementById('aiInput');
@@ -4667,9 +4782,9 @@ async function sendAI() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         max_tokens: 1500,
-        messages: [{role:'system',content: trenutniKorisnik?.uloga === 'trener'
+        messages: [{role:'system', content: trenutniKorisnik?.uloga === 'trener'
           ? `Ti si AI asistent koji ISKLJUČIVO pomaže treneru karate kluba s pisanjem IZVJEŠTAJA S NATJECANJA za web stranice, Facebook i sportske portale. Odgovaraš ISKLJUČIVO na hrvatskom jeziku. Danas je ${todayStr}. PODACI O KLUBU: KK Đurđevac, Đurđevac. Pišeš živahne, kratke sportske izvještaje na temelju podataka koje ti trener da (natjecanje, datum, natjecatelji, rezultati, medalje). Ako te pitaju za bilo što drugo (odluke, molbe, dopise, obavijesti roditeljima, financije, statute, akte), ljubazno odbij i reci: "Za tu vrstu dokumenta obratite se predsjedniku ili tajnici kluba."`
-          : SYSTEM_PROMPT
+          : getSystemPrompt()
         }, ...chatHistory]
       })
     });
@@ -6069,14 +6184,19 @@ function dnRenderStats() {
 
 // ========== ISPIS / PDF IZVOZI ==========
 
-const KLUB_ZAGLAVLJE = `
-  <div style="font-family:Arial,sans-serif;border-bottom:2px solid #C8102E;padding-bottom:12px;margin-bottom:18px;display:flex;align-items:center;gap:16px">
+function getKlubZaglavlje() {
+  const up = getUpPodaci();
+  const naziv = (trenutniKorisnik && trenutniKorisnik.klub_naziv) || 'KK Đurđevac';
+  const meta = [up.adresa, up.oib ? 'OIB: ' + up.oib : '', up.iban ? 'IBAN: ' + up.iban : ''].filter(Boolean).join(' &nbsp;|&nbsp; ');
+  return `<div style="font-family:Arial,sans-serif;border-bottom:2px solid #C8102E;padding-bottom:12px;margin-bottom:18px;display:flex;align-items:center;gap:16px">
     <div style="width:50px;height:50px;background:#C8102E;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:18px;flex-shrink:0">KK</div>
     <div>
-      <div style="font-size:20px;font-weight:900;letter-spacing:1px;color:#111">KARATE KLUB ĐURĐEVAC</div>
-      <div style="font-size:11px;color:#666;margin-top:2px">Ulica Andrije Hebranga 12, 48350 Đurđevac &nbsp;|&nbsp; OIB: 98308789784 &nbsp;|&nbsp; IBAN: HR8823600001102289908</div>
+      <div style="font-size:20px;font-weight:900;letter-spacing:1px;color:#111">${naziv.toUpperCase()}</div>
+      ${meta ? `<div style="font-size:11px;color:#666;margin-top:2px">${meta}</div>` : ''}
     </div>
   </div>`;
+}
+const KLUB_ZAGLAVLJE = '';
 
 const PRINT_CSS = `
   *{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}
@@ -6100,7 +6220,8 @@ const PRINT_CSS = `
 function printDoc(bodyHtml, title) {
   const w = window.open('', '_blank', 'width=900,height=700');
   if (!w) { toast('Dopustite pop-up prozore za ispis!', 'err'); return; }
-  w.document.write(`<!DOCTYPE html><html lang="hr"><head><meta charset="UTF-8"><title>${title}</title><style>${PRINT_CSS}</style></head><body>${KLUB_ZAGLAVLJE}${bodyHtml}<div class="footer">Generirano: ${new Date().toLocaleString('hr-HR')} · Digitalni Tajnik · KK Đurđevac</div></body></html>`);
+  const naziv = (trenutniKorisnik && trenutniKorisnik.klub_naziv) || 'KK Đurđevac';
+  w.document.write(`<!DOCTYPE html><html lang="hr"><head><meta charset="UTF-8"><title>${title}</title><style>${PRINT_CSS}</style></head><body>${getKlubZaglavlje()}${bodyHtml}<div class="footer">Generirano: ${new Date().toLocaleString('hr-HR')} · Digitalni Tajnik · ${naziv}</div></body></html>`);
   w.document.close();
   setTimeout(() => { w.focus(); w.print(); }, 400);
 }
@@ -7040,9 +7161,23 @@ function initUplatnice() {
 }
 
 // ========== UPLATNICE ==========
-const IBAN = 'HR8823600001102289908';
-const PRIMATELJ = 'Karate klub Đurđevac';
-const ADRESA_PRIMATELJ = 'Ulica Andrije Hebranga 12, 48350 Đurđevac';
+function getUpPodaci() {
+  let cfg = {};
+  try { cfg = JSON.parse(localStorage.getItem('kk_uplatnice_cfg') || '{}'); } catch(e) {}
+  const klub = (trenutniKorisnik && trenutniKorisnik.klub_naziv) || 'KK Đurđevac';
+  const jeKKD = klub === 'KK Đurđevac';
+  return {
+    primatelj: cfg.primatelj || klub,
+    iban:      cfg.iban      || (jeKKD ? 'HR8823600001102289908' : ''),
+    adresa:    cfg.adresa    || (jeKKD ? 'Ulica Andrije Hebranga 12, 48350 Đurđevac' : ''),
+    oib:       cfg.oib       || (jeKKD ? '98308789784' : ''),
+    tel:       cfg.tel       || (jeKKD ? '098/805-555' : ''),
+    email_klub: cfg.email_klub || (jeKKD ? 'karate.djurdjevac@gmail.com' : '')
+  };
+}
+function saveUpPodaci(data) {
+  localStorage.setItem('kk_uplatnice_cfg', JSON.stringify(data));
+}
 
 function izracunajClanarinu(clanovi_obitelji) {
   // clanovi_obitelji = array aktivnih članova istog prezimena (djeca)
@@ -7078,6 +7213,27 @@ function izracunajClanarinu(clanovi_obitelji) {
     }
     return { ...c, iznos, napomena_iznos };
   });
+}
+
+function upUcitajCfg() {
+  const p = getUpPodaci();
+  ['Primatelj','IBAN','Adresa','OIB','Tel','Email'].forEach(k => {
+    const el = document.getElementById('upCfg' + k);
+    if (el) el.value = p[k.toLowerCase() === 'email' ? 'email_klub' : k.toLowerCase()] || '';
+  });
+}
+
+function upSpremiCfg() {
+  const cfg = {
+    primatelj:  document.getElementById('upCfgPrimatelj')?.value.trim() || '',
+    iban:       document.getElementById('upCfgIBAN')?.value.trim() || '',
+    adresa:     document.getElementById('upCfgAdresa')?.value.trim() || '',
+    oib:        document.getElementById('upCfgOIB')?.value.trim() || '',
+    tel:        document.getElementById('upCfgTel')?.value.trim() || '',
+    email_klub: document.getElementById('upCfgEmail')?.value.trim() || ''
+  };
+  saveUpPodaci(cfg);
+  toast('Podaci kluba za uplatnice spremljeni!');
 }
 
 function generirajUplatnice() {
@@ -7160,15 +7316,16 @@ function napraviOpis(u) {
 
 function napraviMailBody(u) {
   const rokStr = u.rok ? new Date(u.rok).toLocaleDateString('hr-HR') : `20. u mjesecu`;
+  const up = getUpPodaci();
   return `Poštovani,
 
 molimo Vas da podmiriti članarinu za ${u.mjesec} ${u.godina} za ${u.ime} ${u.prezime}.
 
 PODACI ZA UPLATU:
 ────────────────────────────────
-Primatelj:  ${PRIMATELJ}
-Adresa:     ${ADRESA_PRIMATELJ}
-IBAN:       ${IBAN}
+Primatelj:  ${up.primatelj}
+Adresa:     ${up.adresa}
+IBAN:       ${up.iban}
 Iznos:      ${u.iznos},00 EUR
 Opis:       Članarina ${u.mjesec} ${u.godina}
 Napomena:   ${u.ime} ${u.prezime}
@@ -7181,9 +7338,7 @@ Napomena: ${u.napomena_iznos === '2. dijete' ? 'Drugi član obitelji — povlaš
 Hvala na povjerenju i redovitoj uplati!
 
 Sportski pozdrav,
-KK Đurđevac
-Tel: 098/805-555
-E-mail: karate.djurdjevac@gmail.com`;
+${up.primatelj}${up.tel ? '\nTel: ' + up.tel : ''}${up.email_klub ? '\nE-mail: ' + up.email_klub : ''}`;
 }
 
 function posaljiMailObj(u) {
@@ -7237,15 +7392,15 @@ function prikaziUplatnicuObj(u) {
   document.getElementById('uplatnicaNaslov').textContent = 'Uplatnica — ' + u.ime + ' ' + u.prezime;
   const btnMail = document.getElementById('btnUplatnicaMail');
   if (u.email) { btnMail.style.display = ''; } else { btnMail.style.display = 'none'; }
+  const up = getUpPodaci();
   const row = (lbl, val) => '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #333;font-size:14px"><span style="color:#aaa">' + lbl + '</span><strong style="color:#fff;text-align:right">' + val + '</strong></div>';
-  document.getElementById('uplatnicaBody').innerHTML = 
+  document.getElementById('uplatnicaBody').innerHTML =
     '<div style="font-size:28px;color:#C8102E;font-weight:bold;text-align:center;padding:16px 0;border-bottom:2px solid #C8102E;margin-bottom:12px">' + u.iznos + ',00 EUR</div>'
     + row('Član', u.ime + ' ' + u.prezime)
     + row('Za', 'Članarina ' + u.mjesec + ' ' + u.godina)
     + row('Napomena', u.ime + ' ' + u.prezime + ' (' + u.napomena_iznos + ')')
-    + row('Primatelj', 'Karate klub Đurđevac')
-    + row('IBAN', 'HR8823600001102289908')
-    + row('Banka', 'Zagrebačka banka')
+    + row('Primatelj', up.primatelj)
+    + (up.iban ? row('IBAN', up.iban) : '')
     + row('Opis', 'Članarina ' + u.mjesec + ' ' + u.godina)
     + row('Rok plaćanja', rokStr)
     + (u.email ? '<div style="margin-top:12px;font-size:13px;color:#2ECC71">📧 ' + u.email + '</div>' : '<div style="margin-top:12px;font-size:13px;color:#F39C12">⚠ Nema e-mail adrese</div>');
@@ -7255,14 +7410,15 @@ function prikaziUplatnicuObj(u) {
     const barkodDiv = document.getElementById('hub3Barkod');
     if (!barkodDiv) return;
     // HUB-3 format data
-    const hub3 = 'HRVHUB3\nEUR\n' + String(u.iznos * 100).padStart(15,'0') + '\n\n\n\nKarate klub Djurdjevac\nUlica Andrije Hebranga 12\n48350 Djurdjevac\nHR8823600001102289908\nHR99\n\nClanarina ' + u.mjesec + ' ' + u.godina + ' ' + u.ime + ' ' + u.prezime;
+    const up2 = getUpPodaci();
+    const hub3 = 'HRVHUB3\nEUR\n' + String(u.iznos * 100).padStart(15,'0') + '\n\n\n\n' + up2.primatelj + '\n' + (up2.adresa||'').replace(/,\s*/g,'\n') + '\n' + up2.iban + '\nHR99\n\nClanarina ' + u.mjesec + ' ' + u.godina + ' ' + u.ime + ' ' + u.prezime;
 
     barkodDiv.innerHTML = `
       <div style="background:#fff;border-radius:8px;padding:14px;text-align:center">
         <div style="font-size:10px;color:#333;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">HUB-3 Podaci za plaćanje</div>
         <div style="font-family:monospace;font-size:10px;color:#111;text-align:left;background:#f5f5f5;padding:10px;border-radius:6px;word-break:break-all;line-height:1.6">
-          <div><strong>Primatelj:</strong> Karate klub Đurđevac</div>
-          <div><strong>IBAN:</strong> HR8823600001102289908</div>
+          <div><strong>Primatelj:</strong> ${up2.primatelj}</div>
+          ${up2.iban ? `<div><strong>IBAN:</strong> ${up2.iban}</div>` : ''}
           <div><strong>Iznos:</strong> ${u.iznos},00 EUR</div>
           <div><strong>Model:</strong> HR99</div>
           <div><strong>Poziv na broj:</strong> Clanarina ${u.mjesec} ${u.godina}</div>
@@ -7275,11 +7431,12 @@ function prikaziUplatnicuObj(u) {
   if (u.iznos > 0) {
     setTimeout(() => {
       document.getElementById('hub3QrContainer').style.display = 'block';
+      const up3 = getUpPodaci();
       genHUB3QR(
         'hub3Canvas',
         u.iznos,
-        'Karate klub Đurđevac',
-        'HR8823600001102289908',
+        up3.primatelj,
+        up3.iban,
         'Clanarina ' + u.mjesec + ' ' + u.godina,
         u.ime + ' ' + u.prezime
       );

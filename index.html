@@ -761,6 +761,68 @@
     th, td { padding: 8px 10px; }
   }
 
+  /* ========== MOBILE NAV GRID ========== */
+  #mobileNavGrid {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.65);
+    z-index: 200;
+    flex-direction: column;
+  }
+  #mobileNavGrid.open { display: flex; }
+  .mobile-grid-inner {
+    background: var(--black);
+    border-radius: 0 0 20px 20px;
+    overflow-y: auto;
+    max-height: 90vh;
+    -webkit-overflow-scrolling: touch;
+  }
+  .mobile-grid-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background: var(--black);
+    z-index: 1;
+  }
+  .mobile-grid-tiles {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    padding: 16px;
+  }
+  .mobile-grid-tile {
+    aspect-ratio: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: background 0.12s, transform 0.1s;
+    padding: 8px;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+  .mobile-grid-tile:active { background: var(--surface2); transform: scale(0.93); }
+  .mobile-grid-tile.active { border-color: var(--red); background: rgba(200,16,46,0.15); }
+  .mobile-grid-tile .tile-icon { font-size: 28px; line-height: 1; }
+  .mobile-grid-tile .tile-label {
+    font-size: 11px;
+    color: var(--text);
+    text-align: center;
+    line-height: 1.25;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+  }
+
   /* FLOATING AI BUTTON */
   #floatingAI {
     position: fixed;
@@ -3577,6 +3639,15 @@ function initMobileNav() {
 }
 
 function toggleMobileNav() {
+  if (window.innerWidth <= 768) {
+    const grid = document.getElementById('mobileNavGrid');
+    if (grid && grid.classList.contains('open')) {
+      closeMobileGrid();
+    } else {
+      openMobileGrid();
+    }
+    return;
+  }
   const nav = document.querySelector('nav');
   const overlay = document.getElementById('mobileOverlay');
   if (!nav) return;
@@ -3591,6 +3662,72 @@ function closeMobileNav() {
   const overlay = document.getElementById('mobileOverlay');
   if (nav) nav.classList.remove('mobile-open');
   if (overlay) overlay.classList.remove('show');
+  document.body.classList.remove('nav-open');
+  closeMobileGrid();
+}
+
+// ========== MOBILE GRID NAV ==========
+const NAV_TILES = [
+  { id: 'dashboard',    icon: '📊', label: 'Pregled',       role: 'all' },
+  { id: 'clanovi',      icon: '👥', label: 'Članovi',       role: 'all' },
+  { id: 'treneri',      icon: '🥋', label: 'Treneri',       role: 'all' },
+  { id: 'rezultati',    icon: '🏅', label: 'Natjecanja',    role: 'all' },
+  { id: 'kalendar',     icon: '📅', label: 'Kalendar',      role: 'all' },
+  { id: 'lijecnicki',   icon: '🏥', label: 'Liječnički',    role: 'all' },
+  { id: 'ai',           icon: '🤖', label: 'AI Tajnik',     role: 'all' },
+  { id: 'obavijesti2',  icon: '📢', label: 'Obavijesti',    role: 'admin' },
+  { id: 'emailovi',     icon: '📧', label: 'Email adrese',  role: 'admin' },
+  { id: 'financije',    icon: '💰', label: 'Financije',     role: 'admin' },
+  { id: 'uplatnice',    icon: '💳', label: 'Uplatnice',     role: 'admin' },
+  { id: 'odluke',       icon: '📜', label: 'Odluke',        role: 'admin' },
+  { id: 'godisnjiplan', icon: '📋', label: 'Godišnji plan', role: 'admin' },
+  { id: 'putni',        icon: '🚗', label: 'Putni nalozi',  role: 'admin' },
+  { id: 'dnevnik',      icon: '📋', label: 'Dnevnik rada',  role: 'admin' },
+  { id: 'gdpr',         icon: '🔒', label: 'GDPR',          role: 'admin' },
+  { id: 'korisnici',    icon: '⚙️',  label: 'Korisnici',     role: 'predsjednik' },
+  { id: 'superadmin',   icon: '🔑', label: 'Super Admin',   role: 'superadmin' },
+];
+
+function renderMobileGrid() {
+  const grid = document.getElementById('mobileGridTiles');
+  if (!grid) return;
+  const k = trenutniKorisnik || {};
+  const uloga = k.uloga || '';
+  const jeAdmin = k.admin || false;
+  const jePredsjednik = uloga === 'admin';
+  const jeSuperAdmin = uloga === 'superadmin';
+  const mgIme = document.getElementById('mgUserIme');
+  const mgUloga = document.getElementById('mgUserUloga');
+  if (mgIme) mgIme.textContent = k.ime || '—';
+  const ulogaLabels = { admin: 'Predsjednik', tajnik: 'Tajnik', trener: 'Trener', superadmin: 'Super Admin' };
+  if (mgUloga) mgUloga.textContent = ulogaLabels[uloga] || uloga || '—';
+  const activeSec = document.querySelector('.section.active');
+  const activeId = activeSec ? activeSec.id : 'dashboard';
+  const filtered = NAV_TILES.filter(t => {
+    if (t.role === 'all') return true;
+    if (t.role === 'admin') return jeAdmin;
+    if (t.role === 'predsjednik') return jePredsjednik;
+    if (t.role === 'superadmin') return jeSuperAdmin;
+    return false;
+  });
+  grid.innerHTML = filtered.map(t =>
+    `<div class="mobile-grid-tile${t.id === activeId ? ' active' : ''}" onclick="closeMobileGrid();showSection('${t.id}')">
+      <div class="tile-icon">${t.icon}</div>
+      <div class="tile-label">${t.label}</div>
+    </div>`
+  ).join('');
+}
+
+function openMobileGrid() {
+  renderMobileGrid();
+  const grid = document.getElementById('mobileNavGrid');
+  if (grid) grid.classList.add('open');
+  document.body.classList.add('nav-open');
+}
+
+function closeMobileGrid() {
+  const grid = document.getElementById('mobileNavGrid');
+  if (grid) grid.classList.remove('open');
   document.body.classList.remove('nav-open');
 }
 
@@ -8778,6 +8915,26 @@ async function saObrisiKorisnika(id, username) {
 // Supabase load se poziva iz prijaviKorisnika
 
 </script>
+
+<!-- ========== MOBILNI GRID IZBORNIK ========== -->
+<div id="mobileNavGrid" onclick="if(event.target===this)closeMobileGrid()">
+  <div class="mobile-grid-inner">
+    <div class="mobile-grid-header">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div id="mgUserAvatar" style="width:36px;height:36px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">👤</div>
+        <div>
+          <div id="mgUserIme" style="font-weight:600;font-size:14px;color:var(--text)">—</div>
+          <div id="mgUserUloga" style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px">—</div>
+        </div>
+      </div>
+      <button onclick="closeMobileGrid()" style="background:var(--surface2);border:1px solid var(--border);border-radius:50%;width:36px;height:36px;font-size:18px;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center">✕</button>
+    </div>
+    <div class="mobile-grid-tiles" id="mobileGridTiles"></div>
+    <div style="padding:0 16px 20px">
+      <button onclick="closeMobileGrid();odjava()" style="width:100%;padding:12px;background:rgba(200,16,46,0.1);border:1px solid rgba(200,16,46,0.3);border-radius:10px;color:#ff5a70;font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer">Odjava</button>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>

@@ -748,7 +748,7 @@
           <h2>Pregled kluba</h2>
           <p>KK Đurđevac — sezona 2025/2026</p>
         </div>
-        <button class="btn btn-secondary btn-sm" onclick="manualSyncAll()" id="btnSync" style="margin-right:8px">☁️ Sync u oblak</button><button class="btn btn-gold" onclick="showSection('ai')">🤖 Pitaj AI tajnika</button>
+        <button class="btn btn-secondary btn-sm admin-only" onclick="manualSyncAll()" id="btnSync" style="margin-right:8px">☁️ Sync u oblak</button><button class="btn btn-gold" onclick="showSection('ai')">🤖 Pitaj AI tajnika</button>
       </div>
       <div class="content">
         <!-- ALERT PANEL -->
@@ -764,7 +764,7 @@
           <div class="stat-card" onclick="filterIGo('neaktivan')" style="cursor:pointer" title="Neaktivni članovi">
             <div class="val" id="statAktivni">0</div><div class="lbl" id="statAktivniLbl">Neaktivni</div>
           </div>
-          <div class="stat-card" onclick="filterNeplaceni()" style="cursor:pointer" title="Neplaćena članarina">
+          <div class="stat-card admin-only" onclick="filterNeplaceni()" style="cursor:pointer" title="Neplaćena članarina">
             <div class="val" id="statNeplaceno">0</div><div class="lbl">Neplaćena članarina</div>
           </div>
           <div class="stat-card" onclick="showSection('izvjestaji')" style="cursor:pointer" title="Natjecanja">
@@ -780,10 +780,10 @@
         <hr class="divider">
         <h3 style="font-family:'Bebas Neue',sans-serif;letter-spacing:1px;font-size:18px;margin-bottom:12px;color:var(--muted)">BRZE RADNJE</h3>
         <div style="display:flex;gap:10px;flex-wrap:wrap;">
-          <button class="btn btn-primary" onclick="openModal('modalDodajClana')">+ Novi član</button>
-          <button class="btn btn-secondary" onclick="novaOdluka()">📜 Nova odluka</button>
+          <button class="btn btn-primary admin-only" onclick="openModal('modalDodajClana')">+ Novi član</button>
+          <button class="btn btn-secondary admin-only" onclick="novaOdluka()">📜 Nova odluka</button>
           <button class="btn btn-secondary" onclick="openModal('modalIzvjestaj')">🏆 Novi izvještaj</button>
-          <button class="btn btn-secondary" onclick="openModal('modalKomunikacija')">✉️ Pošalji obavijest</button>
+          <button class="btn btn-secondary admin-only" onclick="openModal('modalKomunikacija')">✉️ Pošalji obavijest</button>
         </div>
       </div>
     </div>
@@ -1458,7 +1458,7 @@
     <div id="treneri" class="section">
       <div class="page-header">
         <div><h2>Stručni kadar</h2><p>Evidencija trenera i stručnih osoba</p></div>
-        <button class="btn btn-primary" onclick="openModal('modalNoviTrener')">+ Dodaj trenera</button>
+        <button class="btn btn-primary admin-only" onclick="openModal('modalNoviTrener')">+ Dodaj trenera</button>
       </div>
       <div class="content">
         <div style="background:rgba(240,165,0,0.1);border:1px solid var(--gold);border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:13px;color:var(--gold)">
@@ -3057,6 +3057,15 @@ function prijaviKorisnika() {
     ].forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; });
   }
   updateHeaderKlub();
+  // Prilagodi AI poruku dobrodošlice ovisno o ulozi
+  const aiWelcome = document.querySelector('#aiMessages .msg-bubble');
+  if (aiWelcome) {
+    if (trenutniKorisnik.uloga === 'trener') {
+      aiWelcome.innerHTML = `Dobar dan, ${trenutniKorisnik.ime}! Ovdje sam kao pomoć pri pisanju <strong>izvještaja s natjecanja</strong> za web i društvene mreže.<br><br>🏆 <strong>Izvještaj s natjecanja</strong> – recite mi naziv natjecanja, kada je bilo, koji su natjecatelji sudjelovali i koji su rezultati.<br><br>Za ostale administrativne poslove obratite se predsjedniku ili tajniku kluba.`;
+    } else {
+      aiWelcome.innerHTML = `Dobar dan! Ja sam digitalni tajnik <strong>KK Đurđevac</strong>. Mogu vam pomoći s:<br><br>📜 <strong>Pisanjem odluka</strong> – skupštinske, upravnog odbora<br>✉️ <strong>Obavijestima roditeljima/trenerima</strong> – pozivi, obavijesti o treninzima, promjene<br>🏆 <strong>Izvještajima s natjecanja</strong> – za web, Facebook, portale<br>👥 <strong>Pitanjima o statutu</strong> – prava, obveze, procedure<br>📋 <strong>Administrativnim poslovima</strong> – zahtjevi, dopisi, izjave<br><br>Što trebate danas?`;
+    }
+  }
   toast('Dobrodošli, ' + trenutniKorisnik.ime + '! 🥋');
 }
 
@@ -4600,7 +4609,10 @@ async function sendAI() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         max_tokens: 1500,
-        messages: [{role:'system',content:SYSTEM_PROMPT}, ...chatHistory]
+        messages: [{role:'system',content: trenutniKorisnik?.uloga === 'trener'
+          ? `Ti si AI asistent koji ISKLJUČIVO pomaže treneru karate kluba s pisanjem IZVJEŠTAJA S NATJECANJA za web stranice, Facebook i sportske portale. Odgovaraš ISKLJUČIVO na hrvatskom jeziku. Danas je ${todayStr}. PODACI O KLUBU: KK Đurđevac, Đurđevac. Pišeš živahne, kratke sportske izvještaje na temelju podataka koje ti trener da (natjecanje, datum, natjecatelji, rezultati, medalje). Ako te pitaju za bilo što drugo (odluke, molbe, dopise, obavijesti roditeljima, financije, statute, akte), ljubazno odbij i reci: "Za tu vrstu dokumenta obratite se predsjedniku ili tajnici kluba."`
+          : SYSTEM_PROMPT
+        }, ...chatHistory]
       })
     });
     if (!resp.ok) throw new Error('API ' + resp.status);

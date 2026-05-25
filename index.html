@@ -4443,26 +4443,23 @@ function genHUB3QR(canvasId, iznos, primatelj, iban, opis, napomena) {
   const adresaDijelovi = (up.adresa || '').split(',').map(s => s.trim());
   const ulica    = toAsciiHR(adresaDijelovi[0] || '');
   const grad     = toAsciiHR(adresaDijelovi[1] || '');
-  const platitelj    = toAsciiHR(napomena || '').substring(0, 30);
-  const opisPlacanja = toAsciiHR((opis || '').trim()).substring(0, 35);
-  // Izvuci godinu iz opisa (zadnji token) za poziv na broj
-  const opisTokeni = opisPlacanja.split(' ');
-  const pozvBroj  = opisTokeni[opisTokeni.length - 1] || '';
+  const platitelj = toAsciiHR(napomena || '').substring(0, 30);
+  const opis35    = toAsciiHR((opis + ' ' + napomena).trim()).substring(0, 35);
 
   const hub3 = [
     'HRVHUB3',
     'EUR',
     String(Math.round(parseFloat(iznos || 0) * 100)).padStart(15, '0'),
-    platitelj,    // polje 4: ime platitelja
-    '',           // polje 5: adresa platitelja 1
-    '',           // polje 6: adresa platitelja 2
-    toAsciiHR(primatelj), // polje 7: ime primatelja
-    ulica,        // polje 8: adresa primatelja
-    grad,         // polje 9: grad primatelja
+    platitelj,             // polje 4: ime platitelja
+    '',                    // polje 5: adresa platitelja 1
+    '',                    // polje 6: adresa platitelja 2
+    toAsciiHR(primatelj),  // polje 7: ime primatelja
+    ulica,                 // polje 8: adresa primatelja
+    grad,                  // polje 9: grad primatelja
     (iban || '').replace(/\s/g, ''), // polje 10: IBAN
-    'HR99',       // polje 11: model plaćanja
-    pozvBroj,     // polje 12: poziv na broj (godina — ne smije biti prazno)
-    opisPlacanja  // polje 13: opis plaćanja
+    'HR99',                // polje 11: model plaćanja
+    opis35,                // polje 12: poziv na broj (isti tekst — banka mora vidjeti nešto)
+    opis35                 // polje 13: opis plaćanja
   ].join('\n');
 
   if (typeof QRious !== 'undefined') {

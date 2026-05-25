@@ -419,13 +419,18 @@
   .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: flex-end; }
 
   /* AI CHAT */
+  /* #ai sekcija ne smije sama scrollati — samo ai-messages scrollaju */
+  #ai.section { overflow-y: hidden; }
   .ai-panel {
     display: flex;
     flex-direction: column;
-    height: 100%;
+    flex: 1;
+    min-height: 0; /* kritično: bez ovoga flex ne može shrinkati ispod content visine */
+    overflow: hidden;
   }
   .ai-messages {
     flex: 1;
+    min-height: 0; /* kritično za scroll unutar flexa */
     overflow-y: auto;
     padding: 20px 24px;
     display: flex;
@@ -466,6 +471,8 @@
     display: flex;
     gap: 10px;
     align-items: flex-end;
+    flex-shrink: 0; /* nikad ne smanjiVati — uvijek vidljiv */
+    background: var(--black); /* sprječava prozirnost na mobilu */
   }
   .ai-input-area textarea {
     flex: 1;
@@ -4940,6 +4947,87 @@ let _msgId = 0;
 // Legacy alias — some paths may still reference it
 const SYSTEM_PROMPT = SYSTEM_PROMPT_KKD;
 
+// ── AI → auto-detekt podataka o novom članu ────────────────────────────────
+
+const _CRO_MJESECI = {
+  siječnja:1,veljače:2,ožujka:3,travnja:4,svibnja:5,lipnja:6,
+  srpnja:7,kolovoza:8,rujna:9,listopada:10,studenoga:11,prosinca:12
+};
+
+function aiParsiraCroDatum(s) {
+  // "4. svibnja 2017." ili "04.05.2017" ili "2017-05-04"
+  const cro = s.match(/(\d{1,2})\.\s*([\wčćšđž]+)\s*(\d{4})/i);
+  if (cro) {
+    const mj = _CRO_MJESECI[cro[2].toLowerCase()];
+    if (mj) return `${cro[3]}-${String(mj).padStart(2,'0')}-${cro[1].padStart(2,'0')}`;
+  }
+  const num = s.match(/(\d{1,2})[.\/\-](\d{1,2})[.\/\-](\d{4})/);
+  if (num) return `${num[3]}-${num[2].padStart(2,'0')}-${num[1].padStart(2,'0')}`;
+  const iso = s.match(/(\d{4})-(\d{2})-(\d{2})/);
+  if (iso) return iso[0];
+  return '';
+}
+
+function aiIzvadiClanData(tekst) {
+  // Detektiramo dokument koji sadrži ime+OIB — signal za "član"
+  const imeM = tekst.match(/Ime\s+i\s+prezime\s*(?:člana)?:\s*([^\n\r.]+)/i);
+  const oibM = tekst.match(/OIB:\s*(\d{11})/i);
+  if (!imeM || !oibM) return null;
+
+  const dijelovi = imeM[1].trim().replace(/\.$/, '').split(/\s+/);
+  if (dijelovi.length < 2) return null;
+
+  const p = {
+    ime: dijelovi[0],
+    prezime: dijelovi.slice(1).join(' '),
+    oib: oibM[1],
+    adresa: '',
+    datRod: '',
+    roditelji: '',
+    mobitel: '',
+    email: '',
+    bolest: ''
+  };
+
+  const adrM = tekst.match(/Adresa:\s*([^\n\r]+)/i);
+  if (adrM) p.adresa = adrM[1].trim().replace(/\.$/, '');
+
+  const datM = tekst.match(/Datum\s*ro[đd]enja:\s*([^\n\r]+)/i);
+  if (datM) p.datRod = aiParsiraCroDatum(datM[1].trim());
+
+  const rodM = tekst.match(/roditelj\s+(?:ili\s+staratelj\s+)?([A-ZČĆŠĐŽ][^\n\r,]+)/i);
+  if (rodM) p.roditelji = rodM[1].trim();
+
+  const mobM = tekst.match(/(?:Mobitel|Tel(?:efon)?):\s*([\d\s\+\-\/]+)/i);
+  if (mobM) p.mobitel = mobM[1].replace(/\s/g,'').trim();
+
+  return p;
+}
+
+function aiAppendBtnDodaj(msgId, podaci) {
+  const msgEl = document.getElementById(msgId);
+  if (!msgEl) return;
+  const bubble = msgEl.querySelector('.msg-bubble');
+  if (!bubble) return;
+  const wrapper = document.createElement('div');
+  wrapper.style.cssText = 'margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.1)';
+  const btn = document.createElement('button');
+  btn.className = 'btn btn-primary btn-sm';
+  btn.style.cssText = 'gap:6px;font-size:13px';
+  btn.innerHTML = `➕ Dodaj <strong style="margin:0 2px">${podaci.ime} ${podaci.prezime}</strong> u bazu`;
+  btn.onclick = () => {
+    popuniFormuIzOCR(podaci, 'c');
+    if (typeof azurirajKategorijuPreview === 'function') azurirajKategorijuPreview();
+    openModal('modalDodajClana');
+    toast('📋 Podaci popunjeni — pregledajte i dopunite');
+    btn.disabled = true;
+    btn.innerHTML = '✓ Forma otvorena';
+    btn.style.opacity = '0.6';
+  };
+  wrapper.appendChild(btn);
+  bubble.appendChild(wrapper);
+}
+
 async function sendAI() {
   const input = document.getElementById('aiInput');
   const msg = input.value.trim();
@@ -4983,6 +5071,12 @@ async function sendAI() {
 
     updateMsg(loadId, text);
     chatHistory.push({ role: 'assistant', content: text });
+
+    // Detektiraj podatke o članu u odgovoru → ponudi dodavanje u bazu
+    if (trenutniKorisnik?.admin) {
+      const clanPodaci = aiIzvadiClanData(text);
+      if (clanPodaci) aiAppendBtnDodaj(loadId, clanPodaci);
+    }
 
     // Keep history manageable
     if (chatHistory.length > 20) chatHistory = chatHistory.slice(-20);

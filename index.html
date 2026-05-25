@@ -5028,63 +5028,88 @@ function aiAppendBtnDodaj(msgId, podaci) {
   bubble.appendChild(wrapper);
 }
 
+// Poziv prema Groq API-ju s automatskim retry pri 429 (rate limit)
+async function aiPozovGroq(payload, loadId) {
+  const CEKANJE_SEK = [5, 10, 20]; // sekunde između pokušaja
+  const TOCKE = '<div class="loading-dots"><span></span><span></span><span></span></div>';
+
+  for (let i = 0; i <= CEKANJE_SEK.length; i++) {
+    if (i > 0) {
+      let sek = CEKANJE_SEK[i - 1];
+      while (sek > 0) {
+        updateMsg(loadId, `⏳ Server zauzet — pokušavam ponovo za ${sek}s`);
+        await new Promise(r => setTimeout(r, 1000));
+        sek--;
+      }
+      updateMsg(loadId, TOCKE);
+    }
+
+    let resp;
+    try {
+      resp = await fetch('/api/ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+    } catch (netErr) {
+      if (i < CEKANJE_SEK.length) continue; // mrežna greška — pokušaj ponovo
+      throw new Error('Nema internetske veze.');
+    }
+
+    if (resp.status === 429) {
+      if (i < CEKANJE_SEK.length) continue; // rate limit — čekaj i pokušaj
+      throw new Error('Server preopterećen. Pokušajte za nekoliko minuta.');
+    }
+
+    if (!resp.ok) {
+      let errMsg = 'HTTP ' + resp.status;
+      try { const e = await resp.json(); errMsg = e.error?.message || e.error || errMsg; } catch(_) {}
+      throw new Error(errMsg);
+    }
+
+    return await resp.json();
+  }
+}
+
 async function sendAI() {
   const input = document.getElementById('aiInput');
   const msg = input.value.trim();
-  const msg_orig = msg;
   if (!msg) return;
-  // Groq API
-  
+
   input.value = '';
   input.style.height = 'auto';
-  
+
   appendMsg('user', msg);
   chatHistory.push({ role: 'user', content: msg });
-  
-  const loadId = appendMsg('assistant', '<div class="loading-dots"><span></span><span></span><span></span></div>');
-  
-  document.getElementById('btnSendAI').disabled = true;
-  
-  try {
-    const resp = await fetch('/api/ai', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        max_tokens: 1500,
-        messages: [{role:'system', content: trenutniKorisnik?.uloga === 'trener'
-          ? `Ti si AI asistent koji ISKLJUČIVO pomaže treneru karate kluba s pisanjem IZVJEŠTAJA S NATJECANJA za web stranice, Facebook i sportske portale. Odgovaraš ISKLJUČIVO na hrvatskom jeziku. Danas je ${todayStr}. PODACI O KLUBU: KK Đurđevac, Đurđevac. Pišeš živahne, kratke sportske izvještaje na temelju podataka koje ti trener da (natjecanje, datum, natjecatelji, rezultati, medalje). Ako te pitaju za bilo što drugo (odluke, molbe, dopise, obavijesti roditeljima, financije, statute, akte), ljubazno odbij i reci: "Za tu vrstu dokumenta obratite se predsjedniku ili tajnici kluba."`
-          : getSystemPrompt()
-        }, ...chatHistory]
-      })
-    });
-    if (!resp.ok) {
-      if (resp.status === 429) throw new Error('Previše zahtjeva — pričekajte trenutak i pokušajte ponovo.');
-      let errMsg = 'HTTP ' + resp.status;
-      try {
-        const errData = await resp.json();
-        errMsg = (errData.error?.message || errData.error || errMsg);
-      } catch(_) {}
-      throw new Error(errMsg);
-    }
-    const data = await resp.json();
-    const text = (data.choices?.[0]?.message?.content || data.content?.map(b => b.text || '').join('') || '') || 'Greška pri komunikaciji.';
 
+  const loadId = appendMsg('assistant', '<div class="loading-dots"><span></span><span></span><span></span></div>');
+  document.getElementById('btnSendAI').disabled = true;
+
+  const systemContent = trenutniKorisnik?.uloga === 'trener'
+    ? `Ti si AI asistent koji ISKLJUČIVO pomaže treneru karate kluba s pisanjem IZVJEŠTAJA S NATJECANJA za web stranice, Facebook i sportske portale. Odgovaraš ISKLJUČIVO na hrvatskom jeziku. Danas je ${todayStr}. PODACI O KLUBU: KK Đurđevac, Đurđevac. Pišeš živahne, kratke sportske izvještaje na temelju podataka koje ti trener da (natjecanje, datum, natjecatelji, rezultati, medalje). Ako te pitaju za bilo što drugo (odluke, molbe, dopise, obavijesti roditeljima, financije, statute, akte), ljubazno odbij i reci: "Za tu vrstu dokumenta obratite se predsjedniku ili tajnici kluba."`
+    : getSystemPrompt();
+
+  try {
+    const data = await aiPozovGroq({
+      max_tokens: 1500,
+      messages: [{ role: 'system', content: systemContent }, ...chatHistory]
+    }, loadId);
+
+    const text = (data.choices?.[0]?.message?.content || '') || 'Greška pri komunikaciji.';
     updateMsg(loadId, text);
     chatHistory.push({ role: 'assistant', content: text });
 
-    // Detektiraj podatke o članu u odgovoru → ponudi dodavanje u bazu
     if (trenutniKorisnik?.admin) {
       const clanPodaci = aiIzvadiClanData(text);
       if (clanPodaci) aiAppendBtnDodaj(loadId, clanPodaci);
     }
 
-    // Keep history manageable
     if (chatHistory.length > 20) chatHistory = chatHistory.slice(-20);
 
   } catch(e) {
-    updateMsg(loadId, 'Greška: ' + (e.message || 'Provjerite internet vezu.'));
+    updateMsg(loadId, '⚠️ ' + (e.message || 'Greška. Pokušajte ponovo.'));
   }
-  
+
   document.getElementById('btnSendAI').disabled = false;
 }
 

@@ -1147,6 +1147,7 @@
           <button class="btn btn-secondary" onclick="importHksClanovi()" title="Uvezi iz HKS popisa">📥 Uvezi HKS</button>
           <button class="btn btn-secondary admin-only" onclick="exportClanCSV()">📊 CSV</button>
           <button class="btn btn-secondary admin-only" onclick="printClanovi()">🖨️ Ispis</button>
+          <button class="btn btn-secondary admin-only" onclick="printBlankPristupnica()">📄 Prazna pristupnica</button>
           <button class="btn btn-secondary admin-only" onclick="bulkOznaciPlaceno()">💰 Sve platilo</button>
           <button class="btn btn-secondary admin-only" onclick="openModal('modalBulkAzuriranje')">📷 Sken</button>
           <button class="btn btn-primary admin-only" onclick="otvoriModalDodajClana()">+ Dodaj člana</button>
@@ -2701,9 +2702,12 @@
         <div style="font-size:12px;color:#555;padding:6px 0">Nema spremljenih izjava.</div>
       </div>
     </div>
-    <div class="modal-footer" style="justify-content:flex-end">
-      <button class="btn btn-secondary" onclick="closeModal('modalDetaljiClana')">Odustani</button>
-      <button class="btn btn-primary" onclick="spremiUrednogClana()">💾 Spremi promjene</button>
+    <div class="modal-footer" style="justify-content:space-between">
+      <button class="btn btn-secondary" onclick="printPristupnica(state.selectedClanId)">🖨️ Pristupnica</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-secondary" onclick="closeModal('modalDetaljiClana')">Odustani</button>
+        <button class="btn btn-primary" onclick="spremiUrednogClana()">💾 Spremi promjene</button>
+      </div>
     </div>
   </div>
 </div>
@@ -7536,6 +7540,98 @@ function bulkOznaciPlaceno() {
   save(); renderClanovi(); updateStats();
   logActivity('💰', 'Bulk plaćanje: ' + aktivni.length + ' članova označeno kao plaćeno');
   toast(aktivni.length + ' članova označeno kao plaćeno!');
+}
+
+// ── Pristupnica za učlanjenje ──
+function _pristupnicaHTML(c) {
+  const naziv = (trenutniKorisnik && trenutniKorisnik.klub_naziv) || 'KK Đurđevac';
+  const up = getUpPodaci ? getUpPodaci() : {};
+  const datum = new Date().toLocaleDateString('hr-HR', { day:'2-digit', month:'long', year:'numeric' });
+  const datUclan = c && c.datUclan ? new Date(c.datUclan + 'T12:00:00').toLocaleDateString('hr-HR') : '____________';
+  const datRodFmt = c && c.datRod ? new Date(c.datRod + 'T12:00:00').toLocaleDateString('hr-HR') : '';
+
+  const jeMaloljetan = c && c.datRod && (new Date().getFullYear() - new Date(c.datRod).getFullYear() < 18);
+
+  const row = (label, val) => `<div class="row"><span>${label}:</span><strong>${val || '________________________'}</strong></div>`;
+  const blankRow = (label) => `<div class="row"><span>${label}:</span><strong>________________________</strong></div>`;
+
+  const clanData = c ? `
+    ${row('Ime i prezime', c.ime && c.prezime ? c.ime + ' ' + c.prezime : '')}
+    ${row('Datum rođenja', datRodFmt)}
+    ${row('OIB', c.oib && (trenutniKorisnik?.admin) ? c.oib : c ? '***' : '')}
+    ${row('Adresa stanovanja', c.adresa)}
+    ${row('Mobitel', c.mobitel)}
+    ${row('E-mail', c.email)}
+    ${row('Pojasni stupanj', c.pojas ? c.pojas + (c.kyu ? ' (' + c.kyu + ')' : '') : '')}
+    ${row('Datum učlanjenja', datUclan)}
+  ` : `
+    ${blankRow('Ime i prezime')}
+    ${blankRow('Datum rođenja')}
+    ${blankRow('OIB')}
+    ${blankRow('Adresa stanovanja')}
+    ${blankRow('Mobitel')}
+    ${blankRow('E-mail')}
+    ${blankRow('Pojasni stupanj')}
+    ${blankRow('Datum učlanjenja')}
+  `;
+
+  const roditeljiSek = (c ? jeMaloljetan : true) ? `
+    <h3>PODACI O RODITELJU / STARATELJU</h3>
+    <p style="font-size:11px;color:#666;margin:-2px 0 8px">(Ispunjava se za osobe mlađe od 18 godina)</p>
+    ${c && c.roditelji ? row('Roditelji / staratelji', c.roditelji) : blankRow('Ime i prezime roditelja/staratelja')}
+    ${blankRow('OIB roditelja/staratelja')}
+    ${blankRow('Mobitel roditelja/staratelja')}
+    <div style="margin:12px 0;font-size:12px;line-height:1.7;border:1px solid #ddd;border-radius:4px;padding:10px;background:#f9f9f9">
+      Ja, niže potpisani roditelj / zakonski zastupnik, dajem suglasnost za upis navedene osobe u ${naziv}
+      te prihvaćam sve obveze i pravila kluba u njeno/njegovo ime.
+    </div>
+    <div class="sig" style="margin-top:20px">
+      <div><div class="line">Potpis roditelja / staratelja</div></div>
+      <div><div class="line">Datum</div></div>
+    </div>
+  ` : '';
+
+  return `
+    <h2 style="text-align:center;text-transform:uppercase;letter-spacing:2px;margin-bottom:4px">PRISTUPNICA ZA UČLANJENJE</h2>
+    <p style="text-align:center;color:#666;margin:0 0 18px;font-size:12px">${naziv}${up.adresa ? ' &nbsp;·&nbsp; ' + up.adresa : ''}</p>
+
+    <h3>OSOBNI PODACI ČLANA</h3>
+    ${clanData}
+
+    ${roditeljiSek}
+
+    <h3>PRIVOLA ZA OBRADU OSOBNIH PODATAKA (GDPR)</h3>
+    <div style="font-size:11px;line-height:1.7;border:1px solid #ddd;border-radius:4px;padding:10px;background:#f9f9f9;margin-bottom:10px">
+      Upisom u ${naziv} potpisnik pristupnice suglasan je da klub obrađuje njegove osobne podatke
+      (ime, prezime, datum rođenja, OIB, adresa, kontakt podaci) isključivo u svrhu evidencije članstva,
+      organizacije treninga, natjecanja i ispunjavanja zakonskih obveza. Podaci se ne ustupaju trećim stranama
+      bez izričite suglasnosti, osim nadležnim savezima (HKS) i tijelima državne vlasti temeljem zakona.
+      Privolu možete povući pisanim putem u bilo koje doba.
+    </div>
+
+    <h3>IZJAVA O PRIHVAĆANJU PRAVILA KLUBA</h3>
+    <div style="font-size:11px;line-height:1.7;border:1px solid #ddd;border-radius:4px;padding:10px;background:#f9f9f9;margin-bottom:10px">
+      Potpisom ove pristupnice izjavljujem da prihvaćam Statut i Pravilnik ${naziv},
+      obvezujem se redovito plaćati članarinu, poštovati upute trenera i pravila fair playa,
+      te da sam upoznat/a s rizicima bavljenja karate sportom.
+    </div>
+
+    <div class="sig">
+      <div><div class="line">${jeMaloljetan && c ? 'Potpis roditelja/staratelja' : 'Potpis člana'}</div></div>
+      <div><div class="line">Predsjednik kluba</div></div>
+      <div><div class="line">Datum: ${datum}</div></div>
+    </div>
+  `;
+}
+
+function printPristupnica(id) {
+  const c = state.clanovi.find(x => x.id === id);
+  if (!c) { toast('Član nije pronađen.', 'err'); return; }
+  printDoc(_pristupnicaHTML(c), 'Pristupnica — ' + c.ime + ' ' + c.prezime);
+}
+
+function printBlankPristupnica() {
+  printDoc(_pristupnicaHTML(null), 'Prazna pristupnica');
 }
 
 // ========== MODUL 3: KALENDAR ==========

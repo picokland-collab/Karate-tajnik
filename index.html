@@ -764,12 +764,53 @@
   /* ========== DASHBOARD NAV GRID ========== */
   .dash-nav-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    grid-template-columns: repeat(4, 1fr);
     gap: 10px;
     margin-bottom: 24px;
   }
-  @media (max-width: 768px) {
+  .dash-nav-tile {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px 12px 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, transform 0.1s;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    text-align: center;
+  }
+  .dash-nav-tile:hover { background: var(--surface2); border-color: rgba(200,16,46,0.4); }
+  .dash-nav-tile:active { transform: scale(0.96); background: var(--surface2); }
+  .dash-nav-tile .dn-icon {
+    font-size: 36px;
+    line-height: 1;
+    width: 56px;
+    height: 56px;
+    background: var(--surface2);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .dash-nav-tile .dn-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    line-height: 1.3;
+  }
+  @media (max-width: 1100px) {
     .dash-nav-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+  @media (max-width: 768px) {
+    .dash-nav-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .dash-nav-tile { padding: 16px 10px 12px; gap: 8px; }
+    .dash-nav-tile .dn-icon { font-size: 28px; width: 46px; height: 46px; border-radius: 12px; }
+    .dash-nav-tile .dn-label { font-size: 11px; }
   }
 
   /* ========== MOBILE NAV GRID ========== */
@@ -3412,9 +3453,9 @@ function renderDashNavTiles() {
     return false;
   });
   container.innerHTML = filtered.map(t =>
-    `<div class="mobile-grid-tile" onclick="showSection('${t.id}')">
-      <div class="tile-icon">${t.icon}</div>
-      <div class="tile-label">${t.label}</div>
+    `<div class="dash-nav-tile" onclick="showSection('${t.id}')">
+      <div class="dn-icon">${t.icon}</div>
+      <div class="dn-label">${t.label}</div>
     </div>`
   ).join('');
 }

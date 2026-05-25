@@ -797,8 +797,9 @@
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn btn-secondary" onclick="importHksClanovi()" title="Uvezi iz HKS popisa">📥 Uvezi HKS</button>
+          <button class="btn btn-secondary" onclick="exportClanCSV()">📊 Export CSV</button>
           <button class="btn btn-secondary" onclick="openModal('modalBulkAzuriranje')">📷 Ažuriraj skenom</button>
-          <button class="btn btn-primary" onclick="openModal('modalDodajClana')">+ Dodaj člana</button>
+          <button class="btn btn-primary" onclick="otvoriModalDodajClana()">+ Dodaj člana</button>
         </div>
       </div>
       <div class="content">
@@ -816,6 +817,7 @@
             <option value="senior">Senior (18+)</option>
           </select>
         </div>
+        <div id="clanovi-count" style="font-size:12px;color:var(--muted);margin-bottom:8px;min-height:16px"></div>
         <div id="tableClanovi">
           <div class="empty-state"><div class="icon">👥</div><p>Nema članova. Dodajte prvog člana!</p></div>
         </div>
@@ -1806,7 +1808,8 @@
         </div>
         <div class="form-group">
           <label>Datum rođenja</label>
-          <input type="date" id="cDatRod">
+          <input type="date" id="cDatRod" onchange="azurirajKategorijuPreview()">
+          <div id="kategorijaPreview" style="font-size:11px;color:var(--gold);margin-top:4px;min-height:14px"></div>
         </div>
         <div class="form-group">
           <label>OIB</label>
@@ -3489,6 +3492,49 @@ function capitalizeName(s) {
   return s.replace(/\S+/g, w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
 }
 
+function otvoriModalDodajClana() {
+  // Reset form
+  ['cIme','cPrezime','cDatRod','cOIB','cAdresa','cRoditelji','cMobitel','cEmail','cBolest'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  const kp = document.getElementById('kategorijaPreview');
+  if (kp) kp.textContent = '';
+  // Auto-postavi datum učlanjenja = danas
+  const datUclan = document.getElementById('cDatUclan');
+  if (datUclan) datUclan.value = new Date().toISOString().split('T')[0];
+  openModal('modalDodajClana');
+}
+
+function azurirajKategorijuPreview() {
+  const datRod = document.getElementById('cDatRod')?.value;
+  const kp = document.getElementById('kategorijaPreview');
+  if (!kp) return;
+  if (!datRod) { kp.textContent = ''; return; }
+  const kat = kategorija(datRod);
+  const god = new Date().getFullYear() - new Date(datRod).getFullYear();
+  const labels = { kadet: 'Kadet (do 14 god.)', junior: 'Junior (14–18 god.)', senior: 'Senior (18+ god.)', nepoznato: '' };
+  kp.textContent = labels[kat] ? `Kategorija: ${labels[kat]} — ${god} god.` : '';
+}
+
+function exportClanCSV() {
+  const lista = state.clanovi;
+  if (!lista.length) { toast('Nema članova za export.', 'err'); return; }
+  const zaglavlje = ['Ime', 'Prezime', 'Datum rođenja', 'OIB', 'Adresa', 'Roditelji', 'Mobitel', 'Email', 'Pojas', 'Kategorija', 'Status', 'Članarina', 'Datum učlanjenja', 'Izjava'];
+  const redovi = lista.map(c => [
+    c.ime, c.prezime, c.datRod || '', c.oib || '', c.adresa || '',
+    c.roditelji || '', c.mobitel || '', c.email || '', c.pojas || '',
+    c.kategorija || '', c.status || '', c.clanarina === 'da' ? 'Da' : 'Ne',
+    c.datUclan || '', c.izjava === 'da' ? 'Da' : 'Ne'
+  ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(';'));
+  const csv = [zaglavlje.join(';'), ...redovi].join('\n');
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'clanovi.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast(`Izvezeno ${lista.length} članova u CSV.`);
+}
+
 function dodajClana() {
   const ime = capitalizeName(document.getElementById('cIme').value.trim());
   const prezime = capitalizeName(document.getElementById('cPrezime').value.trim());
@@ -3540,9 +3586,17 @@ function renderClanovi() {
   });
   
   const el = document.getElementById('tableClanovi');
+  const countEl = document.getElementById('clanovi-count');
   if (lista.length === 0) {
     el.innerHTML = '<div class="empty-state"><div class="icon">👥</div><p>Nema pronađenih članova.</p></div>';
+    if (countEl) countEl.textContent = '';
     return;
+  }
+  if (countEl) {
+    const ukupno = state.clanovi.length;
+    countEl.textContent = lista.length < ukupno
+      ? `Prikazano: ${lista.length} od ${ukupno} članova`
+      : `Ukupno: ${ukupno} ${ukupno === 1 ? 'član' : ukupno < 5 ? 'člana' : 'članova'}`;
   }
   
   el.innerHTML = `<table>

@@ -4834,18 +4834,26 @@ async function sendAI() {
         }, ...chatHistory]
       })
     });
-    if (!resp.ok) throw new Error('API ' + resp.status);
+    if (!resp.ok) {
+      if (resp.status === 429) throw new Error('Previše zahtjeva — pričekajte trenutak i pokušajte ponovo.');
+      let errMsg = 'HTTP ' + resp.status;
+      try {
+        const errData = await resp.json();
+        errMsg = (errData.error?.message || errData.error || errMsg);
+      } catch(_) {}
+      throw new Error(errMsg);
+    }
     const data = await resp.json();
     const text = (data.choices?.[0]?.message?.content || data.content?.map(b => b.text || '').join('') || '') || 'Greška pri komunikaciji.';
-    
+
     updateMsg(loadId, text);
     chatHistory.push({ role: 'assistant', content: text });
-    
+
     // Keep history manageable
     if (chatHistory.length > 20) chatHistory = chatHistory.slice(-20);
-    
+
   } catch(e) {
-    updateMsg(loadId, 'Greška: Provjerite internet vezu.');
+    updateMsg(loadId, 'Greška: ' + (e.message || 'Provjerite internet vezu.'));
   }
   
   document.getElementById('btnSendAI').disabled = false;

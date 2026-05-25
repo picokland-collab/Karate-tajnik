@@ -6855,10 +6855,11 @@ function dnRenderStats() {
     count: counts[String(c.id)] || 0,
     pct: totalTreninzi > 0 ? Math.round((counts[String(c.id)] || 0) / totalTreninzi * 100) : 0
   })).sort((a, b) => b.count - a.count);
+  window._dnStatsData = { treninzi, totalTreninzi };
   el.innerHTML = `
     <div class="card" style="padding:0;overflow:hidden">
-      <div style="display:grid;grid-template-columns:1fr auto auto;gap:0;font-size:11px;color:#666;padding:10px 16px;border-bottom:1px solid #222;font-weight:600;text-transform:uppercase;letter-spacing:0.5px">
-        <span>Član</span><span style="text-align:right;padding-right:16px">Treninzi</span><span style="text-align:right;min-width:52px">%</span>
+      <div style="display:grid;grid-template-columns:1fr auto auto auto;gap:0;font-size:11px;color:#666;padding:10px 16px;border-bottom:1px solid #222;font-weight:600;text-transform:uppercase;letter-spacing:0.5px">
+        <span>Član</span><span style="text-align:right;padding-right:12px">Treninzi</span><span style="text-align:right;min-width:52px">%</span><span style="min-width:28px"></span>
       </div>
       ${rows.map((r, i) => {
         const bar = r.pct;
@@ -6866,21 +6867,66 @@ function dnRenderStats() {
         const foto = r.clan.foto
           ? `<img src="${r.clan.foto}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0">`
           : `<div style="width:32px;height:32px;border-radius:50%;background:#2E2E2E;display:flex;align-items:center;justify-content:center;font-size:13px;color:#888;font-weight:700;flex-shrink:0">${r.clan.ime.charAt(0)}${r.clan.prezime.charAt(0)}</div>`;
-        return `<div style="display:grid;grid-template-columns:1fr auto auto;align-items:center;padding:10px 16px;border-bottom:1px solid #1a1a1a;${i % 2 === 1 ? 'background:rgba(255,255,255,0.02);' : ''}">
-          <div style="display:flex;align-items:center;gap:10px;min-width:0">
-            ${foto}
-            <div style="min-width:0">
-              <div style="font-size:13px;font-weight:600;color:#EDEDED;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.clan.ime} ${r.clan.prezime}</div>
-              <div style="margin-top:3px;height:4px;border-radius:2px;background:#222;width:100px">
-                <div style="height:4px;border-radius:2px;background:${color};width:${bar}%"></div>
+        return `<div id="dn-stat-row-${r.clan.id}">
+          <div onclick="dnToggleClanDetalj('${r.clan.id}')" style="display:grid;grid-template-columns:1fr auto auto auto;align-items:center;padding:10px 16px;border-bottom:1px solid #1a1a1a;cursor:pointer;transition:background 0.12s;${i % 2 === 1 ? 'background:rgba(255,255,255,0.02);' : ''}" onmouseover="this.style.background='rgba(255,255,255,0.04)'" onmouseout="this.style.background='${i%2===1?'rgba(255,255,255,0.02)':'transparent'}'">
+            <div style="display:flex;align-items:center;gap:10px;min-width:0">
+              ${foto}
+              <div style="min-width:0">
+                <div style="font-size:13px;font-weight:600;color:#EDEDED;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.clan.ime} ${r.clan.prezime}</div>
+                <div style="margin-top:4px;height:4px;border-radius:2px;background:#222;width:100px">
+                  <div style="height:4px;border-radius:2px;background:${color};width:${bar}%"></div>
+                </div>
               </div>
             </div>
+            <div style="font-size:14px;font-weight:700;color:#EDEDED;text-align:right;padding-right:12px">${r.count}<span style="font-size:11px;color:#555;font-weight:400"> /${totalTreninzi}</span></div>
+            <div style="font-size:14px;font-weight:700;color:${color};text-align:right;min-width:52px">${r.pct}%</div>
+            <div style="min-width:28px;text-align:right;font-size:14px;color:#555" id="dn-stat-arrow-${r.clan.id}">▸</div>
           </div>
-          <div style="font-size:14px;font-weight:700;color:#EDEDED;text-align:right;padding-right:16px">${r.count}<span style="font-size:11px;color:#555;font-weight:400"> /${totalTreninzi}</span></div>
-          <div style="font-size:14px;font-weight:700;color:${color};text-align:right;min-width:52px">${r.pct}%</div>
+          <div id="dn-stat-detalj-${r.clan.id}" style="display:none;background:#111;border-bottom:1px solid #1a1a1a;padding:10px 16px 14px"></div>
         </div>`;
       }).join('')}
     </div>`;
+}
+
+function dnToggleClanDetalj(clanId) {
+  const detalj = document.getElementById('dn-stat-detalj-' + clanId);
+  const arrow = document.getElementById('dn-stat-arrow-' + clanId);
+  if (!detalj) return;
+  const isOpen = detalj.style.display !== 'none';
+  if (isOpen) {
+    detalj.style.display = 'none';
+    if (arrow) arrow.textContent = '▸';
+    return;
+  }
+  arrow && (arrow.textContent = '▾');
+  const { treninzi, totalTreninzi } = window._dnStatsData || {};
+  if (!treninzi) return;
+  const clan = state.clanovi.find(c => String(c.id) === String(clanId));
+  if (!clan) return;
+  const sorted = [...treninzi].sort((a,b) => (b.datum||'').localeCompare(a.datum||''));
+  const prisutanNa = sorted.filter(t => (t.prisutni||[]).map(String).includes(String(clanId)));
+  const izostanci = sorted.filter(t => !(t.prisutni||[]).map(String).includes(String(clanId)));
+  const pct = totalTreninzi > 0 ? Math.round(prisutanNa.length / totalTreninzi * 100) : 0;
+  const color = pct >= 75 ? '#2ECC71' : pct >= 50 ? '#F0A500' : '#ff5a70';
+  const fmt = d => { try { return new Date(d+'T12:00:00').toLocaleDateString('hr-HR',{day:'2-digit',month:'2-digit',year:'numeric'}); } catch(e){return d;} };
+  detalj.innerHTML = `
+    <div style="font-size:12px;color:#aaa;margin-bottom:10px;padding-top:2px">
+      <span style="color:${color};font-weight:700">${pct}% prisutnosti</span>
+      &nbsp;·&nbsp; ${prisutanNa.length} prisutan · ${izostanci.length} izostanaka
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+      ${sorted.map(t => {
+        const bio = (t.prisutni||[]).map(String).includes(String(clanId));
+        return `<div style="display:flex;align-items:center;gap:7px;padding:6px 10px;border-radius:8px;background:${bio?'rgba(46,204,113,0.08)':'rgba(255,255,255,0.03)'};border:1px solid ${bio?'rgba(46,204,113,0.25)':'#222'}">
+          <span style="font-size:14px;flex-shrink:0">${bio?'✅':'—'}</span>
+          <div style="min-width:0">
+            <div style="font-size:12px;font-weight:600;color:${bio?'#EDEDED':'#666'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${t.naslov||'Trening'}</div>
+            <div style="font-size:10px;color:#555">${fmt(t.datum)}</div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
+  detalj.style.display = 'block';
 }
 
 // ========== ISPIS / PDF IZVOZI ==========

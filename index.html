@@ -4441,15 +4441,16 @@ function genHUB3QR(canvasId, iznos, primatelj, iban, opis, napomena) {
   // HUB-3 format — standard koji čitaju sve HR mobilne banke (m-zaba, PBZ365, Erste, Raiffeisen...)
   const up = getUpPodaci();
   const adresaDijelovi = (up.adresa || '').split(',').map(s => s.trim());
-  const ulica = toAsciiHR(adresaDijelovi[0] || '');
-  const grad  = toAsciiHR(adresaDijelovi[1] || '');
-  const opis35 = toAsciiHR((opis + ' ' + napomena).trim()).substring(0, 35);
+  const ulica    = toAsciiHR(adresaDijelovi[0] || '');
+  const grad     = toAsciiHR(adresaDijelovi[1] || '');
+  const platitelj = toAsciiHR(napomena || '').substring(0, 30);
+  const opisPlacanja = toAsciiHR((opis || '').trim()).substring(0, 35);
 
   const hub3 = [
     'HRVHUB3',
     'EUR',
     String(Math.round(parseFloat(iznos || 0) * 100)).padStart(15, '0'),
-    '',        // ime platitelja (prazno)
+    platitelj, // ime platitelja (npr. "Pero Perić")
     '',        // adresa platitelja 1
     '',        // adresa platitelja 2
     toAsciiHR(primatelj),
@@ -4457,8 +4458,8 @@ function genHUB3QR(canvasId, iznos, primatelj, iban, opis, napomena) {
     grad,
     (iban || '').replace(/\s/g, ''),
     'HR99',
-    opis35,    // poziv na broj — opis plaćanja (neke banke čitaju polje 12, ne 13)
-    opis35
+    opisPlacanja, // poziv na broj (polje 12 — neke banke čitaju ovo)
+    opisPlacanja  // opis plaćanja (polje 13)
   ].join('\n');
 
   if (typeof QRious !== 'undefined') {

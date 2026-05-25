@@ -1325,7 +1325,22 @@
 
         <!-- LISTA TRENINGA -->
         <div id="dn-lista-panel">
-          <div style="font-family:'Bebas Neue',sans-serif;letter-spacing:1px;font-size:15px;margin-bottom:10px;color:#aaa">NEDAVNI TRENINZI</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+            <div style="font-family:'Bebas Neue',sans-serif;letter-spacing:1px;font-size:15px;color:#aaa">TRENINZI</div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <select id="dn-filter-god" onchange="dnRenderLista()" style="background:#1C1C1C;border:1px solid #333;color:#EDEDED;padding:6px 10px;border-radius:8px;font-size:13px">
+                <option value="">Sve godine</option>
+              </select>
+              <select id="dn-filter-mj" onchange="dnRenderLista()" style="background:#1C1C1C;border:1px solid #333;color:#EDEDED;padding:6px 10px;border-radius:8px;font-size:13px">
+                <option value="">Svi mjeseci</option>
+                <option value="01">Siječanj</option><option value="02">Veljača</option><option value="03">Ožujak</option>
+                <option value="04">Travanj</option><option value="05">Svibanj</option><option value="06">Lipanj</option>
+                <option value="07">Srpanj</option><option value="08">Kolovoz</option><option value="09">Rujan</option>
+                <option value="10">Listopad</option><option value="11">Studeni</option><option value="12">Prosinac</option>
+              </select>
+            </div>
+          </div>
+          <div id="dn-count" style="font-size:12px;color:#888;margin-bottom:8px"></div>
           <div id="dn-lista-html">
             <div class="empty-state"><div class="icon">📋</div><p>Nema unesenih treninga.</p></div>
           </div>
@@ -1445,10 +1460,13 @@
         <button class="btn btn-primary" onclick="openModal('modalLijecnicki')">+ Unesi pregled</button>
       </div>
       <div class="content">
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px">
-          <div class="stat-card"><div class="val" id="lj-st-ok" style="font-size:24px;color:var(--success)">0</div><div class="lbl">Valjani</div></div>
-          <div class="stat-card"><div class="val" id="lj-st-warn" style="font-size:24px;color:var(--warn)">0</div><div class="lbl">Uskoro ističu</div></div>
-          <div class="stat-card"><div class="val" id="lj-st-exp" style="font-size:24px;color:var(--red)">0</div><div class="lbl">Istekli</div></div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px">
+          <div class="stat-card" style="cursor:pointer" onclick="ljSetFilter('')"><div class="val" id="lj-st-ok" style="font-size:24px;color:var(--success)">0</div><div class="lbl">Valjani</div></div>
+          <div class="stat-card" style="cursor:pointer" onclick="ljSetFilter('warn')"><div class="val" id="lj-st-warn" style="font-size:24px;color:var(--warn)">0</div><div class="lbl">Uskoro ističu</div></div>
+          <div class="stat-card" style="cursor:pointer" onclick="ljSetFilter('exp')"><div class="val" id="lj-st-exp" style="font-size:24px;color:var(--red)">0</div><div class="lbl">Istekli</div></div>
+        </div>
+        <div class="search-bar" style="margin-bottom:12px">
+          <input type="text" id="lj-search" placeholder="Pretraži po imenu člana..." oninput="ljRenderLista()">
         </div>
 
         <!-- Upozorenja -->
@@ -1494,6 +1512,7 @@
       <div class="page-header">
         <div><h2>Email adrese</h2><p>Brzi unos za slanje uplatnica</p></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-secondary btn-sm" onclick="kopirajSveEmailove()">📋 Kopiraj sve</button>
           <button class="btn btn-secondary" onclick="posaljiSvimaMail()">📧 Pošalji svima</button>
           <button class="btn btn-primary" onclick="spremiEmailove()">💾 Spremi sve</button>
         </div>
@@ -1520,9 +1539,12 @@
         <div style="background:rgba(240,165,0,0.1);border:1px solid var(--gold);border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:13px;color:var(--gold)">
           ⚖️ Zakon o sportu zahtijeva evidenciju svih osoba koje obavljaju stručne poslove u sportu.
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
           <div class="stat-card"><div class="val" id="tr-st-ukupno" style="font-size:28px">0</div><div class="lbl">Ukupno trenera</div></div>
           <div class="stat-card"><div class="val" id="tr-st-licenca" style="font-size:28px;color:var(--warn)">0</div><div class="lbl">Licence uskoro ističu</div></div>
+        </div>
+        <div class="search-bar" style="margin-bottom:12px">
+          <input type="text" id="tr-search" placeholder="Pretraži po imenu ili ulozi..." oninput="trRenderLista()">
         </div>
         <div id="tr-lista-html">
           <div class="empty-state"><div class="icon">🥋</div><p>Nema unesenih trenera.</p></div>
@@ -5587,6 +5609,7 @@ function trRenderLista() {
   const danas = new Date();
   const za30 = new Date(); za30.setDate(za30.getDate() + 30);
   let warn = 0;
+  const q = (document.getElementById('tr-search')?.value || '').toLowerCase();
 
   document.getElementById('tr-st-ukupno').textContent = trenerList.filter(t => t.status === 'aktivan').length;
 
@@ -5597,13 +5620,31 @@ function trRenderLista() {
     return;
   }
 
-  el.innerHTML = trenerList.map(t => {
+  // Broji ukupne upozorenja (za stat karticu) — neovisno o searchu
+  trenerList.forEach(t => {
+    if (t.licvrijedi) {
+      const lic = new Date(t.licvrijedi);
+      if (lic < danas || lic <= za30) warn++;
+    }
+  });
+  document.getElementById('tr-st-licenca').textContent = warn;
+
+  const filtered = q
+    ? trenerList.filter(t => (t.ime+' '+t.prezime+' '+t.uloga+' '+t.licenca).toLowerCase().includes(q))
+    : trenerList;
+
+  if (filtered.length === 0) {
+    el.innerHTML = '<div class="empty-state"><div class="icon">🔍</div><p>Nema rezultata za pretragu.</p></div>';
+    return;
+  }
+
+  el.innerHTML = filtered.map(t => {
     let licStatus = '';
     let licBoja = 'var(--success)';
     if (t.licvrijedi) {
       const lic = new Date(t.licvrijedi);
-      if (lic < danas) { licStatus = '✗ Istekla'; licBoja = 'var(--red)'; warn++; }
-      else if (lic <= za30) { licStatus = '⚠ Uskoro ističe'; licBoja = 'var(--warn)'; warn++; }
+      if (lic < danas) { licStatus = '✗ Istekla'; licBoja = 'var(--red)'; }
+      else if (lic <= za30) { licStatus = '⚠ Uskoro ističe'; licBoja = 'var(--warn)'; }
       else { licStatus = '✓ Valjana do ' + lic.toLocaleDateString('hr-HR'); }
     }
     return `<div class="card" style="margin-bottom:10px">
@@ -5624,8 +5665,6 @@ function trRenderLista() {
       </div>
     </div>`;
   }).join('');
-
-  document.getElementById('tr-st-licenca').textContent = warn;
 }
 
 function spremiTrenera() {
@@ -5845,12 +5884,14 @@ function posaljiSvimaMail(subject, body) {
     return;
   }
 
-  const subj = encodeURIComponent(subject || 'Obavijest — Karate klub Đurđevac');
-  const bod = encodeURIComponent(body || 'Poštovani,\n\n\n\nSrdačan pozdrav,\nKarate klub Đurđevac');
+  const up = getUpPodaci();
+  const klub = (trenutniKorisnik && trenutniKorisnik.klub_naziv) || 'KK Đurđevac';
+  const subj = encodeURIComponent(subject || 'Obavijest — ' + klub);
+  const bod = encodeURIComponent(body || 'Poštovani,\n\n\n\nSrdačan pozdrav,\n' + klub);
   const bcc = encodeURIComponent(emailovi.join(','));
-  
-  // Open Gmail compose directly in browser
-  const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=karate.djurdjevac@gmail.com&bcc=${bcc}&su=${subj}&body=${bod}`;
+  const from = up.email_klub || '';
+
+  const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1${from ? '&to='+encodeURIComponent(from) : ''}&bcc=${bcc}&su=${subj}&body=${bod}`;
   window.open(gmailUrl, '_blank');
   toast('✅ Otvara se Gmail s ' + emailovi.length + ' primatelja!');
 }
@@ -5900,6 +5941,15 @@ function spremiEmailove() {
   save();
   toast('Spremljeno ' + promjena + ' email adresa!');
   logActivity('📧', 'Ažurirane email adrese: ' + promjena + ' članova');
+}
+
+function kopirajSveEmailove() {
+  const emailovi = state.clanovi
+    .filter(c => c.status === 'aktivan' && c.email && c.email.trim())
+    .map(c => c.email.trim());
+  if (!emailovi.length) { toast('Nema unesenih email adresa!', 'err'); return; }
+  navigator.clipboard.writeText(emailovi.join(', '));
+  toast('Kopirano ' + emailovi.length + ' email adresa!');
 }
 
 // ========== MODUL 2: DNEVNIK RADA ==========
@@ -6038,14 +6088,39 @@ function zatvoriProzivku() {
 function dnRenderLista() {
   dnLoad();
   document.getElementById('dn-st-treninga').textContent = dnTreninzi.length;
-  const danas = dnTreninzi.find(t => t.datum === new Date().toISOString().split('T')[0]);
-  document.getElementById('dn-st-danas').textContent = danas ? danas.prisutni.length : 0;
+  const danasStr = new Date().toISOString().split('T')[0];
+  const danasT = dnTreninzi.find(t => t.datum === danasStr);
+  document.getElementById('dn-st-danas').textContent = danasT ? danasT.prisutni.length : 0;
   const el = document.getElementById('dn-lista-html');
+
+  // Popuni dropdown godina
+  const godine = [...new Set(dnTreninzi.map(t => (t.datum||'').substring(0,4)))].filter(Boolean).sort().reverse();
+  const selGod = document.getElementById('dn-filter-god');
+  if (selGod) {
+    const cur = selGod.value;
+    selGod.innerHTML = '<option value="">Sve godine</option>' + godine.map(g => `<option value="${g}"${g===cur?' selected':''}>${g}</option>`).join('');
+  }
+
+  const fg = selGod?.value || '';
+  const fm = document.getElementById('dn-filter-mj')?.value || '';
+  const filtered = [...dnTreninzi].filter(t => {
+    if (fg && !(t.datum||'').startsWith(fg)) return false;
+    if (fm && (t.datum||'').substring(5,7) !== fm) return false;
+    return true;
+  }).reverse();
+
+  const countEl = document.getElementById('dn-count');
+  if (countEl) countEl.textContent = (fg||fm) ? `Prikazano ${filtered.length} od ${dnTreninzi.length} treninga` : '';
+
   if (dnTreninzi.length === 0) {
     el.innerHTML = '<div class="empty-state"><div class="icon">📋</div><p>Nema unesenih treninga.</p></div>';
     return;
   }
-  el.innerHTML = [...dnTreninzi].reverse().map(t => {
+  if (filtered.length === 0) {
+    el.innerHTML = '<div class="empty-state"><div class="icon">🔍</div><p>Nema treninga za odabrani period.</p></div>';
+    return;
+  }
+  el.innerHTML = filtered.map(t => {
     const prisutni = state.clanovi.filter(c => t.prisutni.map(String).includes(String(c.id)));
     return `<div class="card" style="margin-bottom:10px">
       <div class="card-row">
@@ -6538,7 +6613,13 @@ function kalObrisi(id) {
 
 // ========== MODUL 4: LIJEČNIČKI PREGLEDI ==========
 let ljPregledi = [];
+let ljFilter = '';
 try { ljPregledi = JSON.parse(localStorage.getItem('kk_lijecnicki') || '[]'); } catch(e){}
+
+function ljSetFilter(f) {
+  ljFilter = f;
+  ljRenderLista();
+}
 function ljSave() {
   localStorage.setItem('kk_lijecnicki', JSON.stringify(ljPregledi));
   if (typeof sbEnabled !== 'undefined' && sbEnabled) {
@@ -6549,19 +6630,11 @@ function ljSave() {
 
 function ljRenderLista() {
   const danas = new Date();
-  const za15 = new Date(); za15.setDate(za15.getDate() + 30);
+  const za30 = new Date(); za30.setDate(za30.getDate() + 30);
   let ok = 0, warn = 0, exp = 0;
   const upoz = [];
   const el = document.getElementById('lj-lista-html');
-
-  if (ljPregledi.length === 0) {
-    el.innerHTML = '<div class="empty-state"><div class="icon">🏥</div><p>Nema unesenih pregleda.</p></div>';
-    document.getElementById('lj-st-ok').textContent = 0;
-    document.getElementById('lj-st-warn').textContent = 0;
-    document.getElementById('lj-st-exp').textContent = 0;
-    document.getElementById('lj-upozorenja').innerHTML = '';
-    return;
-  }
+  const q = (document.getElementById('lj-search')?.value || '').toLowerCase();
 
   // Populate dropdown
   const sel = document.getElementById('lj-clan-sel');
@@ -6571,15 +6644,59 @@ function ljRenderLista() {
         `<option value="${c.id}">${c.ime} ${c.prezime}</option>`).join('');
   }
 
-  const sorted = [...ljPregledi].sort((a,b) => a.vrijedi.localeCompare(b.vrijedi));
-  el.innerHTML = sorted.map(p => {
+  // Klasificiraj sve preglede (za stat kartice)
+  ljPregledi.forEach(p => {
+    const vd = new Date(p.vrijedi);
+    if (vd < danas) exp++;
+    else if (vd <= za30) warn++;
+    else ok++;
+    const clan = state.clanovi.find(c => c.id == p.clanId);
+    if (vd >= danas && vd <= za30) upoz.push({ ime: clan ? clan.ime+' '+clan.prezime : p.imeRucno, dana: Math.ceil((vd-danas)/86400000) });
+  });
+
+  document.getElementById('lj-st-ok').textContent = ok;
+  document.getElementById('lj-st-warn').textContent = warn;
+  document.getElementById('lj-st-exp').textContent = exp;
+
+  const upozDiv = document.getElementById('lj-upozorenja');
+  upozDiv.innerHTML = upoz.length > 0
+    ? `<div style="background:rgba(243,156,18,0.15);border:1px solid var(--warn);border-radius:8px;padding:12px 14px;margin-bottom:14px">
+        <div style="font-weight:600;color:var(--warn);margin-bottom:6px">⚠ Upozorenje — pregledi uskoro ističu:</div>
+        ${upoz.map(u => `<div style="font-size:13px;color:#EDEDED">• ${u.ime} — još ${u.dana} dan(a)</div>`).join('')}
+      </div>`
+    : '';
+
+  if (ljPregledi.length === 0) {
+    el.innerHTML = '<div class="empty-state"><div class="icon">🏥</div><p>Nema unesenih pregleda.</p></div>';
+    return;
+  }
+
+  // Sortiraj: istekli → uskoro → valjani, unutar svake grupe po datumu
+  const rangiraj = p => { const vd = new Date(p.vrijedi); return vd < danas ? 0 : vd <= za30 ? 1 : 2; };
+  const filtered = [...ljPregledi]
+    .filter(p => {
+      const clan = state.clanovi.find(c => c.id == p.clanId);
+      const ime = (clan ? clan.ime+' '+clan.prezime : p.imeRucno || '').toLowerCase();
+      if (q && !ime.includes(q)) return false;
+      if (!ljFilter) return true;
+      const vd = new Date(p.vrijedi);
+      if (ljFilter === 'exp') return vd < danas;
+      if (ljFilter === 'warn') return vd >= danas && vd <= za30;
+      if (ljFilter === 'ok') return vd > za30;
+      return true;
+    })
+    .sort((a,b) => rangiraj(a) - rangiraj(b) || a.vrijedi.localeCompare(b.vrijedi));
+
+  if (filtered.length === 0) {
+    el.innerHTML = '<div class="empty-state"><div class="icon">🔍</div><p>Nema rezultata za odabrani filter.</p></div>';
+    return;
+  }
+
+  el.innerHTML = filtered.map(p => {
     const clan = state.clanovi.find(c => c.id == p.clanId);
     const vrijediDo = new Date(p.vrijedi);
     const istekao = vrijediDo < danas;
-    const uskoro = !istekao && vrijediDo <= za15;
-    if (istekao) exp++;
-    else if (uskoro) { warn++; upoz.push({ime: clan ? clan.ime+' '+clan.prezime : p.imeRucno, dana: Math.ceil((vrijediDo-danas)/86400000)}); }
-    else ok++;
+    const uskoro = !istekao && vrijediDo <= za30;
     const boja = istekao ? 'var(--red)' : uskoro ? 'var(--warn)' : 'var(--success)';
     const status = istekao ? '✗ Istekao' : uskoro ? '⚠ Uskoro ističe' : '✓ Valjan';
     return `<div class="card" style="margin-bottom:8px;border-left:4px solid ${boja}">
@@ -6591,27 +6708,11 @@ function ljRenderLista() {
         </div>
         <div style="text-align:right">
           <span style="font-size:12px;color:${boja};font-weight:600">${status}</span>
-          <div style="margin-top:4px">
-            <button onclick="ljObrisi('${p.id}')" style="background:none;border:none;color:#666;cursor:pointer;font-size:12px">✕ Obriši</button>
-          </div>
+          ${trenutniKorisnik?.admin ? `<div style="margin-top:4px"><button onclick="ljObrisi('${p.id}')" style="background:none;border:none;color:#666;cursor:pointer;font-size:12px">✕ Obriši</button></div>` : ''}
         </div>
       </div>
     </div>`;
   }).join('');
-
-  document.getElementById('lj-st-ok').textContent = ok;
-  document.getElementById('lj-st-warn').textContent = warn;
-  document.getElementById('lj-st-exp').textContent = exp;
-
-  const upozDiv = document.getElementById('lj-upozorenja');
-  if (upoz.length > 0) {
-    upozDiv.innerHTML = `<div style="background:rgba(243,156,18,0.15);border:1px solid var(--warn);border-radius:8px;padding:12px 14px;margin-bottom:14px">
-      <div style="font-weight:600;color:var(--warn);margin-bottom:6px">⚠ Upozorenje — pregledi uskoro ističu:</div>
-      ${upoz.map(u => `<div style="font-size:13px;color:#EDEDED">• ${u.ime} — još ${u.dana} dan(a)</div>`).join('')}
-    </div>`;
-  } else {
-    upozDiv.innerHTML = '';
-  }
 }
 
 function spremiLijecnicki() {

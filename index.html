@@ -147,8 +147,48 @@
     transition: background 0.12s, border-color 0.12s, transform 0.1s;
     -webkit-tap-highlight-color: transparent;
     user-select: none;
-    overflow: hidden;
+    overflow: visible;
+    position: relative;
   }
+  .tn-badge {
+    position: absolute;
+    top: -6px;
+    right: -4px;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 9px;
+    background: #C8102E;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    border: 2px solid var(--bg);
+    z-index: 10;
+    line-height: 1;
+  }
+  .tn-badge.warn { background: #F39C12; }
+  .dn-badge {
+    position: absolute;
+    top: 8px;
+    right: 10px;
+    min-width: 20px;
+    height: 20px;
+    border-radius: 10px;
+    background: #C8102E;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 5px;
+    z-index: 10;
+    line-height: 1;
+  }
+  .dn-badge.warn { background: #F39C12; }
   .top-nav-tile:hover { background: var(--surface2); border-color: rgba(200,16,46,0.3); }
   .top-nav-tile:active { transform: scale(0.93); }
   .top-nav-tile.active { border-color: var(--red); background: rgba(200,16,46,0.15); }
@@ -662,6 +702,7 @@
   .alert-item:hover { opacity: 0.85; }
   .alert-red { background: rgba(200,16,46,0.15); border-left: 4px solid #C8102E; }
   .alert-warn { background: rgba(243,156,18,0.15); border-left: 4px solid #F39C12; }
+  .alert-info { background: rgba(52,152,219,0.12); border-left: 4px solid #3498DB; }
   .alert-icon { font-size: 20px; flex-shrink: 0; }
   .alert-text { flex: 1; font-size: 13px; color: #EDEDED; }
   .alert-text strong { display: block; font-size: 14px; margin-bottom: 2px; }
@@ -860,6 +901,7 @@
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 14px;
+    position: relative;
     padding: 20px 12px 16px;
     display: flex;
     flex-direction: column;
@@ -3644,12 +3686,17 @@ function renderTopNavBar(activeId) {
     return false;
   });
   const cur = activeId || (document.querySelector('.section.active') || {}).id || 'dashboard';
-  bar.innerHTML = filtered.map(t =>
-    `<div class="top-nav-tile${t.id === cur ? ' active' : ''}" onclick="showSection('${t.id}')">
-      <span class="tn-icon">${t.icon}</span>
+  bar.innerHTML = filtered.map(t => {
+    let badge = '';
+    if (t.id === 'lijecnicki') {
+      const b = ljBadgeInfo();
+      if (b.count > 0) badge = `<span class="tn-badge${b.type === 'warn' ? ' warn' : ''}">${b.count}</span>`;
+    }
+    return `<div class="top-nav-tile${t.id === cur ? ' active' : ''}" onclick="showSection('${t.id}')">
+      ${badge}<span class="tn-icon">${t.icon}</span>
       <span class="tn-label">${t.label}</span>
-    </div>`
-  ).join('');
+    </div>`;
+  }).join('');
 }
 
 function renderDashNavTiles() {
@@ -3667,12 +3714,17 @@ function renderDashNavTiles() {
     if (t.role === 'superadmin') return jeSuperAdmin;
     return false;
   });
-  container.innerHTML = filtered.map(t =>
-    `<div class="dash-nav-tile" onclick="showSection('${t.id}')">
-      <div class="dn-icon">${t.icon}</div>
+  container.innerHTML = filtered.map(t => {
+    let badge = '';
+    if (t.id === 'lijecnicki') {
+      const b = ljBadgeInfo();
+      if (b.count > 0) badge = `<span class="dn-badge${b.type === 'warn' ? ' warn' : ''}">${b.count}</span>`;
+    }
+    return `<div class="dash-nav-tile" onclick="showSection('${t.id}')">
+      ${badge}<div class="dn-icon">${t.icon}</div>
       <div class="dn-label">${t.label}</div>
-    </div>`
-  ).join('');
+    </div>`;
+  }).join('');
 }
 
 function updateHeaderKlub() {
@@ -3866,7 +3918,8 @@ function renderAlerts() {
   const panel = document.getElementById('alertPanel');
   if (!panel) return;
   const danas = new Date();
-  const za15 = new Date(); za15.setDate(za15.getDate() + 30);
+  const za30 = new Date(); za30.setDate(za30.getDate() + 30);
+  const za60 = new Date(); za60.setDate(za60.getDate() + 60);
   const alerts = [];
 
   // Istekli liječnički pregledi
@@ -3878,9 +3931,12 @@ function renderAlerts() {
       const d = new Date(p.vrijedi);
       if (d < danas) {
         alerts.push({ tip: 'red', icon: '🏥', naslov: 'Istekao liječnički pregled!', tekst: ime + ' — istekao ' + d.toLocaleDateString('hr-HR'), link: 'lijecnicki' });
-      } else if (d <= za15) {
+      } else if (d <= za30) {
         const dana = Math.ceil((d - danas) / 86400000);
         alerts.push({ tip: 'warn', icon: '🏥', naslov: '⚠️ Liječnički pregled ističe za ' + dana + ' dan(a)!', tekst: ime + ' — još ' + dana + ' dan(a)', link: 'lijecnicki' });
+      } else if (d <= za60) {
+        const dana = Math.ceil((d - danas) / 86400000);
+        alerts.push({ tip: 'info', icon: '🏥', naslov: 'Liječnički pregled ističe za ' + dana + ' dan(a)', tekst: ime + ' — planirati obnovu', link: 'lijecnicki' });
       }
     });
   }
@@ -8101,6 +8157,24 @@ let ljPregledi = [];
 let ljFilter = '';
 try { ljPregledi = JSON.parse(localStorage.getItem('kk_lijecnicki') || '[]'); } catch(e){}
 
+function ljBadgeInfo() {
+  if (!ljPregledi || !ljPregledi.length) return { count: 0, type: 'ok' };
+  const danas = new Date();
+  const za30 = new Date(); za30.setDate(za30.getDate() + 30);
+  const za60 = new Date(); za60.setDate(za60.getDate() + 60);
+  let exp = 0, warn30 = 0, warn60 = 0;
+  ljPregledi.forEach(p => {
+    if (!p.vrijedi) return;
+    const vd = new Date(p.vrijedi);
+    if (vd < danas) exp++;
+    else if (vd <= za30) warn30++;
+    else if (vd <= za60) warn60++;
+  });
+  if (exp > 0 || warn30 > 0) return { count: exp + warn30, type: 'red' };
+  if (warn60 > 0) return { count: warn60, type: 'warn' };
+  return { count: 0, type: 'ok' };
+}
+
 function ljSetFilter(f) {
   ljFilter = (ljFilter === f && f !== '') ? '' : f;
   ['ok','warn','exp'].forEach(k => {
@@ -8120,8 +8194,10 @@ function ljSave() {
 function ljRenderLista() {
   const danas = new Date();
   const za30 = new Date(); za30.setDate(za30.getDate() + 30);
+  const za60 = new Date(); za60.setDate(za60.getDate() + 60);
   let ok = 0, warn = 0, exp = 0;
   const upoz = [];
+  const plan60 = [];
   const el = document.getElementById('lj-lista-html');
   const q = (document.getElementById('lj-search')?.value || '').toLowerCase();
 
@@ -8140,7 +8216,9 @@ function ljRenderLista() {
     else if (vd <= za30) warn++;
     else ok++;
     const clan = state.clanovi.find(c => c.id == p.clanId);
-    if (vd >= danas && vd <= za30) upoz.push({ ime: clan ? clan.ime+' '+clan.prezime : p.imeRucno, dana: Math.ceil((vd-danas)/86400000) });
+    const ime = clan ? clan.ime+' '+clan.prezime : p.imeRucno;
+    if (vd >= danas && vd <= za30) upoz.push({ ime, dana: Math.ceil((vd-danas)/86400000) });
+    else if (vd > za30 && vd <= za60) plan60.push({ ime, dana: Math.ceil((vd-danas)/86400000) });
   });
 
   document.getElementById('lj-st-ok').textContent = ok;
@@ -8148,12 +8226,20 @@ function ljRenderLista() {
   document.getElementById('lj-st-exp').textContent = exp;
 
   const upozDiv = document.getElementById('lj-upozorenja');
-  upozDiv.innerHTML = upoz.length > 0
-    ? `<div style="background:rgba(243,156,18,0.15);border:1px solid var(--warn);border-radius:8px;padding:12px 14px;margin-bottom:14px">
-        <div style="font-weight:600;color:var(--warn);margin-bottom:6px">⚠ Upozorenje — pregledi uskoro ističu:</div>
-        ${upoz.map(u => `<div style="font-size:13px;color:#EDEDED">• ${u.ime} — još ${u.dana} dan(a)</div>`).join('')}
-      </div>`
-    : '';
+  let upozHtml = '';
+  if (upoz.length > 0) {
+    upozHtml += `<div style="background:rgba(243,156,18,0.15);border:1px solid var(--warn);border-radius:8px;padding:12px 14px;margin-bottom:10px">
+      <div style="font-weight:600;color:var(--warn);margin-bottom:6px">⚠ Upozorenje — pregledi uskoro ističu (do 30 dana):</div>
+      ${upoz.map(u => `<div style="font-size:13px;color:#EDEDED">• ${u.ime} — još ${u.dana} dan(a)</div>`).join('')}
+    </div>`;
+  }
+  if (plan60.length > 0) {
+    upozHtml += `<div style="background:rgba(52,152,219,0.1);border:1px solid #3498DB;border-radius:8px;padding:12px 14px;margin-bottom:10px">
+      <div style="font-weight:600;color:#3498DB;margin-bottom:6px">ℹ Planiranje — pregledi ističu za 30–60 dana:</div>
+      ${plan60.map(u => `<div style="font-size:13px;color:#EDEDED">• ${u.ime} — još ${u.dana} dan(a)</div>`).join('')}
+    </div>`;
+  }
+  upozDiv.innerHTML = upozHtml;
 
   if (ljPregledi.length === 0) {
     el.innerHTML = '<div class="empty-state"><div class="icon">🏥</div><p>Nema unesenih pregleda.</p></div>';

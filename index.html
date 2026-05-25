@@ -3774,11 +3774,13 @@ function renderAlerts() {
     });
   }
 
-  // Neplaćena članarina
-  const neplaceni = state.clanovi.filter(c => c.status === 'aktivan' && c.clanarina === 'ne');
-  if (neplaceni.length > 0) {
-    const tip = neplaceni.length >= 5 ? 'red' : 'warn';
-    alerts.push({ tip, icon: '💶', naslov: neplaceni.length + ' članova nije platilo članarinu!', tekst: neplaceni.slice(0,3).map(c => c.ime + ' ' + c.prezime).join(', ') + (neplaceni.length > 3 ? ' i još ' + (neplaceni.length - 3) : ''), link: 'uplatnice' });
+  // Neplaćena članarina — samo za admina i tajnika
+  if (trenutniKorisnik?.admin) {
+    const neplaceni = state.clanovi.filter(c => c.status === 'aktivan' && c.clanarina === 'ne');
+    if (neplaceni.length > 0) {
+      const tip = neplaceni.length >= 5 ? 'red' : 'warn';
+      alerts.push({ tip, icon: '💶', naslov: neplaceni.length + ' članova nije platilo članarinu!', tekst: neplaceni.slice(0,3).map(c => c.ime + ' ' + c.prezime).join(', ') + (neplaceni.length > 3 ? ' i još ' + (neplaceni.length - 3) : ''), link: 'uplatnice' });
+    }
   }
 
   // Istekle licence trenera
@@ -4083,7 +4085,7 @@ function renderDashboardWidgets() {
   if (daEl) {
     const danas = new Date().toISOString().split('T')[0];
     try { kalDogadaji = JSON.parse(localStorage.getItem('kk_kalendar') || '[]'); } catch(e){}
-    const nadolazeci = kalDogadaji.filter(e => e.datum >= danas).sort((a,b) => a.datum.localeCompare(b.datum)).slice(0, 5);
+    const nadolazeci = kalDogadaji.filter(e => e.datum >= danas && e.naziv && e.naziv !== 'null').sort((a,b) => a.datum.localeCompare(b.datum)).slice(0, 5);
     if (nadolazeci.length === 0) {
       daEl.innerHTML = '';
     } else {
@@ -7295,7 +7297,7 @@ function kalOdaberiDan(datum) {
 
 function kalRenderLista() {
   const danas = new Date().toISOString().split('T')[0];
-  const nadolazeci = kalDogadaji.filter(e => e.datum >= danas).sort((a,b) => a.datum.localeCompare(b.datum));
+  const nadolazeci = kalDogadaji.filter(e => e.datum >= danas && e.naziv && e.naziv !== 'null').sort((a,b) => a.datum.localeCompare(b.datum));
   const el = document.getElementById('kal-lista-html');
   if (nadolazeci.length === 0) {
     el.innerHTML = '<div class="empty-state"><div class="icon">📅</div><p>Nema planiranih događaja.</p></div>';

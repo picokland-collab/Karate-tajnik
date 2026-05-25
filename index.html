@@ -5466,22 +5466,25 @@ function getSystemPrompt() {
 }
 const SYSTEM_PROMPT_KKD = `Ti si DIGITALNI TAJNIK Karate kluba Đurđevac (KK Đurđevac).
 Odgovaraš ISKLJUČIVO na hrvatskom jeziku.
-NIKADA ne govori da ne možeš nešto napraviti.
-NIKADA ne spominji da nemaš pristup internetu, email računu ili sustavima.
-NIKADA ne davaj upute korisniku kako da sam nešto napravi.
-NIKADA ne objašnjavaj svoja ograničenja.
-Kad korisnik kaže "pošalji mail svima" — napiši tekst maila i reci "Mail je pripremljen — kliknite gumb Pošalji svima u Email adrese sekciji."
-Kad korisnik kaže "generiraj uplatnicu" — reci "Idite na Uplatnice sekciju."
-Uvijek budi kratki i konkretan.
 Danas je ${todayStr}.
 Tvoja uloga je pomagati tajniku i predsjedniku kluba s administrativnim poslovima.
 
-Kad te pitaju za slanje mailova — odmah napiši gotov tekst maila, bez uvoda.
-Kad te pitaju za odluke — odmah napiši gotovu odluku prema statutu, bez uvoda.
-Kad te pitaju za obavijesti — odmah napiši gotovu obavijest, bez uvoda.
-Kad te pitaju za izvještaje — odmah napiši gotov izvještaj, bez uvoda.
-UVIJEK počni direktno s dokumentom, bez objašnjavanja što ćeš napraviti.
-Nikad ne pitaj za datum jer ga već znaš.
+⚠️ PRAVILO TOČNOSTI — NAJVAŽNIJE:
+- NIKADA ne izmišljaj podatke o klubu: broj članova, rasporede treninga, rezultate natjecanja, datume, iznose, imena.
+- Kada govoriš o trenutnom stanju kluba (koliko ima članova, koji su rezultati, koji su treninzi), koristi ISKLJUČIVO podatke iz sekcije "TRENUTNI PODACI IZ APLIKACIJE" na dnu ovog prompta.
+- Ako traženi podatak nije u tim podacima — reci: "Taj podatak nije unesen u aplikaciju." Nemoj ga izmišljati.
+- Ako nema unesenih rezultata — ne navodi nikakve rezultate.
+- Ako nema unesenih treninga — ne navodi nikakve termine treninga.
+
+PONAŠANJE:
+- Kad te pitaju za slanje mailova — odmah napiši gotov tekst maila, bez uvoda.
+- Kad te pitaju za odluke — odmah napiši gotovu odluku prema statutu, bez uvoda.
+- Kad te pitaju za obavijesti — odmah napiši gotovu obavijest, bez uvoda.
+- Kad te pitaju za izvještaje — odmah napiši gotov izvještaj na temelju podataka koje ti korisnik da.
+- UVIJEK počni direktno s dokumentom, bez objašnjavanja što ćeš napraviti.
+- Nikad ne pitaj za datum jer ga već znaš.
+- Kad korisnik kaže "pošalji mail svima" — napiši tekst maila i reci "Mail je pripremljen — kliknite gumb Pošalji svima u Email adrese sekciji."
+- Kad korisnik kaže "generiraj uplatnicu" — reci "Idite na Uplatnice sekciju."
 
 PODACI O KLUBU:
 - Naziv: Karate klub "Đurđevac" / KK Đurđevac
@@ -5600,8 +5603,79 @@ Uvijek si profesionalan, koncizan i koristan. Kada pišeš formalne dokumente, k
 
 let chatHistory = [];
 let _msgId = 0;
-// Legacy alias — some paths may still reference it
 const SYSTEM_PROMPT = SYSTEM_PROMPT_KKD;
+
+function buildAILiveContext() {
+  const danasIso = new Date().toISOString().split('T')[0];
+  const aktivni = (state.clanovi || []).filter(c => c.status === 'aktivan');
+
+  // Competition results — last 5 by date
+  let rezArr = [];
+  try { rezArr = JSON.parse(localStorage.getItem('kk_rezultati') || '[]'); } catch(e) {}
+  const recentRez = rezArr
+    .filter(r => r && r.natjecanje)
+    .sort((a, b) => (b.datum || '').localeCompare(a.datum || ''))
+    .slice(0, 5);
+
+  // Recent trainings — last 3
+  let trArr = [];
+  try { trArr = JSON.parse(localStorage.getItem('kk_treninzi') || '[]'); } catch(e) {}
+  const recentTr = trArr
+    .filter(t => t && t.datum)
+    .sort((a, b) => (b.datum || '').localeCompare(a.datum || ''))
+    .slice(0, 3);
+
+  // Upcoming calendar events — next 30 days
+  const za30Dana = new Date(); za30Dana.setDate(za30Dana.getDate() + 30);
+  const za30Iso = za30Dana.toISOString().split('T')[0];
+  let kalArr = [];
+  try { kalArr = JSON.parse(localStorage.getItem('kk_kalendar') || '[]'); } catch(e) {}
+  const nadolazeci = kalArr
+    .filter(e => e && e.datum >= danasIso && e.datum <= za30Iso)
+    .sort((a, b) => a.datum.localeCompare(b.datum))
+    .slice(0, 8);
+
+  const medalje = { '1':'🥇 1. mjesto', '2':'🥈 2. mjesto', '3':'🥉 3. mjesto', '4':'4. mjesto', '5':'5-8. mjesto', '0':'—' };
+
+  const lines = ['\n\n=== TRENUTNI PODACI IZ APLIKACIJE ==='];
+  lines.push(`AKTIVNI ČLANOVI: ${aktivni.length}`);
+
+  if (recentRez.length > 0) {
+    lines.push('\nPOSLJEDNJI REZULTATI S NATJECANJA:');
+    recentRez.forEach(r => {
+      const clan = (state.clanovi || []).find(c => c.id == r.clanId);
+      const ime = clan ? `${clan.ime} ${clan.prezime}` : 'nepoznat';
+      const med = medalje[r.plasman] || r.plasman || '—';
+      const dis = r.disciplina ? `, ${r.disciplina}` : '';
+      const kat = r.kategorija ? ` (${r.kategorija})` : '';
+      lines.push(`- ${r.datum || '?'}: ${ime} — ${med} — ${r.natjecanje}${dis}${kat}`);
+    });
+  } else {
+    lines.push('REZULTATI: Nema unesenih rezultata u aplikaciji.');
+  }
+
+  if (recentTr.length > 0) {
+    lines.push('\nPOSLJEDNJI TRENINZI:');
+    recentTr.forEach(t => {
+      lines.push(`- ${t.datum}: ${t.naslov || 'Trening'} (prisutno: ${(t.prisutni || []).length})`);
+    });
+  } else {
+    lines.push('TRENINZI: Nema unesenih treninga u aplikaciji.');
+  }
+
+  if (nadolazeci.length > 0) {
+    lines.push('\nNADOLAZEĆI DOGAĐAJI (sljedećih 30 dana):');
+    nadolazeci.forEach(e => {
+      lines.push(`- ${e.datum}: ${e.naziv}${e.tip ? ' [' + e.tip + ']' : ''}`);
+    });
+  } else {
+    lines.push('KALENDAR: Nema unesenih događaja u sljedećih 30 dana.');
+  }
+
+  lines.push('\n=== KRAJ PODATAKA IZ APLIKACIJE ===');
+  lines.push('Koristi isključivo ove podatke za tvrdnje o trenutnom stanju kluba. Ako podatak nije ovdje — napiši da nije unesen u aplikaciju.');
+  return lines.join('\n');
+}
 
 // ── AI → auto-detekt podataka o novom članu ────────────────────────────────
 
@@ -5742,8 +5816,8 @@ async function sendAI() {
   document.getElementById('btnSendAI').disabled = true;
 
   const systemContent = trenutniKorisnik?.uloga === 'trener'
-    ? `Ti si AI asistent koji ISKLJUČIVO pomaže treneru karate kluba s pisanjem IZVJEŠTAJA S NATJECANJA za web stranice, Facebook i sportske portale. Odgovaraš ISKLJUČIVO na hrvatskom jeziku. Danas je ${todayStr}. PODACI O KLUBU: KK Đurđevac, Đurđevac. Pišeš živahne, kratke sportske izvještaje na temelju podataka koje ti trener da (natjecanje, datum, natjecatelji, rezultati, medalje). Ako te pitaju za bilo što drugo (odluke, molbe, dopise, obavijesti roditeljima, financije, statute, akte), ljubazno odbij i reci: "Za tu vrstu dokumenta obratite se predsjedniku ili tajnici kluba."`
-    : getSystemPrompt();
+    ? `Ti si AI asistent koji ISKLJUČIVO pomaže treneru karate kluba s pisanjem IZVJEŠTAJA S NATJECANJA za web stranice, Facebook i sportske portale. Odgovaraš ISKLJUČIVO na hrvatskom jeziku. Danas je ${todayStr}. PODACI O KLUBU: KK Đurđevac, Đurđevac. Pišeš živahne, kratke sportske izvještaje na temelju podataka koje ti trener da (natjecanje, datum, natjecatelji, rezultati, medalje). NIKADA ne izmišljaj rezultate — koristi samo ono što ti trener kaže u razgovoru. Ako te pitaju za bilo što drugo (odluke, molbe, dopise, obavijesti roditeljima, financije, statute, akte), ljubazno odbij i reci: "Za tu vrstu dokumenta obratite se predsjedniku ili tajnici kluba."`
+    : (getSystemPrompt() + buildAILiveContext());
 
   try {
     const data = await aiPozovGroq({

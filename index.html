@@ -116,10 +116,44 @@
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
   /* LAYOUT */
+  /* ========== TOP NAV BAR (desktop) ========== */
+  #topNavBar {
+    display: flex;
+    align-items: center;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 5px 12px;
+    gap: 2px;
+    overflow-x: auto;
+    flex-shrink: 0;
+    scrollbar-width: none;
+  }
+  #topNavBar::-webkit-scrollbar { display: none; }
+  @media (max-width: 768px) { #topNavBar { display: none; } }
+  .top-nav-tile {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+    border: 1px solid transparent;
+    transition: background 0.12s, border-color 0.12s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .top-nav-tile:hover { background: var(--surface2); }
+  .top-nav-tile.active { background: var(--surface2); border-color: var(--border); }
+  .top-nav-tile .tn-icon { font-size: 17px; line-height: 1; }
+  .top-nav-tile .tn-label { font-size: 12px; color: var(--text); font-family: 'DM Sans',sans-serif; font-weight: 500; }
+  /* Hide dashboard tile section on desktop (top bar replaces it) */
+  @media (min-width: 769px) { #dashNavSection { display: none; } }
+
   .app {
     display: flex;
     flex: 1;
-    height: calc(100vh - 64px);
+    min-height: 0;
     overflow: hidden;
     position: relative;
   }
@@ -982,6 +1016,7 @@
   <div class="header-ai" id="headerAI">AI Tajnik aktivan</div>
 </header>
 <div id="sa-klub-banner" style="display:none;background:#C8102E;color:white;text-align:center;padding:8px;font-size:13px;cursor:pointer;font-weight:600"></div>
+<div id="topNavBar"></div>
 
 <div class="app">
   <nav>
@@ -1027,8 +1062,10 @@
         <button class="btn btn-secondary btn-sm admin-only" onclick="manualSyncAll()" id="btnSync" style="margin-right:8px">☁️ Sync u oblak</button><button class="btn btn-gold" onclick="showSection('ai')">🤖 Pitaj AI tajnika</button>
       </div>
       <div class="content">
-        <h3 style="font-family:'Bebas Neue',sans-serif;letter-spacing:1px;font-size:18px;margin-bottom:12px;color:var(--muted)">BRZI PRISTUP</h3>
-        <div id="dashNavTiles" class="dash-nav-grid"></div>
+        <div id="dashNavSection">
+          <h3 style="font-family:'Bebas Neue',sans-serif;letter-spacing:1px;font-size:18px;margin-bottom:12px;color:var(--muted)">BRZI PRISTUP</h3>
+          <div id="dashNavTiles" class="dash-nav-grid"></div>
+        </div>
 
         <div id="alertPanel" style="margin-bottom:16px"></div>
 
@@ -3457,6 +3494,31 @@ function prijaviKorisnika() {
   }
   toast('Dobrodošli, ' + trenutniKorisnik.ime + '! 🥋');
   renderDashNavTiles();
+  renderTopNavBar('dashboard');
+}
+
+function renderTopNavBar(activeId) {
+  const bar = document.getElementById('topNavBar');
+  if (!bar) return;
+  const k = trenutniKorisnik || {};
+  const uloga = k.uloga || '';
+  const jeAdmin = k.admin || false;
+  const jePredsjednik = uloga === 'admin';
+  const jeSuperAdmin = uloga === 'superadmin';
+  const filtered = NAV_TILES.filter(t => {
+    if (t.role === 'all') return true;
+    if (t.role === 'admin') return jeAdmin;
+    if (t.role === 'predsjednik') return jePredsjednik;
+    if (t.role === 'superadmin') return jeSuperAdmin;
+    return false;
+  });
+  const cur = activeId || (document.querySelector('.section.active') || {}).id || 'dashboard';
+  bar.innerHTML = filtered.map(t =>
+    `<div class="top-nav-tile${t.id === cur ? ' active' : ''}" onclick="showSection('${t.id}')">
+      <span class="tn-icon">${t.icon}</span>
+      <span class="tn-label">${t.label}</span>
+    </div>`
+  ).join('');
 }
 
 function renderDashNavTiles() {
@@ -3913,6 +3975,7 @@ function showSection(id) {
   });
   updateStats();
   if (id === 'dashboard') renderDashNavTiles();
+  renderTopNavBar(id);
   if (id === 'clanovi') renderClanovi();
   if (id === 'odluke') renderOdluke();
   if (id === 'izvjestaji') renderIzvjestaji();

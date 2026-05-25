@@ -1335,6 +1335,20 @@
               <input type="email" id="upCfgEmail" placeholder="klub@email.hr">
             </div>
           </div>
+          <div class="form-group" style="margin-top:12px">
+            <label>Logo kluba (za ispis pristupnica)</label>
+            <div style="display:flex;align-items:center;gap:12px;margin-top:6px">
+              <div id="upLogoPreview" style="width:70px;height:70px;border:1px dashed var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#f5f5f5;flex-shrink:0">
+                <span style="font-size:10px;color:var(--muted);text-align:center">Nema<br>loga</span>
+              </div>
+              <div>
+                <input type="file" id="upCfgLogoFile" accept="image/*" style="display:none" onchange="upLogoOdabran(this)">
+                <button class="btn btn-secondary btn-sm" onclick="document.getElementById('upCfgLogoFile').click()">📁 Odaberi logo</button>
+                <button class="btn btn-secondary btn-sm" onclick="upObrisiLogo()" style="margin-left:6px">✕ Ukloni</button>
+                <p style="font-size:11px;color:var(--muted);margin-top:5px">PNG ili JPG, max 1 MB. Logo se sprema lokalno i koristi na pristupnicama.</p>
+              </div>
+            </div>
+          </div>
           <div style="margin-top:12px">
             <button class="btn btn-secondary btn-sm" onclick="upSpremiCfg()">💾 Spremi podatke kluba</button>
           </div>
@@ -7543,7 +7557,6 @@ function bulkOznaciPlaceno() {
 }
 
 // ── Izjava o učlanjenju ──
-const KKDJ_LOGO = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAyADIAAD/2wBDAAMCAgMCAgMDAwMEAwMEBQgFBQQEBQoHBwYIDAoMDAsKCwsNDhIQDQ4RDgsLEBYQERMUFRUVDA8XGBYUGBIUFRT/2wBDAQMEBAUEBQkFBQkUDQsNFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBT/wAARCAB4AF0DASIAAhEBAxEB/8QAHQABAAEFAQEBAAAAAAAAAAAAAAgEBQYHCQMBAv/EADoQAAEDAwMDAgQDBwEJAAAAAAECAwQFBhEABxIIEyEiMQkUQWEVFlEjJDIzUnGBQiU0Q1Njc5Ghwf/EABoBAQEAAwEBAAAAAAAAAAAAAAAHBAUGAQP/xAAwEQABAwMCBQIFAwUAAAAAAAABAgMRAAQFITEGEkFRYXGREyKBocFisfAUFTJC0f/aAAwDAQACEQMRAD8A6p6aaaUpppppSmmmmlKaaaaUpppppSmmmmlKaaaaUppprXe8nUBY2xNIYm3fWkRH5ai3BpkZtUidPc/oYjoytw5wMgYGRkjXhIAk16ASYFbE01CavdX28F7uK/JVjUawqSo+ifez65c9xB9lCFGUEtn7LdP3GtdVXdnfh+JU34W9q6tPg+XaPbNs0lLiVZ/gw+pZB+y1An299cu9xRiGF/DL4J8SR7gQPet+1gck6nnDRA8wD7HX7V0e01y7sXre3Sftip3NT92KFccakuoZqdMvK0fkn4Cirh+3MNwFCc+CsJUkYOfY4kbZfX1HpS40bd20X7FZeKUt3PTJH4pQnM44qW8hIcjhRIx3EcceSvGtgxmLG4c+ClyFzEKBSZ00HMBOhB0nQg1hO426aR8QolMTIIIjuYJjY71LfTVLS6rCrdOjT6dLYnwZLaXmJUZxLjTqFDKVJUkkKBHkEHGqrW5rWU0000pTTTVou66qbY9q1i4qzJESk0mI7OlyFezbLaCtav8AAB0pWoeqDqQXs3T6db1sQmK/uRcAWmUo5ZDMdtPhybKI8ojt/X6rVhCfOSIYzflLAl1C7bkqjl57iVAtsTrgqCgFNuOhfYbVjPyUSgkWyTy6buK7DaROgAOs80EA8tSxGObxzQdUAX1CddkDz201JPpIO+Rbd77zq3ttdNzXBQH4ztvhx59qE0UpdQkFS20hS1Yeb4qStJPghPtnAoNi+npXW9vFK3VtmtVnbqx6Sy3S3avT20x6jWJQypwN+VJSlKFtpUtYVnCRxPnjDnffrAu3dqZLgU2S/blqqKkIp8Vzi4+gk+X1jyrPnKB6RnGD7mbvw6urFFq07aHZyAwwpFcV6lrR5bPcqzspeR7rKmoSRnwEqJ10/D/AA0i0cXeXLYSpeyAZASQJB6HUegn0jQ5jOquUJtmFlSU/wCxEEkEwR1H71Y776ZtgaZKuW2Wrv3M2Zr9daeiN3FuNALFHrykuBxYLzracgrSlRVybODnBzg2fouuO5LitOu0WtKhz6FbpaoECXEV3mJnbU93VBZ8OJKVNAHAHHh499efxJoz+4vVFF22pVPXV7pEBVUVU6pIecKyI7shqnQo4WGmmyloJyE9xxxfqV+uounTe1W7NyXhatz1OLa9SuulsU6DJoNPZgsl1oOJSO22EoDhbWlsEAFaUBJVy4k5/Fdgi5xbnKkSCkzEkAEAkRron7CKw+HrtTF+jmUYIIidCYMDXufuamLt5fNW6YJy7gsUKr+2Lry11yzYbgdTFAUQ7LpvnCHEEKK44PFeFYCVAY6EWhd1Hvy2KZcVv1Bmq0Wpx0SokyOrKHW1DII/T7g+Qcg+RrlFtTVGNpbwqVlyHqREZMqO38rADqFKfXGaS0iHEy46tJSnuPSHCE8ir+lStSV6RbyXtFvNP2seX27Ru1uRW7bb/wBMKe2eU6Gj9ELSRIQkeBh3HvrT8NZh0PDGXSysES2s7qETB8ga+m/StlnMY2Wjf26eWDC0jYHaR4J/m9Tf0001TK4WmowfEKq7jmzNFs1pRH52uWn0KRwOFfK81SZH+C1HUk/ZepP6iN13c/zjsRn/AHf8yTeX6c/wyRw/+61uSdVb2L7yN0oUR6gE1nWLaXrtptWxUke5qNu4u7dqQLpesO5KEqosz2oyI8ZxhLjUxTq+IbSleEnjlHkEnyfA4k6wHeXaq5upHd+zNgbJd+RpcCCmrVec+pbrUOOk9ttbhJKl8U/wpJypTqcke4yKZdjND6gE26i6qpJm1mpMyF0NDEdMGK0Ig481vILhWrsqVhg/UZ4k+qQHQ60yjqm38VJSPnl0y31RFH3+X7TwWE/bmE5++NR/hasia/uTAKSAG/iakwVGEzBAjc953BiKpWfunP6F6DMr5NhoBJiQTPTt2Ir3tX4P+wtGt9uFVma9cFR4AOVJ+prYUV/UpbaAQkZ9gQr7k6ht1KdL0/wCHLvlt1ulakqZcliMVdDrCJxHfjOpPJyK4tICT3GufFYA9lAjKcqv3UlV+q1nrwmtW45dySKwgW4xA7/4UuByHbKgn9iWyn+aVfXny9tdDeujZ5e93SxfVusxxJq7UL8Sp6UjKvmY57qUo+6glSP7L1cqk9R46tuqLp4tajWnvbSIVKvDd1+k5tApWoux0LCgl6W2FcUpaUpeA4CvmFJRj1FPGRqbIjzkS2nVMyUOB1DzZ4qSsHIUCPYg+fGt8dCMfbiT1PWe3umYP5UK3cirFIhKkdtXy4f5enhzx/F6c4CvGdST+LfStm2q/YjW3LFAReLofTU2LYS0EKj+gMd5LPp7hVyCf9RT7+OOvCJ0NBpXy6LjVu90/WbepqcymzZQTAqIpsd55yY5laFR+0wUOOhbqBhPcQlIcJ8nGs7ql6t0/ayzdwoK6iZlh1qBNcXUmQxLV8s+mLMS6gE8StpTvIZ+utddPlo1qV0mz6ExTo8+oqrbzLTExJLbYTKaSt3wtBBbKXFgpWkgo8HOsoqEKpUvpQ3Bp1bi0qI5CgTmW00g5YUO2lfInuOErLq18lKVyJGT76gSlIs7xLbKtWbiAJH+JPv4+nrViSF3Nspbg0cZknXcD28/WuuzagpAIIIPsR9R9NfrVotDu/lWj9/Pe+TY559+XbTn/AN6u+r9UdpqL/wAQqkONbNUO8mkkiybmp9ckFIyr5UrVGkf4DchSj9k6lBqz3halMvm1KzblZjCXSatDdgy2D/xGnEKQsf8AhR18XmkvtKaXsoEH0OlfRpxTS0uJ3BB9q5Z9QMi66VWqbXIyacqy6K21UJUiWWEKS4h1SilDim3HkrVhkIDSfVyWkkFSSM1pu4zGxm+ll7xOKUmzaxATbtyvD2jRXlJdiS1AZHFtwgKIzhKvGc6s8axAIlZ2jv8Ap6a3cVjvoDCZDy2BUoyUq+QnIWkg4W2QhR88XEqz51QbNR5dWp92WvUbK/B7KYlPQocSW8l1jtcUIXHbT5U4jmHlFwniCoJRkDIgDD7uDuApSQF2xIUNAFoVHmSo7gxER21sbrTeWZKQqUPgEbnlUPpAA2Ov76dUIshmbHbkR3UPsOpC0ONq5IWkjIII8EEeQfvr1xrnJtVuZud0osootEpzu6e1rR/dqI5KDdZoref5cdxfpkMj6Nq9Q8AEAed3QPibbJJYT+YJNzWdOx6qfW7amJeQf0PaQ4k/4Vq3Y/L2WTbDls4D46j1G4qVXmOurFZQ+gjz0Poaj91K/Bzi37fdSufbO6YVstVN5Ul+hVSOtUdl1RJWWXG8lKCST2yk8cnBxgDWk/oOoHRLagvy8Lgj35uXJdECy7Yp8bhGXVF+Gn1BZ5PBkkOnIQkcRnJIGpZ3N8R2lVyOuLtNt/c9+1JwYanToSqTSm/pycffwrA9+IRk49xrTlItO5bpvlzcbc6stXJfDjRYiNxEFunUVg+7ENs+fPspw+pX19yTqs1xJYYhlR5wpzokGTPnsPX6VsMXg7rJOD5SlHVR7eO5/hrVG41st7c7IWjt03Q6hdq3Ck1GPS2H1uupRzdkPocbB4OF9SSjmClROFDjyIyuv2V83tdZu2sNCBKvCr0+ipDFNbgKLTr6XpC3I7fpQpMdtfcwMZBOBnGr/XNoI9UvyBc8d9DdRRU2Jr0x1BVJbZZZ7aYkdQxwaWeRcByDyV4yQRtbpGsxe7m9E7dB5HctGz25FEtx0/wzag56Z0tH6obSAwlQyCS7j21L8C2cteMISSoJUXXD+qZjtqdNNxqdhHe5dYx1s8pQgqAbQP0xv7a+DoNzM220hKAAAEj2A9sfTX6001fKkFNNNNKVofqh6b3N4oVNuS1prFC3Jt9KzSam+kliS0ry5ClAeVMOY/uhWFp+oMWrXvo1SsTbar1NftS+qaP9oW3UVDvt/wDUaV7PsH3S6jIIxnGujutcbzdPdjb70qPEu2jiRKhkrgVaI4qNPgL/AK2JCMLQc4JGeJwMg65DP8N22cQFE8rg2V+COo+4956TD5x/EqKQOZB3H5HY/vUE67KuKny6xLjpqj0tpwmAw22hyA+0oJQ02RkEOc1ciSQfSfPDXlTN0ak7Fackx4iEt9guNuvlmRIQ88pDamWcqAIABUgqPq5JyMZ1t2vdIu8djOK/J160TcGkJPohXkyuDUUIHsn5yOlSHT91tJ+51hsmxd8mJDa5uwLk6QzkNyadc9MeSnPvxU6ptaQf7DUtf4VyjPyG2S4B1SoD7GDr9prv2eILBz5w+UE9FA/iRWIwb+qd4SWkQnHadFTNCFluIpxx+G4tSG5DS3BgYVw5gJVgKB5YI1VW9a9cbr79fqlUcpqiwwmTGZUlTUgto4OLcCiUpQeIWkpCVDmcqP8ADrNKbtZ1DXERGh7Y0G0EYARKua523kIH/ahoWTgfTkNbFtHoLFwPtTd4rykXy2lQcFsUpg0yiJUPOHG0qLsnBGR3F8T9UnWVZ8I5N8lKm0soOhkhRjfpv9SPG1fC44jsGRzJWXVDXSUifr+JrTllWrX+qyrOUKzJL9L27acLNevhn0iQkHC4dNUf5jivKVPjKGwTjKiM9ArOs+jWDa9Lty3qezSqLTI6IsSHHThDTaRgAfU/qSfJJJPknVdSKRBoNNjU6mQ49PgRW0ssRYrSWmmkAYSlCEgBIA9gBjVXqu4nEW2Ht/gWw9Sdye5/50qb5HIv5J74z59B0A8U0001uq1dNNNNKU0000pTXzGvumlKaaaaUpppppSmmmmlKaaaaUpppppSmmmmlKaaaaUpppppSmmmmlK//9k=';
 
 function _izjavaHTML(c) {
   const naziv = (trenutniKorisnik && trenutniKorisnik.klub_naziv) || 'KK Đurđevac';
@@ -7562,7 +7575,9 @@ function _izjavaHTML(c) {
   const blank = (w) => `<span style="display:inline-block;border-bottom:1px solid #333;min-width:${w||120}px">&nbsp;</span>`;
   const cell  = (label, val, w) => `<tr><td style="width:160px;padding:5px 8px;font-weight:600;font-size:11px;color:#444;background:#f5f5f5;border:1px solid #ddd">${label}</td><td style="padding:5px 8px;font-size:12px;border:1px solid #ddd">${val || blank(w)}</td></tr>`;
 
-  const logoHtml = `<img src="${KKDJ_LOGO}" style="width:80px;height:80px;object-fit:contain">`;
+  const logoHtml = up.logo
+    ? `<img src="${up.logo}" style="width:80px;height:80px;object-fit:contain">`
+    : `<div style="width:80px;height:80px;background:#C8102E;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:24px;flex-shrink:0">KK</div>`;
 
   const oibPrikaz = c && c.oib ? (trenutniKorisnik?.admin ? c.oib : c.oib.substring(0,3)+'••••••••') : '';
 
@@ -8511,7 +8526,8 @@ function getUpPodaci() {
     adresa:    cfg.adresa    || (jeKKD ? 'Ulica Andrije Hebranga 12, 48350 Đurđevac' : ''),
     oib:       cfg.oib       || (jeKKD ? '98308789784' : ''),
     tel:       cfg.tel       || (jeKKD ? '098/805-555' : ''),
-    email_klub: cfg.email_klub || (jeKKD ? 'karate.djurdjevac@gmail.com' : '')
+    email_klub: cfg.email_klub || (jeKKD ? 'karate.djurdjevac@gmail.com' : ''),
+    logo:      cfg.logo || null
   };
 }
 function saveUpPodaci(data) {
@@ -8575,10 +8591,48 @@ function upUcitajCfg() {
     const el = document.getElementById('upCfg' + k);
     if (el) el.value = p[k.toLowerCase() === 'email' ? 'email_klub' : k.toLowerCase()] || '';
   });
+  const prev = document.getElementById('upLogoPreview');
+  if (prev) {
+    if (p.logo) {
+      prev.innerHTML = `<img src="${p.logo}" style="width:100%;height:100%;object-fit:contain">`;
+    } else {
+      prev.innerHTML = '<span style="font-size:10px;color:var(--muted);text-align:center">Nema<br>loga</span>';
+    }
+  }
+}
+function upLogoOdabran(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 1048576) { toast('Logo je prevelik — max 1 MB!', 'err'); return; }
+  const reader = new FileReader();
+  reader.onload = e => {
+    const data = e.target.result;
+    const prev = document.getElementById('upLogoPreview');
+    if (prev) prev.innerHTML = `<img src="${data}" style="width:100%;height:100%;object-fit:contain">`;
+    let cfg = {};
+    try { cfg = JSON.parse(localStorage.getItem('kk_uplatnice_cfg') || '{}'); } catch(x) {}
+    cfg.logo = data;
+    saveUpPodaci(cfg);
+    toast('Logo spremen! Klikni Spremi podatke kluba za potvrdu ostalih podataka.');
+  };
+  reader.readAsDataURL(file);
+}
+function upObrisiLogo() {
+  let cfg = {};
+  try { cfg = JSON.parse(localStorage.getItem('kk_uplatnice_cfg') || '{}'); } catch(x) {}
+  delete cfg.logo;
+  saveUpPodaci(cfg);
+  const prev = document.getElementById('upLogoPreview');
+  if (prev) prev.innerHTML = '<span style="font-size:10px;color:var(--muted);text-align:center">Nema<br>loga</span>';
+  document.getElementById('upCfgLogoFile').value = '';
+  toast('Logo uklonjen.');
 }
 
 function upSpremiCfg() {
+  let existing = {};
+  try { existing = JSON.parse(localStorage.getItem('kk_uplatnice_cfg') || '{}'); } catch(x) {}
   const cfg = {
+    ...existing,
     primatelj:  document.getElementById('upCfgPrimatelj')?.value.trim() || '',
     iban:       document.getElementById('upCfgIBAN')?.value.trim() || '',
     adresa:     document.getElementById('upCfgAdresa')?.value.trim() || '',

@@ -4465,7 +4465,7 @@ function genHUB3QR(canvasId, iznos, primatelj, iban, opis, napomena) {
   if (typeof QRious !== 'undefined') {
     try {
       new QRious({ element: canvas, value: hub3, size: 200, level: 'M', background: '#ffffff', foreground: '#111111' });
-      return;
+      return hub3;
     } catch(e) { console.warn('QRious error:', e); }
   }
 
@@ -7627,43 +7627,45 @@ function prikaziUplatnicuObj(u) {
     + row('Rok plaćanja', rokStr)
     + (u.email ? '<div style="margin-top:12px;font-size:13px;color:#2ECC71">📧 ' + u.email + '</div>' : '<div style="margin-top:12px;font-size:13px;color:#F39C12">⚠ Nema e-mail adrese</div>');
   openModal('modalUplatnica');
-  // Generate HUB-3 visual barcode area
+  // Generiraj QR i prikaži točne podatke koji su kodirani u QR-u
   setTimeout(() => {
+    const up3 = getUpPodaci();
+    const opisQR = 'Clanarina ' + u.mjesec + ' ' + u.godina;
+    const platiteljQR = u.ime + ' ' + u.prezime;
+    let hub3Str = null;
+
+    if (u.iznos > 0) {
+      document.getElementById('hub3QrContainer').style.display = 'block';
+      hub3Str = genHUB3QR('hub3Canvas', u.iznos, up3.primatelj, up3.iban, opisQR, platiteljQR);
+    }
+
     const barkodDiv = document.getElementById('hub3Barkod');
     if (!barkodDiv) return;
-    // HUB-3 format data
-    const up2 = getUpPodaci();
-    const hub3 = 'HRVHUB3\nEUR\n' + String(u.iznos * 100).padStart(15,'0') + '\n\n\n\n' + up2.primatelj + '\n' + (up2.adresa||'').replace(/,\s*/g,'\n') + '\n' + up2.iban + '\nHR99\n\nClanarina ' + u.mjesec + ' ' + u.godina + ' ' + u.ime + ' ' + u.prezime;
+
+    // Prikaži točno ono što je kodirano u QR-u (parsed iz vraćenog stringa)
+    const lines = hub3Str ? hub3Str.split('\n') : [];
+    const iznosEur = lines[2] ? (parseInt(lines[2], 10) / 100).toFixed(2).replace('.', ',') : '—';
+    const ibanQR   = lines[9] || up3.iban || '—';
+    const opisFin  = lines[12] || opisQR;
+    const kopirajTekst = `Primatelj: ${up3.primatelj}\nIBAN: ${ibanQR}\nIznos: ${iznosEur} EUR\nOpis: ${opisFin}\nModel: HR99`;
 
     barkodDiv.innerHTML = `
-      <div style="background:#fff;border-radius:8px;padding:14px;text-align:center">
-        <div style="font-size:10px;color:#333;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">HUB-3 Podaci za plaćanje</div>
-        <div style="font-family:monospace;font-size:10px;color:#111;text-align:left;background:#f5f5f5;padding:10px;border-radius:6px;word-break:break-all;line-height:1.6">
-          <div><strong>Primatelj:</strong> ${up2.primatelj}</div>
-          ${up2.iban ? `<div><strong>IBAN:</strong> ${up2.iban}</div>` : ''}
-          <div><strong>Iznos:</strong> ${u.iznos},00 EUR</div>
-          <div><strong>Model:</strong> HR99</div>
-          <div><strong>Poziv na broj:</strong> Clanarina ${u.mjesec} ${u.godina}</div>
-          <div><strong>Opis:</strong> ${u.ime} ${u.prezime}</div>
+      <div style="background:#1a1a1a;border-radius:8px;padding:12px 16px;margin-top:4px">
+        <div style="font-size:10px;color:#777;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Podaci u QR kodu</div>
+        <div style="font-family:monospace;font-size:12px;line-height:2;color:#eee">
+          <div><span style="color:#888;display:inline-block;width:90px">Iznos:</span><strong>${iznosEur} EUR</strong></div>
+          <div><span style="color:#888;display:inline-block;width:90px">Platitelj:</span>${platiteljQR}</div>
+          <div><span style="color:#888;display:inline-block;width:90px">Primatelj:</span>${up3.primatelj}</div>
+          <div><span style="color:#888;display:inline-block;width:90px">IBAN:</span><strong style="color:#4fc3f7">${ibanQR}</strong></div>
+          <div><span style="color:#888;display:inline-block;width:90px">Model:</span>HR99</div>
+          <div><span style="color:#888;display:inline-block;width:90px">Opis:</span>${opisFin}</div>
         </div>
-        <div style="margin-top:8px;font-size:10px;color:#888">Za mobilno plaćanje skenirajte QR kod vaše banke</div>
+        <button onclick="navigator.clipboard.writeText(${JSON.stringify(kopirajTekst)}).then(()=>toast('Kopirano u clipboard!','ok'))"
+          style="margin-top:10px;background:#333;color:#ddd;border:1px solid #444;border-radius:6px;padding:7px 16px;font-size:12px;cursor:pointer;width:100%">
+          📋 Kopiraj podatke za ručni unos
+        </button>
       </div>`;
-  }, 200);
-  // Generate HUB-3 QR
-  if (u.iznos > 0) {
-    setTimeout(() => {
-      document.getElementById('hub3QrContainer').style.display = 'block';
-      const up3 = getUpPodaci();
-      genHUB3QR(
-        'hub3Canvas',
-        u.iznos,
-        up3.primatelj,
-        up3.iban,
-        'Clanarina ' + u.mjesec + ' ' + u.godina,
-        u.ime + ' ' + u.prezime
-      );
-    }, 200);
-  }
+  }, 300);
 
 }
 

@@ -149,14 +149,23 @@
       top: 64px;
       width: 240px;
       min-width: 240px;
+      /* dvh = dynamic viewport height — prati stvarnu vidljivu visinu (bez browser chrome) */
       height: calc(100vh - 64px);
+      height: calc(100dvh - 64px);
+      /* Padding na dnu za iOS home indicator i browser traku */
+      padding-bottom: max(env(safe-area-inset-bottom, 0px), 80px);
       z-index: 150;
       transition: left 0.25s ease;
       box-shadow: 4px 0 20px rgba(0,0,0,0.6);
+      overflow-y: scroll;
+      -webkit-overflow-scrolling: touch;
       scrollbar-width: none;
     }
     nav::-webkit-scrollbar { display: none; }
     nav.mobile-open { left: 0; }
+    /* Floating gumbi — sakrij kad je nav otvoren (via JS klasa na body) */
+    body.nav-open #floatingAI,
+    body.nav-open #scrollTopBtn { display: none !important; }
   }
   nav::-webkit-scrollbar { width: 4px; }
   nav::-webkit-scrollbar-track { background: transparent; }
@@ -3565,7 +3574,9 @@ function toggleMobileNav() {
   const overlay = document.getElementById('mobileOverlay');
   if (!nav) return;
   nav.classList.toggle('mobile-open');
-  if (overlay) overlay.classList.toggle('show', nav.classList.contains('mobile-open'));
+  const isOpen = nav.classList.contains('mobile-open');
+  if (overlay) overlay.classList.toggle('show', isOpen);
+  document.body.classList.toggle('nav-open', isOpen);
 }
 
 function closeMobileNav() {
@@ -3573,6 +3584,7 @@ function closeMobileNav() {
   const overlay = document.getElementById('mobileOverlay');
   if (nav) nav.classList.remove('mobile-open');
   if (overlay) overlay.classList.remove('show');
+  document.body.classList.remove('nav-open');
 }
 
 window.addEventListener('resize', initMobileNav);

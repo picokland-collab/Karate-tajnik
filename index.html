@@ -7373,9 +7373,20 @@ function getUpPodaci() {
   try { cfg = JSON.parse(localStorage.getItem('kk_uplatnice_cfg') || '{}'); } catch(e) {}
   const klub = (trenutniKorisnik && trenutniKorisnik.klub_naziv) || 'KK Đurđevac';
   const jeKKD = klub === 'KK Đurđevac';
+  // Provjera IBAN check-digit (mod 97) — odbacuje svaki IBAN s krivim check-digit
+  const validanIBAN = iban => {
+    if (!iban || typeof iban !== 'string') return false;
+    const s = iban.replace(/\s/g,'').toUpperCase();
+    if (s.length !== 21 || !s.startsWith('HR')) return false;
+    const rearranged = s.slice(4) + s.slice(0, 4);
+    const numStr = rearranged.replace(/[A-Z]/g, c => (c.charCodeAt(0) - 55).toString());
+    let r = 0;
+    for (const ch of numStr) r = (r * 10 + parseInt(ch)) % 97;
+    return r === 1;
+  };
   return {
     primatelj: cfg.primatelj || klub,
-    iban:      cfg.iban      || (jeKKD ? 'HR8823600001102289908' : ''),
+    iban:      (validanIBAN(cfg.iban) ? cfg.iban.trim().replace(/\s/g,'') : '') || (jeKKD ? 'HR8823600001102289908' : ''),
     adresa:    cfg.adresa    || (jeKKD ? 'Ulica Andrije Hebranga 12, 48350 Đurđevac' : ''),
     oib:       cfg.oib       || (jeKKD ? '98308789784' : ''),
     tel:       cfg.tel       || (jeKKD ? '098/805-555' : ''),

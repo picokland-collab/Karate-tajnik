@@ -796,8 +796,10 @@
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn btn-secondary" onclick="importHksClanovi()" title="Uvezi iz HKS popisa">📥 Uvezi HKS</button>
-          <button class="btn btn-secondary admin-only" onclick="exportClanCSV()">📊 Export CSV</button>
-          <button class="btn btn-secondary admin-only" onclick="openModal('modalBulkAzuriranje')">📷 Ažuriraj skenom</button>
+          <button class="btn btn-secondary admin-only" onclick="exportClanCSV()">📊 CSV</button>
+          <button class="btn btn-secondary admin-only" onclick="printClanovi()">🖨️ Ispis</button>
+          <button class="btn btn-secondary admin-only" onclick="bulkOznaciPlaceno()">💰 Sve platilo</button>
+          <button class="btn btn-secondary admin-only" onclick="openModal('modalBulkAzuriranje')">📷 Sken</button>
           <button class="btn btn-primary admin-only" onclick="otvoriModalDodajClana()">+ Dodaj člana</button>
         </div>
       </div>
@@ -1464,13 +1466,16 @@
     <div id="lijecnicki" class="section">
       <div class="page-header">
         <div><h2>Liječnički pregledi</h2><p>Praćenje valjanosti pregleda</p></div>
-        <button class="btn btn-primary" onclick="openModal('modalLijecnicki')">+ Unesi pregled</button>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-secondary btn-sm admin-only" onclick="printLijecnicki()">🖨️ Ispis</button>
+          <button class="btn btn-primary" onclick="openModal('modalLijecnicki')">+ Unesi pregled</button>
+        </div>
       </div>
       <div class="content">
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px">
-          <div class="stat-card" style="cursor:pointer" onclick="ljSetFilter('ok')"><div class="val" id="lj-st-ok" style="font-size:24px;color:var(--success)">0</div><div class="lbl">Valjani</div></div>
-          <div class="stat-card" style="cursor:pointer" onclick="ljSetFilter('warn')"><div class="val" id="lj-st-warn" style="font-size:24px;color:var(--warn)">0</div><div class="lbl">Uskoro ističu</div></div>
-          <div class="stat-card" style="cursor:pointer" onclick="ljSetFilter('exp')"><div class="val" id="lj-st-exp" style="font-size:24px;color:var(--red)">0</div><div class="lbl">Istekli</div></div>
+          <div id="lj-card-ok" class="stat-card" style="cursor:pointer;transition:border-color .2s" onclick="ljSetFilter('ok')"><div class="val" id="lj-st-ok" style="font-size:24px;color:var(--success)">0</div><div class="lbl">Valjani</div></div>
+          <div id="lj-card-warn" class="stat-card" style="cursor:pointer;transition:border-color .2s" onclick="ljSetFilter('warn')"><div class="val" id="lj-st-warn" style="font-size:24px;color:var(--warn)">0</div><div class="lbl">Uskoro ističu</div></div>
+          <div id="lj-card-exp" class="stat-card" style="cursor:pointer;transition:border-color .2s" onclick="ljSetFilter('exp')"><div class="val" id="lj-st-exp" style="font-size:24px;color:var(--red)">0</div><div class="lbl">Istekli</div></div>
         </div>
         <div class="search-bar" style="margin-bottom:12px">
           <input type="text" id="lj-search" placeholder="Pretraži po imenu člana..." oninput="ljRenderLista()">
@@ -6457,7 +6462,7 @@ function printRezultati() {
         <td style="font-weight:700">${med[r.plasman]||r.plasman||'—'}</td>
       </tr>`).join('') || '<tr><td colspan="5" style="color:#999">Nema rezultata</td></tr>'}
     </table>`;
-  printDoc(html, 'Rezultati natjecanja — KK Đurđevac');
+  printDoc(html, 'Rezultati natjecanja — ' + (trenutniKorisnik?.klub_naziv || 'KK Đurđevac'));
 }
 
 // ── Statistika prisutnosti ──
@@ -6487,6 +6492,79 @@ function printDnevnikStats() {
       </tr>`).join('')}
     </table>`;
   printDoc(html, 'Statistika prisutnosti — ' + labelPeriod);
+}
+
+function printClanovi() {
+  const status = document.getElementById('filterStatus')?.value || '';
+  const kat = document.getElementById('filterKat')?.value || '';
+  const lista = state.clanovi.filter(c => {
+    if (status && c.status !== status) return false;
+    if (kat && kategorija(c.datRod) !== kat) return false;
+    return true;
+  }).sort((a,b) => a.prezime.localeCompare(b.prezime));
+  if (!lista.length) { toast('Nema članova za ispis.', 'err'); return; }
+  const naslov = (trenutniKorisnik?.klub_naziv || 'KK Đurđevac').toUpperCase();
+  const html = `
+    <h2 style="text-align:center;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">POPIS ČLANOVA — ${naslov}</h2>
+    <p style="text-align:center;color:#666;margin:0 0 20px">${status ? status.charAt(0).toUpperCase()+status.slice(1) : 'Svi'} · ${kat ? kat.charAt(0).toUpperCase()+kat.slice(1) + 'i' : 'Sve kategorije'} · Ukupno: ${lista.length}</p>
+    <table>
+      <tr><th>#</th><th>Prezime i ime</th><th>Datum roč.</th><th>Pojas</th><th>Kategorija</th><th>Status</th><th>Čl.</th></tr>
+      ${lista.map((c,i) => `<tr>
+        <td style="color:#999">${i+1}.</td>
+        <td style="font-weight:600">${c.prezime} ${c.ime}</td>
+        <td>${c.datRod ? new Date(c.datRod+'T12:00').toLocaleDateString('hr-HR') : '—'}</td>
+        <td>${c.pojas || '—'}</td>
+        <td>${kategorija(c.datRod)}</td>
+        <td>${c.status || '—'}</td>
+        <td style="font-weight:700;color:${c.clanarina==='da'?'#2ECC71':'#C8102E'}">${c.clanarina==='da'?'✓':'✗'}</td>
+      </tr>`).join('')}
+    </table>`;
+  printDoc(html, 'Popis članova');
+}
+
+function printLijecnicki() {
+  if (!ljPregledi.length) { toast('Nema pregleda za ispis.', 'err'); return; }
+  const danas = new Date();
+  const za30 = new Date(); za30.setDate(za30.getDate() + 30);
+  const lista = [...ljPregledi].sort((a,b) => {
+    const va = new Date(a.vrijedi), vb = new Date(b.vrijedi);
+    const ra = va < danas ? 0 : va <= za30 ? 1 : 2;
+    const rb = vb < danas ? 0 : vb <= za30 ? 1 : 2;
+    return ra - rb || a.vrijedi.localeCompare(b.vrijedi);
+  });
+  const html = `
+    <h2 style="text-align:center;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">LIJEČNIČKI PREGLEDI</h2>
+    <p style="text-align:center;color:#666;margin:0 0 20px">Ukupno: ${lista.length} · Datum ispisa: ${new Date().toLocaleDateString('hr-HR')}</p>
+    <table>
+      <tr><th>#</th><th>Član</th><th>Vrijedi do</th><th>Dana</th><th>Status</th></tr>
+      ${lista.map((p,i) => {
+        const clan = state.clanovi.find(c => c.id == p.clanId);
+        const vd = new Date(p.vrijedi);
+        const istekao = vd < danas;
+        const uskoro = !istekao && vd <= za30;
+        const dana = Math.ceil((vd - danas) / 86400000);
+        const status = istekao ? 'ISTEKAO' : uskoro ? 'USKORO' : 'VALJAN';
+        const boja = istekao ? '#C8102E' : uskoro ? '#F0A500' : '#2ECC71';
+        return `<tr>
+          <td style="color:#999">${i+1}.</td>
+          <td style="font-weight:600">${clan ? clan.prezime+' '+clan.ime : p.imeRucno||'—'}</td>
+          <td>${vd.toLocaleDateString('hr-HR')}</td>
+          <td style="color:${boja}">${istekao ? Math.abs(dana)+' d. istekao' : dana+' d.'}</td>
+          <td style="font-weight:700;color:${boja}">${status}</td>
+        </tr>`;
+      }).join('')}
+    </table>`;
+  printDoc(html, 'Liječnički pregledi');
+}
+
+function bulkOznaciPlaceno() {
+  const aktivni = state.clanovi.filter(c => c.status === 'aktivan' && c.clanarina !== 'da');
+  if (!aktivni.length) { toast('Svi aktivni članovi već imaju plaćenu članarinu! ✓'); return; }
+  if (!confirm(`Označiti ${aktivni.length} aktivnih članova kao plaćeno?\n\nOva radnja će svim aktivnim članovima bez plaćene članarine postaviti status "plaćeno".`)) return;
+  aktivni.forEach(c => { c.clanarina = 'da'; });
+  save(); renderClanovi(); updateStats();
+  logActivity('💰', 'Bulk plaćanje: ' + aktivni.length + ' članova označeno kao plaćeno');
+  toast(aktivni.length + ' članova označeno kao plaćeno!');
 }
 
 // ========== MODUL 3: KALENDAR ==========
@@ -6637,6 +6715,10 @@ try { ljPregledi = JSON.parse(localStorage.getItem('kk_lijecnicki') || '[]'); } 
 
 function ljSetFilter(f) {
   ljFilter = (ljFilter === f && f !== '') ? '' : f;
+  ['ok','warn','exp'].forEach(k => {
+    const el = document.getElementById('lj-card-' + k);
+    if (el) el.style.borderColor = (ljFilter === k) ? '#C8102E' : '';
+  });
   ljRenderLista();
 }
 function ljSave() {

@@ -761,6 +761,17 @@
     th, td { padding: 8px 10px; }
   }
 
+  /* ========== DASHBOARD NAV GRID ========== */
+  .dash-nav-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+  @media (max-width: 768px) {
+    .dash-nav-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+
   /* ========== MOBILE NAV GRID ========== */
   #mobileNavGrid {
     display: none;
@@ -953,6 +964,9 @@
         <button class="btn btn-secondary btn-sm admin-only" onclick="manualSyncAll()" id="btnSync" style="margin-right:8px">☁️ Sync u oblak</button><button class="btn btn-gold" onclick="showSection('ai')">🤖 Pitaj AI tajnika</button>
       </div>
       <div class="content">
+        <h3 style="font-family:'Bebas Neue',sans-serif;letter-spacing:1px;font-size:18px;margin-bottom:12px;color:var(--muted)">BRZI PRISTUP</h3>
+        <div id="dashNavTiles" class="dash-nav-grid"></div>
+
         <div id="alertPanel" style="margin-bottom:16px"></div>
 
         <div class="stats-row" id="statsRow">
@@ -3379,6 +3393,30 @@ function prijaviKorisnika() {
     }
   }
   toast('Dobrodošli, ' + trenutniKorisnik.ime + '! 🥋');
+  renderDashNavTiles();
+}
+
+function renderDashNavTiles() {
+  const container = document.getElementById('dashNavTiles');
+  if (!container) return;
+  const k = trenutniKorisnik || {};
+  const uloga = k.uloga || '';
+  const jeAdmin = k.admin || false;
+  const jePredsjednik = uloga === 'admin';
+  const jeSuperAdmin = uloga === 'superadmin';
+  const filtered = NAV_TILES.filter(t => {
+    if (t.role === 'all') return true;
+    if (t.role === 'admin') return jeAdmin;
+    if (t.role === 'predsjednik') return jePredsjednik;
+    if (t.role === 'superadmin') return jeSuperAdmin;
+    return false;
+  });
+  container.innerHTML = filtered.map(t =>
+    `<div class="mobile-grid-tile" onclick="showSection('${t.id}')">
+      <div class="tile-icon">${t.icon}</div>
+      <div class="tile-label">${t.label}</div>
+    </div>`
+  ).join('');
 }
 
 function updateHeaderKlub() {

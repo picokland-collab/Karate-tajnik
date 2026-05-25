@@ -1144,13 +1144,13 @@
           <p>Registar svih članova kluba</p>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn btn-secondary" onclick="importHksClanovi()" title="Uvezi iz HKS popisa">📥 Uvezi HKS</button>
+          <button class="btn btn-secondary admin-only" onclick="importHksClanovi()" title="Uvezi iz HKS popisa">📥 Uvezi HKS</button>
           <button class="btn btn-secondary admin-only" onclick="exportClanCSV()">📊 CSV</button>
           <button class="btn btn-secondary admin-only" onclick="printClanovi()">🖨️ Ispis</button>
           <button class="btn btn-secondary admin-only" onclick="printBlankPristupnica()">📄 Prazna pristupnica</button>
           <button class="btn btn-secondary admin-only" onclick="bulkOznaciPlaceno()">💰 Sve platilo</button>
           <button class="btn btn-secondary admin-only" onclick="openModal('modalBulkAzuriranje')">📷 Sken</button>
-          <button class="btn btn-primary admin-only" onclick="otvoriModalDodajClana()">+ Dodaj člana</button>
+          <button class="btn btn-primary" onclick="otvoriModalDodajClana()">+ Dodaj člana</button>
         </div>
       </div>
       <div class="content">

@@ -7658,8 +7658,6 @@ function prikaziUplatnicuObj(u) {
     const iznosEur = lines[2] ? (parseInt(lines[2], 10) / 100).toFixed(2).replace('.', ',') : '—';
     const ibanQR   = lines[9] || up3.iban || '—';
     const opisFin  = lines[12] || opisQR;
-    const kopirajTekst = `Primatelj: ${up3.primatelj}\nIBAN: ${ibanQR}\nIznos: ${iznosEur} EUR\nOpis: ${opisFin}\nModel: HR99`;
-
     barkodDiv.innerHTML = `
       <div style="background:#1a1a1a;border-radius:8px;padding:12px 16px;margin-top:4px">
         <div style="font-size:10px;color:#777;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Podaci u QR kodu</div>
@@ -7671,11 +7669,14 @@ function prikaziUplatnicuObj(u) {
           <div><span style="color:#888;display:inline-block;width:90px">Model:</span>HR99</div>
           <div><span style="color:#888;display:inline-block;width:90px">Opis:</span>${opisFin}</div>
         </div>
-        <button onclick="navigator.clipboard.writeText(${JSON.stringify(kopirajTekst)}).then(()=>toast('Kopirano u clipboard!','ok'))"
-          style="margin-top:10px;background:#333;color:#ddd;border:1px solid #444;border-radius:6px;padding:7px 16px;font-size:12px;cursor:pointer;width:100%">
+        <button id="btnKopirajUp" style="margin-top:10px;background:#333;color:#ddd;border:1px solid #444;border-radius:6px;padding:7px 16px;font-size:12px;cursor:pointer;width:100%">
           📋 Kopiraj podatke za ručni unos
         </button>
       </div>`;
+    document.getElementById('btnKopirajUp').addEventListener('click', () => {
+      const txt = `Primatelj: ${up3.primatelj}\nIBAN: ${ibanQR}\nIznos: ${iznosEur} EUR\nOpis: ${opisFin}\nModel: HR99`;
+      navigator.clipboard.writeText(txt).then(() => toast('Kopirano u clipboard!', 'ok'));
+    });
   }, 300);
 
 }

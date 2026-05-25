@@ -1321,7 +1321,7 @@
     <div id="kalendar" class="section">
       <div class="page-header">
         <div><h2>Kalendar</h2><p>Treninzi, utakmice i događaji</p></div>
-        <button class="btn btn-primary" onclick="noviDogadaj()">+ Novi događaj</button>
+        <button class="btn btn-primary admin-only" onclick="noviDogadaj()">+ Novi događaj</button>
       </div>
       <div class="content">
         <!-- Mini kalendar -->
@@ -1507,10 +1507,15 @@
         <div style="background:rgba(200,16,46,0.1);border:1px solid var(--red);border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:13px;color:#ff5a70">
           ⚠️ GDPR obveza: Za svakog člana (posebno maloljetnika) mora postojati potpisana privola za obradu osobnih podataka i fotografija.
         </div>
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px">
-          <div class="stat-card"><div class="val" id="gdpr-st-potpisano" style="font-size:24px;color:var(--success)">0</div><div class="lbl">Potpisano</div></div>
-          <div class="stat-card"><div class="val" id="gdpr-st-nepotpisano" style="font-size:24px;color:var(--red)">0</div><div class="lbl">Nije potpisano</div></div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px">
+          <div class="stat-card" style="cursor:pointer" onclick="gdprSetFilter('')"><div class="val" id="gdpr-st-potpisano" style="font-size:24px;color:var(--success)">0</div><div class="lbl">Potpisano</div></div>
+          <div class="stat-card" style="cursor:pointer" onclick="gdprSetFilter('ne')"><div class="val" id="gdpr-st-nepotpisano" style="font-size:24px;color:var(--red)">0</div><div class="lbl">Nije potpisano</div></div>
           <div class="stat-card"><div class="val" id="gdpr-st-postotak" style="font-size:24px;color:var(--gold)">0%</div><div class="lbl">Usklađenost</div></div>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+          <button id="gdpr-btn-svi" class="btn btn-secondary btn-sm" onclick="gdprSetFilter('')" style="border:1px solid #C8102E">Svi</button>
+          <button id="gdpr-btn-ne" class="btn btn-secondary btn-sm" onclick="gdprSetFilter('ne')">Nepotpisani</button>
+          <button id="gdpr-btn-da" class="btn btn-secondary btn-sm" onclick="gdprSetFilter('da')">Potpisani</button>
         </div>
         <div id="gdpr-lista-html">
           <div class="empty-state"><div class="icon">🔒</div><p>Učitajte listu članova za pregled GDPR statusa.</p></div>
@@ -1637,6 +1642,18 @@
       <div class="content">
         <div style="background:rgba(240,165,0,0.1);border:1px solid var(--gold);border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:13px;color:var(--gold)">
           ⚖️ Prema čl. 25. Statuta, Skupština usvaja program rada i financijski plan za sljedeću kalendarsku godinu te izvješće o radu za prethodnu godinu.
+        </div>
+        <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+          <select id="plan-filter-god" onchange="planRenderLista()" style="flex:1;max-width:140px;background:#1C1C1C;border:1px solid #333;color:#EDEDED;padding:8px 12px;border-radius:8px;font-size:13px">
+            <option value="">Sve godine</option>
+          </select>
+          <select id="plan-filter-vrsta" onchange="planRenderLista()" style="flex:2;background:#1C1C1C;border:1px solid #333;color:#EDEDED;padding:8px 12px;border-radius:8px;font-size:13px">
+            <option value="">Sve vrste</option>
+            <option value="plan">📋 Plan rada</option>
+            <option value="izvjesce">📄 Izvješće o radu</option>
+            <option value="financijski">💶 Financijski plan</option>
+            <option value="financijsko_izvjesce">📊 Financijsko izvješće</option>
+          </select>
         </div>
         <div id="plan-lista-html">
           <div class="empty-state"><div class="icon">📋</div><p>Nema unesenih planova rada.</p></div>
@@ -5051,11 +5068,21 @@ const PLAN_VRSTA_LABEL = {
 
 function planRenderLista() {
   const el = document.getElementById('plan-lista-html');
-  if (planLista.length === 0) {
-    el.innerHTML = '<div class="empty-state"><div class="icon">📋</div><p>Nema unesenih planova rada.</p></div>';
+  // Populate year filter
+  const godine = [...new Set(planLista.map(p => p.god))].filter(Boolean).sort().reverse();
+  const selGod = document.getElementById('plan-filter-god');
+  if (selGod) {
+    const cur = selGod.value;
+    selGod.innerHTML = '<option value="">Sve godine</option>' + godine.map(g => `<option value="${g}" ${g===cur?'selected':''}>${g}.</option>`).join('');
+  }
+  const fg = selGod?.value || '';
+  const fv = document.getElementById('plan-filter-vrsta')?.value || '';
+  const filtrirani = planLista.filter(p => (!fg || p.god === fg) && (!fv || p.vrsta === fv));
+  if (filtrirani.length === 0) {
+    el.innerHTML = '<div class="empty-state"><div class="icon">📋</div><p>Nema planova za odabrane filtere.</p></div>';
     return;
   }
-  el.innerHTML = [...planLista].reverse().map(p => `
+  el.innerHTML = [...filtrirani].reverse().map(p => `
     <div class="card" style="margin-bottom:10px">
       <div class="card-row">
         <div>
@@ -5555,6 +5582,16 @@ function obrisiTrenera(id) {
 
 // ========== GDPR PRIVOLE ==========
 let gdprAktivniClan = null;
+let gdprFilter = '';
+
+function gdprSetFilter(f) {
+  gdprFilter = f;
+  ['svi','ne','da'].forEach(k => {
+    const btn = document.getElementById('gdpr-btn-' + k);
+    if (btn) btn.style.borderColor = ((k === 'svi' && f === '') || f === k) ? '#C8102E' : '';
+  });
+  gdprRenderLista();
+}
 
 function gdprRenderLista() {
   const aktivni = state.clanovi.filter(c => c.status === 'aktivan');
@@ -5571,13 +5608,19 @@ function gdprRenderLista() {
     return;
   }
 
-  // Sort - nepotpisani prvi
-  const sorted = [...aktivni].sort((a,b) => {
-    if (a.gdpr === 'da' && b.gdpr !== 'da') return 1;
-    if (a.gdpr !== 'da' && b.gdpr === 'da') return -1;
-    return a.prezime.localeCompare(b.prezime);
-  });
+  // Sort - nepotpisani prvi, pa abecedno; primijeni filter
+  const sorted = [...aktivni]
+    .filter(c => gdprFilter === '' || (gdprFilter === 'da' ? c.gdpr === 'da' : c.gdpr !== 'da'))
+    .sort((a,b) => {
+      if (a.gdpr === 'da' && b.gdpr !== 'da') return 1;
+      if (a.gdpr !== 'da' && b.gdpr === 'da') return -1;
+      return a.prezime.localeCompare(b.prezime);
+    });
 
+  if (sorted.length === 0) {
+    document.getElementById('gdpr-lista-html').innerHTML = '<div class="empty-state"><div class="icon">✓</div><p>Svi članovi iz ove grupe imaju uređen GDPR status.</p></div>';
+    return;
+  }
   document.getElementById('gdpr-lista-html').innerHTML = sorted.map(c => {
     const potpisana = c.gdpr === 'da';
     const god = c.datRod ? new Date().getFullYear() - new Date(c.datRod).getFullYear() : 18;
@@ -6302,7 +6345,7 @@ function kalOdaberiDan(datum) {
             <div style="font-weight:600;color:#EDEDED">${e.naziv}</div>
             <div style="font-size:12px;color:#aaa">${e.pocetak||''} ${e.kraj ? '- '+e.kraj : ''} ${e.lokacija ? '· '+e.lokacija : ''}</div>
           </div>
-          <button onclick="kalObrisi('${e.id}')" style="background:none;border:none;color:#ff5a70;cursor:pointer;font-size:16px">✕</button>
+          ${trenutniKorisnik?.admin ? `<button onclick="kalObrisi('${e.id}')" style="background:none;border:none;color:#ff5a70;cursor:pointer;font-size:16px">✕</button>` : ''}
         </div>
       </div>`).join('');
   }
@@ -6326,7 +6369,7 @@ function kalRenderLista() {
           <div style="font-weight:600;color:#EDEDED">${e.naziv}</div>
           <div style="font-size:12px;color:#aaa">${new Date(e.datum+'T12:00:00').toLocaleDateString('hr-HR')} ${e.pocetak||''} ${e.lokacija ? '· '+e.lokacija : ''}</div>
         </div>
-        <button onclick="kalObrisi('${e.id}')" style="background:none;border:none;color:#666;cursor:pointer">✕</button>
+        ${trenutniKorisnik?.admin ? `<button onclick="kalObrisi('${e.id}')" style="background:none;border:none;color:#666;cursor:pointer">✕</button>` : ''}
       </div>
     </div>`).join('');
 }

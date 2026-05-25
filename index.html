@@ -3856,6 +3856,7 @@ function showSection(id) {
     if (b.getAttribute('onclick') && b.getAttribute('onclick').includes(id)) b.classList.add('active');
   });
   updateStats();
+  if (id === 'dashboard') renderDashNavTiles();
   if (id === 'clanovi') renderClanovi();
   if (id === 'odluke') renderOdluke();
   if (id === 'izvjestaji') renderIzvjestaji();

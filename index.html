@@ -5084,21 +5084,9 @@ function parsirajOCRTekst(tekst, prefiks) {
   const full = tekst.toUpperCase();
   const p = {ime:'', prezime:'', datRod:'', oib:'', adresa:'', roditelji:'', mobitel:'', email:'', bolest:''};
 
-  // OIB — 11 uzastopnih znamenki
+  // OIB — 11 uzastopnih znamenki (ne smije biti dio većeg broja)
   const oibMatch = tekst.match(/\b(\d{11})\b/);
   if (oibMatch) p.oib = oibMatch[1];
-
-  // Datum — DD.MM.YYYY ili YYYY-MM-DD ili DD/MM/YYYY
-  const datMatch = tekst.match(/\b(\d{1,2})[.\/](\d{1,2})[.\/](\d{4})\b/) ||
-                   tekst.match(/\b(\d{4})-(\d{2})-(\d{2})\b/);
-  if (datMatch) {
-    if (datMatch[0].includes('-')) {
-      p.datRod = datMatch[0];
-    } else {
-      const d = datMatch[1].padStart(2,'0'), m = datMatch[2].padStart(2,'0'), g = datMatch[3];
-      p.datRod = g + '-' + m + '-' + d;
-    }
-  }
 
   // Mobitel — počinje s 09 ili +385
   const mobMatch = tekst.match(/(\+385|00385|09\d)[\s\-]?\d[\d\s\-]{6,12}/);
@@ -5108,37 +5096,71 @@ function parsirajOCRTekst(tekst, prefiks) {
   const mailMatch = tekst.match(/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/);
   if (mailMatch) p.email = mailMatch[0];
 
-  // Ime i prezime — tražimo redak koji izgleda kao "IME PREZIME" (velika slova, 2 riječi)
-  // Tipično je na pristupnici: IME I PREZIME DJETETA: Luka Horvat
-  for (const linija of linije) {
-    const imePrezime = linija.match(/^([A-ZČĆŠĐŽ][a-zčćšđžA-ZČĆŠĐŽ]+)\s+([A-ZČĆŠĐŽ][a-zčćšđžA-ZČĆŠĐŽ]+)$/);
-    if (imePrezime && !p.ime) {
-      p.ime = imePrezime[1];
-      p.prezime = imePrezime[2];
-    }
-    // Nakon labele "IME I PREZIME" ili "IME:"
-    if (/IME.*(PREZIME|DJETETA)/i.test(linija) || /^IME:/i.test(linija)) {
-      const nextIdx = linije.indexOf(linija) + 1;
-      if (nextIdx < linije.length) {
-        const nxt = linije[nextIdx].trim();
-        const ip = nxt.match(/^([A-ZČĆŠĐŽ][a-zčćšđžA-ZČĆŠĐŽ]+)\s+([A-ZČĆŠĐŽ][a-zčćšđžA-ZČĆŠĐŽ\s]+)$/);
-        if (ip) { p.ime = ip[1]; p.prezime = ip[2].trim(); }
+  // Helper: kapitalizira ALL-CAPS riječ → "Luka"
+  const kapital = w => w ? w.charAt(0).toUpperCase() + w.slice(1).toLowerCase() : '';
+
+  // Ime i prezime — više strategija parsiranja
+  for (let i = 0; i < linije.length; i++) {
+    const linija = linije[i];
+
+    // 1. Nakon labele "IME I PREZIME DJETETA:" ili "IME I PREZIME:" — isti redak ili sljedeći
+    const labelaMatch = linija.match(/(?:IME\s*[I\/]?\s*PREZIME(?:\s*DJETETA)?)[:\s]+(.+)/i);
+    if (labelaMatch && !p.ime) {
+      const val = labelaMatch[1].trim();
+      const ip = val.match(/^([A-ZČĆŠĐŽ][a-zčćšđžA-ZČĆŠĐŽ\-]+)\s+([A-ZČĆŠĐŽ][a-zčćšđžA-ZČĆŠĐŽ\-]+(?:\s+[A-ZČĆŠĐŽ][a-zčćšđžA-ZČĆŠĐŽ\-]+)?)/i);
+      if (ip) { p.ime = kapital(ip[1]); p.prezime = kapital(ip[2]); }
+      else if (i + 1 < linije.length) {
+        const nxt = linije[i + 1].trim();
+        const ip2 = nxt.match(/^([A-ZČĆŠĐŽa-zčćšđž\-]+)\s+([A-ZČĆŠĐŽa-zčćšđž\-]+)/);
+        if (ip2) { p.ime = kapital(ip2[1]); p.prezime = kapital(ip2[2]); }
       }
     }
-    // Adresa — redak koji sadrži broj i grad
-    if (!p.adresa && /\d+.*\d{5}|ulica|trg|put|cesta/i.test(linija) && linija.length > 8) {
+
+    // 2. Izolirani redak koji izgleda kao "Luka Horvat" ili "LUKA HORVAT" (2 ili 3 riječi)
+    if (!p.ime) {
+      const mixed = linija.match(/^([A-ZČĆŠĐŽ][a-zčćšđžA-ZČĆŠĐŽ\-]{1,})\s+([A-ZČĆŠĐŽ][a-zčćšđžA-ZČĆŠĐŽ\-]{1,})(?:\s+([A-ZČĆŠĐŽ][a-zčćšđžA-ZČĆŠĐŽ\-]+))?$/);
+      if (mixed && linija.length < 40) { p.ime = mixed[1]; p.prezime = (mixed[3] ? mixed[2]+' '+mixed[3] : mixed[2]); }
+      // All-caps: LUKA HORVAT
+      const caps = linija.match(/^([A-ZČĆŠĐŽ]{2,})\s+([A-ZČĆŠĐŽ]{2,})(?:\s+([A-ZČĆŠĐŽ]{2,}))?$/);
+      if (caps && !p.ime && linija.length < 40 && !/^\d/.test(linija)) {
+        p.ime = kapital(caps[1]);
+        p.prezime = caps[3] ? kapital(caps[2])+' '+kapital(caps[3]) : kapital(caps[2]);
+      }
+    }
+
+    // Adresa — redak koji sadrži poštanski broj ili ključne riječi
+    if (!p.adresa && /\b\d{5}\b|\bulica\b|\btrg\b|\bput\b|\bcesta\b|\bbb\b/i.test(linija) && linija.length > 8) {
       p.adresa = linija;
     }
-    // Roditelji
-    if (/IME OCA|IME MAJKE|RODITELJ|STARATELJ/i.test(linija)) {
-      const nextIdx = linije.indexOf(linija) + 1;
-      if (nextIdx < linije.length) p.roditelji = linije[nextIdx].trim();
+
+    // Roditelji — redak iza labele
+    if (/IME\s*OCA|IME\s*MAJKE|RODITELJ|STARATELJ|OCA\/MAJKE/i.test(linija)) {
+      // Provjeri vrijednost na istom retku iza dvotočke
+      const inline = linija.match(/:\s*(.+)$/);
+      if (inline && inline[1].trim().length > 2) { p.roditelji = inline[1].trim(); }
+      else if (i + 1 < linije.length && linije[i + 1].length > 2) { p.roditelji = linije[i + 1].trim(); }
     }
-    // Bolesti/napomene
-    if (/BOLEST|NAPOMENA|ALERGIJA/i.test(linija)) {
-      const nextIdx = linije.indexOf(linija) + 1;
-      if (nextIdx < linije.length && linije[nextIdx].length > 2) p.bolest = linije[nextIdx].trim();
+
+    // Bolesti/napomene — isti princip
+    if (/BOLEST|NAPOMENA|ALERGIJA|POSEBNOST/i.test(linija)) {
+      const inline = linija.match(/:\s*(.+)$/);
+      if (inline && inline[1].trim().length > 2) { p.bolest = inline[1].trim(); }
+      else if (i + 1 < linije.length && linije[i + 1].length > 2) { p.bolest = linije[i + 1].trim(); }
     }
+  }
+
+  // Datum — uzmi onaj s godištem između 1980-2020 (datum rođenja, ne danas)
+  const datMatches = [...tekst.matchAll(/\b(\d{1,2})[.\/](\d{1,2})[.\/](\d{4})\b/g)];
+  for (const m of datMatches) {
+    const god = parseInt(m[3]);
+    if (god >= 1980 && god <= 2020) {
+      p.datRod = m[3] + '-' + m[2].padStart(2,'0') + '-' + m[1].padStart(2,'0');
+      break;
+    }
+  }
+  if (!p.datRod) {
+    const isoMatch = tekst.match(/\b(19[89]\d|20[012]\d)-(\d{2})-(\d{2})\b/);
+    if (isoMatch) p.datRod = isoMatch[0];
   }
 
   return p;
@@ -5248,14 +5270,10 @@ async function skenirajDokument(input, mode) {
       const podaci = parsirajOCRTekst(tekst, mode === 'novi' ? 'c' : '');
 
       if (mode === 'novi') {
-        if (podaci.ime) document.getElementById('cIme').value = podaci.ime;
-        if (podaci.prezime) document.getElementById('cPrezime').value = podaci.prezime;
-        if (podaci.datRod) document.getElementById('cDatRod').value = podaci.datRod;
-        if (podaci.oib) document.getElementById('cOIB').value = podaci.oib;
-        if (podaci.adresa) document.getElementById('cAdresa').value = podaci.adresa;
-        if (podaci.mobitel) document.getElementById('cMobitel').value = podaci.mobitel;
-        if (podaci.email) document.getElementById('cEmail').value = podaci.email;
-        const nadeno = Object.entries(podaci).filter(([k,v])=>v).map(([k])=>k).join(', ');
+        popuniFormuIzOCR(podaci, 'c');
+        if (podaci.datRod && typeof azurirajKategorijuPreview === 'function') azurirajKategorijuPreview();
+        const lblMap = {ime:'Ime',prezime:'Prezime',datRod:'Datum',oib:'OIB',adresa:'Adresa',roditelji:'Roditelji',mobitel:'Mobitel',email:'Email',bolest:'Napomena'};
+        const nadeno = Object.entries(podaci).filter(([k,v])=>v).map(([k])=>lblMap[k]||k).join(', ');
         statusEl.textContent = nadeno ? '✓ Pronađeno: ' + nadeno + ' — provjerite' : '⚠ Nisu prepoznati podaci';
         statusEl.style.color = nadeno ? 'var(--success)' : 'var(--warn)';
         prikaziOCRModal(tekst, 'c');

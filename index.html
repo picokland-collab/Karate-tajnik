@@ -667,6 +667,7 @@
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.0.4/tesseract.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
 </head>
 <body>
 
@@ -4426,52 +4427,36 @@ function genHUB3QR(canvasId, iznos, primatelj, iban, opis, napomena) {
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
 
-  // EPC QR sadržaj (EU standard koji podržavaju sve HR banke)
+  // EPC QR sadržaj (EU standard — podržavaju sve HR banke)
   const epc = [
-    'BCD',           // Service Tag
-    '002',           // Version
-    '1',             // Encoding (UTF-8)
-    'SCT',           // Identification (SEPA Credit Transfer)
-    '',              // BIC (opcionalno)
-    primatelj,       // Primatelj
-    iban.replace(/\s/g,''),  // IBAN
-    'EUR' + parseFloat(iznos).toFixed(2),  // Iznos
-    '',              // Purpose
-    opis.substring(0,140),  // Opis plaćanja
-    napomena.substring(0,70)  // Napomena (ime djeteta)
+    'BCD',
+    '002',
+    '1',
+    'SCT',
+    '',
+    primatelj,
+    (iban || '').replace(/\s/g, ''),
+    'EUR' + parseFloat(iznos || 0).toFixed(2),
+    '',
+    (opis || '').substring(0, 140),
+    (napomena || '').substring(0, 70)
   ].join('\n');
 
-  // Generiraj QR s Google Charts API (fallback na tekst ako ne radi)
-  const qrUrl = 'https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=' + encodeURIComponent(epc) + '&choe=UTF-8&chld=M|2';
+  if (typeof QRious !== 'undefined') {
+    try {
+      new QRious({ element: canvas, value: epc, size: 200, level: 'M', background: '#ffffff', foreground: '#111111' });
+      return;
+    } catch(e) { console.warn('QRious error:', e); }
+  }
 
+  // Fallback ako QRious nije učitan
   const ctx = canvas.getContext('2d');
-  canvas.width = 200;
-  canvas.height = 200;
-
-  const img = new Image();
-  img.crossOrigin = 'anonymous';
-  img.onload = () => {
-    ctx.clearRect(0, 0, 200, 200);
-    ctx.drawImage(img, 0, 0, 200, 200);
-  };
-  img.onerror = () => {
-    // Fallback — nacrtaj placeholder s tekstom
-    ctx.fillStyle = '#1C1C1C';
-    ctx.fillRect(0, 0, 200, 200);
-    ctx.fillStyle = '#C8102E';
-    ctx.font = 'bold 13px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText('QR kod', 100, 85);
-    ctx.fillStyle = '#888';
-    ctx.font = '11px Arial';
-    ctx.fillText('Dostupan na', 100, 105);
-    ctx.fillText('karate-tajnik.vercel.app', 100, 120);
-    // Draw border
-    ctx.strokeStyle = '#C8102E';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(2, 2, 196, 196);
-  };
-  img.src = qrUrl;
+  canvas.width = 200; canvas.height = 200;
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, 200, 200);
+  ctx.fillStyle = '#C8102E'; ctx.font = 'bold 13px Arial'; ctx.textAlign = 'center';
+  ctx.fillText('QR nije dostupan', 100, 90);
+  ctx.fillStyle = '#888'; ctx.font = '11px Arial';
+  ctx.fillText('Otvorite aplikaciju u Chromeu', 100, 110);
 }
 
 // ========== ALERT SUSTAV ==========

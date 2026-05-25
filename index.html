@@ -4423,28 +4423,47 @@ function stopFieldMic(fieldId, btnId) {
 // ========== HUB-3 QR GENERATOR (Canvas, bez vanjske biblioteke) ==========
 // EPC QR format kompatibilan s hrvatskim bankama
 
+// Pretvara hrvatska slova u ASCII (HUB-3 zahtijeva ASCII)
+function toAsciiHR(s) {
+  return (s || '')
+    .replace(/[Čč]/g, m => m === 'Č' ? 'C' : 'c')
+    .replace(/[Ćć]/g, m => m === 'Ć' ? 'C' : 'c')
+    .replace(/[Šš]/g, m => m === 'Š' ? 'S' : 's')
+    .replace(/[Žž]/g, m => m === 'Ž' ? 'Z' : 'z')
+    .replace(/[Đđ]/g, m => m === 'Đ' ? 'D' : 'd')
+    .normalize('NFD').replace(/[̀-ͯ]/g, '');
+}
+
 function genHUB3QR(canvasId, iznos, primatelj, iban, opis, napomena) {
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
 
-  // EPC QR sadržaj (EU standard — podržavaju sve HR banke)
-  const epc = [
-    'BCD',
-    '002',
-    '1',
-    'SCT',
-    '',
-    primatelj,
+  // HUB-3 format — standard koji čitaju sve HR mobilne banke (m-zaba, PBZ365, Erste, Raiffeisen...)
+  const up = getUpPodaci();
+  const adresaDijelovi = (up.adresa || '').split(',').map(s => s.trim());
+  const ulica = toAsciiHR(adresaDijelovi[0] || '');
+  const grad  = toAsciiHR(adresaDijelovi[1] || '');
+  const opis35 = toAsciiHR((opis + ' ' + napomena).trim()).substring(0, 35);
+
+  const hub3 = [
+    'HRVHUB3',
+    'EUR',
+    String(Math.round(parseFloat(iznos || 0) * 100)).padStart(15, '0'),
+    '',        // ime platitelja (prazno)
+    '',        // adresa platitelja 1
+    '',        // adresa platitelja 2
+    toAsciiHR(primatelj),
+    ulica,
+    grad,
     (iban || '').replace(/\s/g, ''),
-    'EUR' + parseFloat(iznos || 0).toFixed(2),
-    '',
-    (opis || '').substring(0, 140),
-    (napomena || '').substring(0, 70)
+    'HR99',
+    '',        // poziv na broj (prazan za HR99)
+    opis35
   ].join('\n');
 
   if (typeof QRious !== 'undefined') {
     try {
-      new QRious({ element: canvas, value: epc, size: 200, level: 'M', background: '#ffffff', foreground: '#111111' });
+      new QRious({ element: canvas, value: hub3, size: 200, level: 'M', background: '#ffffff', foreground: '#111111' });
       return;
     } catch(e) { console.warn('QRious error:', e); }
   }

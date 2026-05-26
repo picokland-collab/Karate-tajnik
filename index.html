@@ -5430,17 +5430,18 @@ function stopMic() {
 }
 
 // ========== AI CHAT ==========
-const today = new Date();
-const todayStr = today.toLocaleDateString('hr-HR', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
 function getSystemPrompt() {
+  const todayStr = new Date().toLocaleDateString('hr-HR', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
   const klubNaziv = (trenutniKorisnik && trenutniKorisnik.klub_naziv) || 'KK Đurđevac';
   const jeDjurdjevac = !trenutniKorisnik || !trenutniKorisnik.klub_naziv || trenutniKorisnik.klub_naziv === 'KK Đurđevac';
   if (!jeDjurdjevac) {
     return `Ti si DIGITALNI TAJNIK ${klubNaziv}. Odgovaraš ISKLJUČIVO na hrvatskom jeziku. NIKADA ne govori da ne možeš nešto napraviti. Uvijek budi kratki i konkretan. Danas je ${todayStr}. Tvoja uloga je pomagati tajniku i predsjedniku kluba s administrativnim poslovima: pisanjem odluka, obavijesti, izvještaja s natjecanja, dopisa i ostalih administrativnih dokumenata. Uvijek si profesionalan i koristan.`;
   }
-  return SYSTEM_PROMPT_KKD;
+  return getSystemPromptKKD();
 }
-const SYSTEM_PROMPT_KKD = `Ti si DIGITALNI TAJNIK Karate kluba Đurđevac (KK Đurđevac).
+function getSystemPromptKKD() {
+  const todayStr = new Date().toLocaleDateString('hr-HR', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+  return `Ti si DIGITALNI TAJNIK Karate kluba Đurđevac (KK Đurđevac).
 Odgovaraš ISKLJUČIVO na hrvatskom jeziku.
 Danas je ${todayStr}.
 Tvoja uloga je pomagati tajniku i predsjedniku kluba s administrativnim poslovima.
@@ -5576,10 +5577,10 @@ Možeš pomoći s:
 8. Svim ostalim zadacima tajnika sportskog kluba
 
 Uvijek si profesionalan, koncizan i koristan. Kada pišeš formalne dokumente, koristii standardni format s datumom, brojem, pravnom osnovom i potpisima.`;
+}
 
 let chatHistory = [];
 let _msgId = 0;
-const SYSTEM_PROMPT = SYSTEM_PROMPT_KKD;
 
 function buildAILiveContext() {
   const danasIso = new Date().toISOString().split('T')[0];
@@ -7891,7 +7892,7 @@ function _izjavaSuglasnostHTML(c) {
 }
 
 function printPristupnica(id) {
-  const c = state.clanovi.find(x => x.id === id);
+  const c = state.clanovi.find(x => String(x.id) === String(id));
   if (!c) { toast('Član nije pronađen.', 'err'); return; }
   const age = _calcAge(c.datRod);
   const html = (age !== null && age >= 14 && age < 18) ? _izjavaSuglasnostHTML(c) : _izjavaHTML(c);

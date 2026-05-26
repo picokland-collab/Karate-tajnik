@@ -6974,27 +6974,46 @@ function gdprOznaci(id) {
 }
 
 
-function posaljiSvimaMail(subject, body) {
-  const emailovi = state.clanovi
+async function posaljiSvimaMail(subject, body) {
+  const primatelji = state.clanovi
     .filter(c => c.status === 'aktivan' && c.email && c.email.trim())
-    .map(c => c.email.trim());
-  
-  if (emailovi.length === 0) {
+    .map(c => ({ email: c.email.trim(), ime: c.ime, prezime: c.prezime }));
+
+  if (primatelji.length === 0) {
     toast('Nema unesenih email adresa! Unesite ih u Email adrese sekciji.', 'err');
     showSection('emailovi');
     return;
   }
 
-  const up = getUpPodaci();
   const klub = (trenutniKorisnik && trenutniKorisnik.klub_naziv) || 'KK Đurđevac';
-  const subj = encodeURIComponent(subject || 'Obavijest — ' + klub);
-  const bod = encodeURIComponent(body || 'Poštovani,\n\n\n\nSrdačan pozdrav,\n' + klub);
-  const bcc = encodeURIComponent(emailovi.join(','));
-  const from = up.email_klub || '';
+  const finalSubject = subject || 'Obavijest — ' + klub;
+  const finalMessage = body || 'Poštovani,\n\n\n\nSrdačan pozdrav,\n' + klub;
 
-  const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1${from ? '&to='+encodeURIComponent(from) : ''}&bcc=${bcc}&su=${subj}&body=${bod}`;
-  window.open(gmailUrl, '_blank');
-  toast('✅ Otvara se Gmail s ' + emailovi.length + ' primatelja!');
+  if (!confirm(`Šalje se obavijest na ${primatelji.length} adresa. Nastaviti?`)) return;
+
+  let ok = 0, fail = 0;
+  for (let i = 0; i < primatelji.length; i++) {
+    toast(`Šalje se ${i + 1} / ${primatelji.length}...`);
+    try {
+      const resp = await fetch('/api/email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to_email: primatelji[i].email,
+          to_name:  primatelji[i].ime + ' ' + primatelji[i].prezime,
+          subject:  finalSubject,
+          message:  finalMessage
+        })
+      });
+      if (!resp.ok) throw new Error((await resp.json().catch(() => ({}))).error || 'Greška');
+      ok++;
+    } catch(e) {
+      fail++;
+      console.error('Mail greška (' + primatelji[i].email + '):', e.message);
+    }
+    if (i < primatelji.length - 1) await new Promise(r => setTimeout(r, 1200));
+  }
+  toast(fail === 0 ? `✅ Poslano ${ok} mailova!` : `Poslano ${ok}, greška na ${fail}`, fail > 0 ? 'err' : 'success');
 }
 
 // ========== BRZI UNOS EMAILOVA ==========

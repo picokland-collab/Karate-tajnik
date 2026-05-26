@@ -4212,8 +4212,7 @@ document.querySelectorAll('.modal-overlay').forEach(m => {
 
 // ========== STATS ==========
 function updateStats() {
-  setTimeout(renderAlerts, 100);
-  updateAlerts();
+  renderAlerts();
   renderDashboardWidgets();
   const ukupno = state.clanovi.length;
   const aktivni = state.clanovi.filter(c => c.status === 'aktivan').length;
@@ -5345,98 +5344,6 @@ function genHUB3QR(canvasId, iznos, primatelj, iban, opis, napomena) {
   ctx.fillText('QR nije dostupan', 100, 90);
   ctx.fillStyle = '#888'; ctx.font = '11px Arial';
   ctx.fillText('Otvorite aplikaciju u Chromeu', 100, 110);
-}
-
-// ========== ALERT SUSTAV ==========
-function updateAlerts() {
-  const panel = document.getElementById('alertPanel');
-  if (!panel) return;
-
-  const alerts = [];
-  const danas = new Date();
-  const za15 = new Date(); za15.setDate(za15.getDate() + 30);
-
-  // Neplaćena članarina
-  const neplaceni = state.clanovi.filter(c => c.status === 'aktivan' && c.clanarina === 'ne');
-  if (neplaceni.length > 0) {
-    alerts.push({
-      tip: 'warn',
-      ikona: '💶',
-      naslov: neplaceni.length + ' članova nije platilo članarinu',
-      tekst: neplaceni.slice(0,3).map(c => c.ime + ' ' + c.prezime).join(', ') + (neplaceni.length > 3 ? ' i još ' + (neplaceni.length-3) + '...' : ''),
-      akcija: "showSection('clanovi');document.getElementById('filterStatus').value='aktivan';filterNeplaceni()",
-      akcijaLabel: 'Prikaži'
-    });
-  }
-
-  // Liječnički pregledi
-  try {
-    const pregledi = JSON.parse(localStorage.getItem('kk_lijecnicki') || '[]');
-    const istekli = pregledi.filter(p => new Date(p.vrijedi) < danas);
-    const uskoro = pregledi.filter(p => { const d = new Date(p.vrijedi); return d >= danas && d <= za15; });
-
-    if (istekli.length > 0) {
-      const imena = istekli.slice(0,2).map(p => {
-        const c = state.clanovi.find(x => x.id == p.clanId);
-        return c ? c.ime + ' ' + c.prezime : '—';
-      }).join(', ');
-      alerts.push({
-        tip: 'error',
-        ikona: '🏥',
-        naslov: istekli.length + ' isteklih liječničkih pregleda!',
-        tekst: imena + (istekli.length > 2 ? ' i još ' + (istekli.length-2) + '...' : ''),
-        akcija: "showSection('lijecnicki')",
-        akcijaLabel: 'Prikaži'
-      });
-    }
-
-    if (uskoro.length > 0) {
-      const imena = uskoro.slice(0,2).map(p => {
-        const c = state.clanovi.find(x => x.id == p.clanId);
-        return c ? c.ime + ' ' + c.prezime : '—';
-      }).join(', ');
-      alerts.push({
-        tip: 'warn',
-        ikona: '⚠️',
-        naslov: uskoro.length + ' pregleda ističe unutar 15 dana',
-        tekst: imena,
-        akcija: "showSection('lijecnicki')",
-        akcijaLabel: 'Prikaži'
-      });
-    }
-  } catch(e) {}
-
-  // Licence trenera
-  try {
-    const treneri = JSON.parse(localStorage.getItem('kk_treneri') || '[]');
-    const licIstekle = treneri.filter(t => t.licvrijedi && new Date(t.licvrijedi) < danas);
-    const licUskoro = treneri.filter(t => { if(!t.licvrijedi) return false; const d=new Date(t.licvrijedi); return d>=danas && d<=za15; });
-    if (licIstekle.length > 0) {
-      alerts.push({ tip: 'error', ikona: '🥋', naslov: 'Istekla licenca: ' + licIstekle.map(t=>t.ime+' '+t.prezime).join(', '), tekst: 'Obnovite licencu što prije!', akcija: "showSection('treneri')", akcijaLabel: 'Prikaži' });
-    }
-    if (licUskoro.length > 0) {
-      alerts.push({ tip: 'warn', ikona: '🥋', naslov: 'Licenca uskoro ističe: ' + licUskoro.map(t=>t.ime+' '+t.prezime).join(', '), tekst: '', akcija: "showSection('treneri')", akcijaLabel: 'Prikaži' });
-    }
-  } catch(e) {}
-
-  if (alerts.length === 0) {
-    panel.innerHTML = '<div style="background:rgba(46,204,113,0.1);border:1px solid var(--success);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--success);margin-bottom:4px">✅ Sve je u redu — nema upozorenja!</div>';
-    return;
-  }
-
-  const boje = { error: { bg: 'rgba(200,16,46,0.12)', border: 'var(--red)', text: '#ff5a70' }, warn: { bg: 'rgba(243,156,18,0.12)', border: 'var(--warn)', text: 'var(--warn)' } };
-
-  panel.innerHTML = alerts.map(a => {
-    const b = boje[a.tip];
-    return `<div style="background:${b.bg};border:1px solid ${b.border};border-radius:8px;padding:10px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px">
-      <span style="font-size:20px;flex-shrink:0">${a.ikona}</span>
-      <div style="flex:1;min-width:0">
-        <div style="font-size:13px;font-weight:600;color:${b.text}">${a.naslov}</div>
-        ${a.tekst ? `<div style="font-size:11px;color:#888;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.tekst}</div>` : ''}
-      </div>
-      <button onclick="${a.akcija}" style="background:none;border:1px solid ${b.border};color:${b.text};border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;flex-shrink:0;font-family:'DM Sans',sans-serif">${a.akcijaLabel}</button>
-    </div>`;
-  }).join('');
 }
 
 // ========== GLASOVNA NAREDBA (Web Speech API) ==========
@@ -7586,13 +7493,13 @@ function printRezultati() {
     </div>
     <table>
       <tr><th>Datum</th><th>Sportaš</th><th>Natjecanje</th><th>Kategorija / Disciplina</th><th>Plasman</th></tr>
-      ${sorted.map(r => `<tr>
+      ${sorted.map(r => { const clan = state.clanovi.find(c => c.id == r.clanId); const ime = clan ? clan.ime+' '+clan.prezime : r.imeRucno||'—'; return `<tr>
         <td>${r.datum ? new Date(r.datum+'T12:00:00').toLocaleDateString('hr-HR') : '—'}</td>
-        <td style="font-weight:600">${r.natjecatelj||''}</td>
-        <td>${r.naziv||''}</td>
+        <td style="font-weight:600">${ime}</td>
+        <td>${r.natjecanje||'—'}</td>
         <td>${[r.kategorija,r.disciplina].filter(Boolean).join(' / ')||'—'}</td>
         <td style="font-weight:700">${med[r.plasman]||r.plasman||'—'}</td>
-      </tr>`).join('') || '<tr><td colspan="5" style="color:#999">Nema rezultata</td></tr>'}
+      </tr>`; }).join('') || '<tr><td colspan="5" style="color:#999">Nema rezultata</td></tr>'}
     </table>`;
   printDoc(html, 'Rezultati natjecanja — ' + (trenutniKorisnik?.klub_naziv || 'KK Đurđevac'));
 }

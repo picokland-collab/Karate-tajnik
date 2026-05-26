@@ -1392,6 +1392,14 @@
               <label>E-mail kluba</label>
               <input type="email" id="upCfgEmail" placeholder="klub@email.hr">
             </div>
+            <div class="form-group">
+              <label>Iznos — 1. dijete (€)</label>
+              <input type="number" id="upCfgIznosOsnovni" min="0" max="500" value="25">
+            </div>
+            <div class="form-group">
+              <label>Iznos — 2. dijete (€)</label>
+              <input type="number" id="upCfgIznosPopust" min="0" max="500" value="15">
+            </div>
           </div>
           <div class="form-group" style="margin-top:12px">
             <label>Logo kluba (za ispis pristupnica)</label>
@@ -3826,25 +3834,35 @@ function odjava() {
 function provjeriSesiju() {
   try {
     const sess = JSON.parse(localStorage.getItem('kk_session') || 'null');
-    if (sess && sess.username) {
-      // Session valid for 24h
-      if (Date.now() - sess.vrijeme < 24 * 60 * 60 * 1000) {
-        // Postavi klub_id iz sessije
-        if (sess.klub_id) window.AKTIVAN_KLUB_ID = sess.klub_id;
-        else window.AKTIVAN_KLUB_ID = '00000000-0000-0000-0000-000000000001';
+    if (sess && sess.username && Date.now() - sess.vrijeme < 24 * 60 * 60 * 1000) {
+      if (sess.klub_id) window.AKTIVAN_KLUB_ID = sess.klub_id;
+      else window.AKTIVAN_KLUB_ID = '00000000-0000-0000-0000-000000000001';
 
-        if (sess.superadmin) {
-          trenutniKorisnik = { username: 'superadmin', ime: 'Super Admin', uloga: 'superadmin', admin: true, superadmin: true, klub_id: null };
+      let sessijaValidna = false;
+
+      if (sess.superadmin) {
+        trenutniKorisnik = { username: 'superadmin', ime: 'Super Admin', uloga: 'superadmin', admin: true, superadmin: true, klub_id: null };
+        sessijaValidna = true;
+      } else {
+        const lokalni = getKorisnici()[sess.username];
+        if (lokalni) {
+          // Local user: re-sync role from source of truth if it changed
+          const uloga = lokalni.uloga;
+          if (sess.uloga !== uloga) { sess.uloga = uloga; localStorage.setItem('kk_session', JSON.stringify(sess)); }
+          trenutniKorisnik = { ...lokalni, username: sess.username, admin: ['admin','tajnik'].includes(uloga), klub_id: sess.klub_id || '00000000-0000-0000-0000-000000000001', klub_logo: sess.klub_logo || null, klub_naziv: sess.klub_naziv || '' };
+          sessijaValidna = true;
+        } else if (sess.uloga && ['admin','tajnik','trener'].includes(sess.uloga)) {
+          // Supabase user: only restore if role is a known valid value
+          const uloga = sess.uloga;
+          trenutniKorisnik = { username: sess.username, ime: sess.username, uloga, admin: ['admin','tajnik'].includes(uloga), klub_id: sess.klub_id || '00000000-0000-0000-0000-000000000001', klub_logo: sess.klub_logo || null, klub_naziv: sess.klub_naziv || '' };
+          sessijaValidna = true;
         } else {
-          const lokalni = getKorisnici()[sess.username];
-          if (lokalni) {
-            trenutniKorisnik = { ...lokalni, username: sess.username, admin: ['admin','tajnik'].includes(lokalni.uloga), klub_id: sess.klub_id || '00000000-0000-0000-0000-000000000001', klub_logo: sess.klub_logo || null, klub_naziv: sess.klub_naziv || '' };
-          } else {
-            // Korisnik iz Supabase - rekonstrukcija iz sessije
-            const uloga = sess.uloga || 'tajnik';
-            trenutniKorisnik = { username: sess.username, ime: sess.username, uloga, admin: ['admin','tajnik'].includes(uloga), klub_id: sess.klub_id || '00000000-0000-0000-0000-000000000001', klub_logo: sess.klub_logo || null, klub_naziv: sess.klub_naziv || '' };
-          }
+          // User deleted locally or session has no valid role — clear and force re-login
+          localStorage.removeItem('kk_session');
         }
+      }
+
+      if (sessijaValidna) {
         document.getElementById('loginScreen').style.display = 'none';
         prijaviKorisnika();
         return;
@@ -8789,7 +8807,9 @@ function getUpPodaci() {
     oib:       cfg.oib       || (jeKKD ? '98308789784' : ''),
     tel:       cfg.tel       || (jeKKD ? '098/805-555' : ''),
     email_klub: cfg.email_klub || (jeKKD ? 'karate.djurdjevac@gmail.com' : ''),
-    logo:      cfg.logo || null
+    logo:           cfg.logo || null,
+    iznos_osnovni: typeof cfg.iznos_osnovni === 'number' ? cfg.iznos_osnovni : 25,
+    iznos_popust:  typeof cfg.iznos_popust  === 'number' ? cfg.iznos_popust  : 15
   };
 }
 function saveUpPodaci(data) {
@@ -8819,6 +8839,9 @@ function izracunajClanarinu(clanovi_obitelji) {
     const db = b.datUclan || '2000-01-01';
     return da.localeCompare(db);
   });
+  const _cfg = getUpPodaci();
+  const fOsnovni = _cfg.iznos_osnovni;
+  const fPopust  = _cfg.iznos_popust;
   return sorted.map((c, i) => {
     // Provjeri je li novi član (učlanjen ovog ili prošlog mjeseca)
     const jeNovi = c.datUclan && (() => {
@@ -8834,10 +8857,10 @@ function izracunajClanarinu(clanovi_obitelji) {
       iznos = 0;
       napomena_iznos = 'novi član — prvi mjesec besplatno';
     } else if (i === 0) {
-      iznos = 25;
+      iznos = fOsnovni;
       napomena_iznos = '1. dijete';
     } else if (i === 1) {
-      iznos = 15;
+      iznos = fPopust;
       napomena_iznos = '2. dijete';
     } else {
       iznos = 0;
@@ -8853,6 +8876,10 @@ function upUcitajCfg() {
     const el = document.getElementById('upCfg' + k);
     if (el) el.value = p[k.toLowerCase() === 'email' ? 'email_klub' : k.toLowerCase()] || '';
   });
+  const elO = document.getElementById('upCfgIznosOsnovni');
+  const elP = document.getElementById('upCfgIznosPopust');
+  if (elO) elO.value = p.iznos_osnovni;
+  if (elP) elP.value = p.iznos_popust;
   const prev = document.getElementById('upLogoPreview');
   if (prev) {
     if (p.logo) {
@@ -8900,7 +8927,9 @@ function upSpremiCfg() {
     adresa:     document.getElementById('upCfgAdresa')?.value.trim() || '',
     oib:        document.getElementById('upCfgOIB')?.value.trim() || '',
     tel:        document.getElementById('upCfgTel')?.value.trim() || '',
-    email_klub: document.getElementById('upCfgEmail')?.value.trim() || ''
+    email_klub:    document.getElementById('upCfgEmail')?.value.trim() || '',
+    iznos_osnovni: parseInt(document.getElementById('upCfgIznosOsnovni')?.value) || 25,
+    iznos_popust:  parseInt(document.getElementById('upCfgIznosPopust')?.value)  || 15
   };
   saveUpPodaci(cfg);
   toast('Podaci kluba za uplatnice spremljeni!');

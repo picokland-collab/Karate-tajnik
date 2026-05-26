@@ -4359,6 +4359,7 @@ function renderDashboardWidgets() {
 
 function logActivity(icon, text) {
   state.aktivnosti.push({ icon, text, datum: new Date().toLocaleString('hr-HR') });
+  if (state.aktivnosti.length > 100) state.aktivnosti = state.aktivnosti.slice(-100);
   save();
   updateStats();
 }
@@ -4749,7 +4750,9 @@ function renderClanovi() {
 function toggleClanarina(id) {
   const c = state.clanovi.find(x => x.id === id);
   if (!c) return;
-  c.clanarina = c.clanarina === 'da' ? 'ne' : 'da';
+  const noviStatus = c.clanarina === 'da' ? 'ne' : 'da';
+  if (!confirm(`Promijeniti status članarine za ${c.ime} ${c.prezime}?\n${c.clanarina === 'da' ? 'Plaćeno → Nije plaćeno' : 'Nije plaćeno → Plaćeno'}`)) return;
+  c.clanarina = noviStatus;
   save();
   renderClanovi();
   updateStats();

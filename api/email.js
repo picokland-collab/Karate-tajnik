@@ -38,7 +38,6 @@ module.exports = async function handler(req, res) {
         service_id:  EMAILJS_SERVICE_ID,
         template_id: EMAILJS_TEMPLATE_ID,
         user_id:     EMAILJS_PUBLIC_KEY,
-        secret_key:  EMAILJS_PRIVATE_KEY,
         template_params: {
           to_email: to_email,
           to_name:  to_name  || to_email,

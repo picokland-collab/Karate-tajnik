@@ -4554,7 +4554,8 @@ function obrisiIspit(id) {
 // ========== ČLANOVI ==========
 function kategorija(datRod) {
   if (!datRod) return 'nepoznato';
-  const god = new Date().getFullYear() - new Date(datRod).getFullYear();
+  const god = _calcAge(datRod);
+  if (god === null) return 'nepoznato';
   if (god < 14) return 'kadet';
   if (god < 18) return 'junior';
   return 'senior';
@@ -9282,7 +9283,7 @@ async function sbLoadClanovi() {
       seen[key] = true;
       return true;
     });
-    localStorage.setItem('kk_djurdjevac', JSON.stringify({...state, version: 3}));
+    localStorage.setItem('kk_djurdjevac', JSON.stringify({...state, version: DATA_VERSION}));
     console.log('✅ Članovi učitani iz Supabase:', state.clanovi.length);
     return true;
   } catch(e) { console.error('sbLoadClanovi:', e); return false; }
@@ -9561,7 +9562,7 @@ async function sbLoadOdluke() {
     const { data, error } = await sb.from('odluke').select('*').eq('klub_id', window.AKTIVAN_KLUB_ID || KLUB_ID);
     if (error || !data || !data.length) return;
     state.odluke = data;
-    localStorage.setItem('kk_djurdjevac', JSON.stringify({...state, version: 3}));
+    localStorage.setItem('kk_djurdjevac', JSON.stringify({...state, version: DATA_VERSION}));
   } catch(e) {}
 }
 

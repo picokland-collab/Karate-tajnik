@@ -4711,6 +4711,8 @@ function toggleClanarina(id) {
 }
 
 function obrisiClana(id) {
+  const uloga = trenutniKorisnik?.uloga;
+  if (uloga !== 'admin' && uloga !== 'tajnik') { toast('Nemate ovlasti za brisanje članova.', 'err'); return; }
   const c = state.clanovi.find(x => x.id === id);
   if (!c || !confirm(`Obrisati člana ${c.ime} ${c.prezime}?`)) return;
   sbObrisi('clanovi', id);
@@ -4779,6 +4781,8 @@ function prikaziClana(id) {
 }
 
 function spremiUrednogClana() {
+  const uloga = trenutniKorisnik?.uloga;
+  if (uloga !== 'admin' && uloga !== 'tajnik') { toast('Nemate ovlasti za uređivanje članova.', 'err'); return; }
   const id = state.selectedClanId;
   const c = state.clanovi.find(x => x.id === id);
   if (!c) return;

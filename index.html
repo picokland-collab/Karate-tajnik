@@ -3487,8 +3487,17 @@ function obrišiFoto() {
 
 // ========== PRIJAVA / ODJAVA ==========
 async function hashPassword(pass) {
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pass));
-  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+  if (window.crypto && crypto.subtle) {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pass));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+  }
+  // Fallback for non-secure contexts (file:// or plain HTTP): DJB2-style hash.
+  // 'fb_' prefix prevents collision with real SHA-256 hashes (always 64 hex chars, no prefix).
+  let h = 5381;
+  for (let i = 0; i < pass.length; i++) {
+    h = (Math.imul(h, 33) ^ pass.charCodeAt(i)) | 0;
+  }
+  return 'fb_' + (h >>> 0).toString(16).padStart(8, '0');
 }
 
 const KORISNICI = {

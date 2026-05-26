@@ -8944,7 +8944,7 @@ function generirajUplatnice() {
       ${uplatnice.map((u, idx) => `
         <tr>
           <td style="font-weight:600;color:var(--text)">${u.ime} ${u.prezime}</td>
-          <td style="color:#555;font-size:12px">${u.napomena_iznos}</td>
+          <td style="color:#555;font-size:12px">${u.prezime}</td>
           <td style="font-size:12px;color:var(--muted)">${u.email || '<span style="color:var(--warn)">⚠ nema maila</span>'}</td>
           <td><strong style="color:${u.iznos > 0 ? 'var(--red)' : 'var(--success)'}">${u.iznos > 0 ? u.iznos + ' €' : 'Besplatno'}</strong></td>
           <td style="font-size:12px;color:var(--muted)">${u.napomena_iznos}</td>
@@ -9143,7 +9143,7 @@ function renderClanIzjave(clanId) {
   el.innerHTML = izjave.map(iz => `
     <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:#242424;border-radius:6px;margin-bottom:6px">
       <div>
-        <div style="font-size:13px;color:#EDEDED;font-weight:600">${iz.vrsta.substring(0,40)}...</div>
+        <div style="font-size:13px;color:#EDEDED;font-weight:600;max-width:260px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${iz.vrsta}</div>
         <div style="font-size:11px;color:#666;margin-top:2px">Datum: ${iz.datum || '—'}</div>
       </div>
       <div style="display:flex;gap:6px;flex-shrink:0">

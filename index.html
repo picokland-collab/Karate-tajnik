@@ -3508,12 +3508,6 @@ async function hashPassword(pass) {
   return 'fb_' + (h >>> 0).toString(16).padStart(8, '0');
 }
 
-const KORISNICI = {
-  'ivan':     { lozinka: 'karate2025',  ime: 'Ivan Juričić',         uloga: 'predsjednik', admin: true },
-  'jasminka': { lozinka: 'tajnik2025',  ime: 'Jasminka Sinjeri Prevedan', uloga: 'tajnica', admin: true },
-  'trener':   { lozinka: 'trening2025', ime: 'Trener',               uloga: 'trener',      admin: false }
-};
-
 let trenutniKorisnik = null;
 
 async function loginSubmit() {
@@ -4248,7 +4242,6 @@ function showSection(id) {
   if (id === 'clanovi') renderClanovi();
   if (id === 'odluke') renderOdluke();
   if (id === 'izvjestaji') renderIzvjestaji();
-  if (id === 'komunikacija') renderKomunikacija();
   if (id === 'uplatnice') { initUplatnice(); upUcitajCfg(); }
   if (id === 'emailovi') { renderEmailForma(); }
   if (id === 'treneri') { trRenderLista(); }
@@ -7425,7 +7418,6 @@ function getKlubZaglavlje() {
     </div>
   </div>`;
 }
-const KLUB_ZAGLAVLJE = '';
 
 const PRINT_CSS = `
   *{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}
@@ -9063,8 +9055,7 @@ async function posaljiMailObj(u) {
 async function posaljiSveMailove() {
   const lista = window._zadnjeUplatnice;
   if (!lista || lista.length === 0) { toast('Najprije generirajte uplatnice!', 'err'); return; }
-  const bezMaila = (window._zadnjeUplatnice_svi || []).filter(u => u.iznos > 0 && !u.email);
-  if (!confirm(`Šalje se ${lista.length} mailova${bezMaila.length > 0 ? ' (' + bezMaila.length + ' članova nema e-mail)' : ''}. Nastaviti?`)) return;
+  if (!confirm(`Šalje se ${lista.length} mailova. Nastaviti?`)) return;
   let ok = 0, fail = 0;
   for (let i = 0; i < lista.length; i++) {
     toast(`Šalje se ${i + 1} / ${lista.length}...`);

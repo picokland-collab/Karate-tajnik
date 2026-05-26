@@ -11,7 +11,7 @@ module.exports = async function handler(req, res) {
   const EMAILJS_PUBLIC_KEY  = process.env.EMAILJS_PUBLIC_KEY;
   const EMAILJS_PRIVATE_KEY = process.env.EMAILJS_PRIVATE_KEY;
 
-  if (!EMAILJS_SERVICE_ID || !EMAILJS_TEMPLATE_ID || !EMAILJS_PUBLIC_KEY) {
+  if (!EMAILJS_SERVICE_ID || !EMAILJS_TEMPLATE_ID || !EMAILJS_PUBLIC_KEY || !EMAILJS_PRIVATE_KEY) {
     return res.status(500).json({ error: 'Email service not configured' });
   }
 
@@ -31,7 +31,7 @@ module.exports = async function handler(req, res) {
         user_id:     EMAILJS_PUBLIC_KEY,
         secret_key: EMAILJS_PRIVATE_KEY,
         template_params: {
-          to_email,
+          to_email: to_email,
           to_name:  to_name  || to_email,
           subject:  subject  || '',
           message:  message  || ''

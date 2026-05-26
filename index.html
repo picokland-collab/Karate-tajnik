@@ -3466,6 +3466,11 @@ function obrišiFoto() {
 
 
 // ========== PRIJAVA / ODJAVA ==========
+async function hashPassword(pass) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pass));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
 const KORISNICI = {
   'ivan':     { lozinka: 'karate2025',  ime: 'Ivan Juričić',         uloga: 'predsjednik', admin: true },
   'jasminka': { lozinka: 'tajnik2025',  ime: 'Jasminka Sinjeri Prevedan', uloga: 'tajnica', admin: true },
@@ -3576,7 +3581,10 @@ async function loginSubmit() {
     // Fallback na lokalne korisnike
     const allK = getKorisnici();
     const k = allK[user];
-    if (k && k.lozinka === pass) {
+    const hashedPass = await hashPassword(pass);
+    const passOk = k && (k.lozinka === hashedPass || k.lozinka === pass);
+    if (passOk) {
+      if (k.lozinka === pass) { k.lozinka = hashedPass; saveKorisnici({ ...allK, [user]: k }); }
       trenutniKorisnik = { ...k, username: user, admin: ['admin','tajnik'].includes(k.uloga), klub_id: (window.AKTIVAN_KLUB_ID || '00000000-0000-0000-0000-000000000001') };
       window.AKTIVAN_KLUB_ID = '00000000-0000-0000-0000-000000000001';
       localStorage.setItem('kk_session', JSON.stringify({ username: user, vrijeme: Date.now(), uloga: k.uloga, klub_id: window.AKTIVAN_KLUB_ID }));
@@ -3597,7 +3605,10 @@ async function loginSubmit() {
     // Fallback na lokalno
     const allK = getKorisnici();
     const k = allK[user];
-    if (k && k.lozinka === pass) {
+    const hashedPass2 = await hashPassword(pass);
+    const passOk2 = k && (k.lozinka === hashedPass2 || k.lozinka === pass);
+    if (passOk2) {
+      if (k.lozinka === pass) { k.lozinka = hashedPass2; saveKorisnici({ ...allK, [user]: k }); }
       trenutniKorisnik = { ...k, username: user, admin: ['admin','tajnik'].includes(k.uloga), klub_id: (window.AKTIVAN_KLUB_ID || '00000000-0000-0000-0000-000000000001') };
       window.AKTIVAN_KLUB_ID = '00000000-0000-0000-0000-000000000001';
       localStorage.setItem('kk_session', JSON.stringify({ username: user, vrijeme: Date.now(), uloga: k.uloga, klub_id: window.AKTIVAN_KLUB_ID }));
@@ -3833,7 +3844,7 @@ function korisnikRenderLista() {
           <div style="font-weight:600;color:#EDEDED;font-size:15px">${u.ime}</div>
           <div style="font-size:12px;color:#aaa;margin-top:2px">@${username} · ${ulogeLabel[u.uloga]||u.uloga}</div>
           ${u.napomena ? `<div style="font-size:11px;color:#666;margin-top:2px">${u.napomena}</div>` : ''}
-          <div style="font-size:11px;color:#444;margin-top:4px;font-family:monospace">Lozinka: ${u.lozinka}</div>
+          <div style="font-size:11px;color:#444;margin-top:4px;font-family:monospace">Lozinka: •••••••</div>
         </div>
         <div style="display:flex;gap:6px;flex-shrink:0;align-self:flex-start">
           <button class="btn btn-secondary btn-sm" onclick="urediKorisnika('${username}')">✏️</button>
@@ -3843,7 +3854,7 @@ function korisnikRenderLista() {
     </div>`).join('');
 }
 
-function spremiKorisnika() {
+async function spremiKorisnika() {
   const ime = document.getElementById('ku-ime').value.trim();
   const username = document.getElementById('ku-username').value.trim().toLowerCase().replace(/[^a-z0-9]/g,'');
   const lozinka = document.getElementById('ku-lozinka').value;
@@ -3859,7 +3870,7 @@ function spremiKorisnika() {
     // Edit existing
     if (!k[korisnikEditUsername]) { toast('Korisnik nije pronađen!', 'err'); return; }
     k[korisnikEditUsername].ime = ime;
-    if (lozinka && lozinka.length >= 6) k[korisnikEditUsername].lozinka = lozinka;
+    if (lozinka && lozinka.length >= 6) k[korisnikEditUsername].lozinka = await hashPassword(lozinka);
     else if (lozinka && lozinka.length < 6) { toast('Lozinka mora imati najmanje 6 znakova!', 'err'); return; }
     k[korisnikEditUsername].uloga = uloga;
     k[korisnikEditUsername].napomena = napomena;
@@ -3869,7 +3880,7 @@ function spremiKorisnika() {
     if (!username) { toast('Unesite korisničko ime!', 'err'); return; }
     if (k[username]) { toast('Korisničko ime već postoji!', 'err'); return; }
     if (!lozinka || lozinka.length < 6) { toast('Lozinka mora imati najmanje 6 znakova!', 'err'); return; }
-    k[username] = { ime, lozinka, uloga, napomena };
+    k[username] = { ime, lozinka: await hashPassword(lozinka), uloga, napomena };
     toast('Korisnik ' + ime + ' dodan!');
   }
 
@@ -8621,66 +8632,9 @@ function obrisiPutniNalog() {
 
 // ========== IMPORT ČLANOVA IZ HKS POPISA ==========
 const hksClanovi = [
-  {ime:"Janko",prezime:"Avirović",datRod:"2017-12-27",oib:"94325146269",sifra:"014-28555",pojas:"Bijeli pojas",kyu:"9. KYU"},
-  {ime:"Eva",prezime:"Benaković",datRod:"2013-03-11",oib:"67146276900",sifra:"014-28537",pojas:"Narančasti pojas",kyu:"7. KYU"},
-  {ime:"Hana",prezime:"Benaković",datRod:"2013-03-11",oib:"14996799207",sifra:"014-28531",pojas:"Narančasti pojas",kyu:"7. KYU"},
-  {ime:"Natan",prezime:"Benaković",datRod:"2008-01-28",oib:"51737725264",sifra:"014-28539",pojas:"Bijeli pojas",kyu:""},
-  {ime:"Noa",prezime:"Benaković",datRod:"2010-09-28",oib:"96380739577",sifra:"014-28530",pojas:"Zeleni pojas",kyu:"6. KYU"},
-  {ime:"Valentina",prezime:"Benc",datRod:"1993-04-18",oib:"49919021335",sifra:"014-28564",pojas:"Bijeli pojas",kyu:""},
-  {ime:"Šime",prezime:"Bračanov",datRod:"2016-01-25",oib:"00079400025",sifra:"014-28547",pojas:"Narančasti pojas",kyu:"7. KYU"},
-  {ime:"Stipe",prezime:"Čačija",datRod:"1963-08-10",oib:"18000665085",sifra:"014-28525",pojas:"Bijeli pojas",kyu:""},
-  {ime:"Artur",prezime:"Chornii",datRod:"2017-07-14",oib:"84365232676",sifra:"014-28569",pojas:"Bijeli pojas",kyu:""},
-  {ime:"Vinko",prezime:"Cibolka Igrić",datRod:"2018-03-12",oib:"08643795097",sifra:"014-28571",pojas:"Bijeli pojas",kyu:"9. KYU"},
-  {ime:"Lorena",prezime:"Čorba",datRod:"2009-04-13",oib:"17879248834",sifra:"014-28563",pojas:"Bijeli pojas",kyu:""},
-  {ime:"Filip",prezime:"Cugovčan",datRod:"2010-12-30",oib:"69423116889",sifra:"014-28542",pojas:"Bijeli pojas",kyu:""},
-  {ime:"Franko",prezime:"Cugovčan",datRod:"2016-09-21",oib:"83829768562",sifra:"014-28543",pojas:"Bijeli pojas",kyu:""},
-  {ime:"Patrik",prezime:"Dergez",datRod:"2017-10-05",oib:"27450168581",sifra:"014-28575",pojas:"Bijeli pojas",kyu:"9. KYU"},
-  {ime:"Karlo",prezime:"Fašaić",datRod:"2020-01-07",oib:"52320027989",sifra:"014-28574",pojas:"Bijeli pojas",kyu:"9. KYU"},
-  {ime:"Klara",prezime:"Fašaić",datRod:"2017-04-01",oib:"78707950144",sifra:"014-28572",pojas:"Bijeli pojas",kyu:"9. KYU"},
-  {ime:"Petra",prezime:"Gašparec",datRod:"2012-03-22",oib:"95708392929",sifra:"014-28513",pojas:"Smeđi pojas",kyu:"3. KYU"},
-  {ime:"Viktor",prezime:"Gašparec",datRod:"2015-09-18",oib:"41712876072",sifra:"014-28532",pojas:"Narančasti pojas",kyu:"7. KYU"},
-  {ime:"Ivan Konrad",prezime:"Gavrilović",datRod:"2012-05-21",oib:"94712139394",sifra:"014-28550",pojas:"Narančasti pojas",kyu:"7. KYU"},
-  {ime:"Sergej",prezime:"Gavrilović",datRod:"2016-02-16",oib:"07278305097",sifra:"014-28549",pojas:"Narančasti pojas",kyu:"7. KYU"},
-  {ime:"Lukas",prezime:"Goll",datRod:"2015-04-17",oib:"53002167880",sifra:"014-28561",pojas:"Žuti pojas",kyu:"8. KYU"},
-  {ime:"Petar",prezime:"Gregurić",datRod:"2014-02-13",oib:"41783074939",sifra:"014-28565",pojas:"Bijeli pojas",kyu:"9. KYU"},
-  {ime:"Antea",prezime:"Ivandija",datRod:"2014-02-21",oib:"79943249659",sifra:"014-28521",pojas:"Narančasti pojas",kyu:"7. KYU"},
-  {ime:"Šimun",prezime:"Ivandija",datRod:"2011-09-06",oib:"63614164248",sifra:"014-28520",pojas:"Plavi pojas",kyu:"5. KYU"},
-  {ime:"Dani",prezime:"Janči",datRod:"2018-07-02",oib:"02440956617",sifra:"014-28553",pojas:"Žuti pojas",kyu:"8. KYU"},
-  {ime:"Petra",prezime:"Jančijev",datRod:"2004-04-05",oib:"07232716121",sifra:"014-20999",pojas:"Smeđi pojas",kyu:"2. KYU"},
-  {ime:"Dunja",prezime:"Jendrašić",datRod:"2017-03-14",oib:"28835342659",sifra:"014-28562",pojas:"Narančasti pojas",kyu:"7. KYU"},
-  {ime:"Ivan",prezime:"Juričić",datRod:"1976-04-11",oib:"11935978789",sifra:"014-28545",pojas:"Bijeli pojas",kyu:""},
-  {ime:"Ivan",prezime:"Juričić",datRod:"2007-03-29",oib:"30389244965",sifra:"014-28557",pojas:"Smeđi pojas",kyu:"2. KYU"},
-  {ime:"Tin",prezime:"Krčmar",datRod:"2015-01-28",oib:"65466852158",sifra:"014-28546",pojas:"Narančasti pojas",kyu:"7. KYU"},
-  {ime:"Lucija",prezime:"Lauš",datRod:"2010-05-28",oib:"99055889954",sifra:"014-28558",pojas:"Smeđi pojas",kyu:"3. KYU"},
-  {ime:"Luna",prezime:"Lisjak",datRod:"2017-10-24",oib:"06817087573",sifra:"014-28554",pojas:"Zeleni pojas",kyu:"6. KYU"},
-  {ime:"Aleks",prezime:"Lopar",datRod:"1995-02-26",oib:"03167651028",sifra:"014-28552",pojas:"Žuti pojas",kyu:"8. KYU"},
-  {ime:"Borna",prezime:"Lopar",datRod:"2015-02-26",oib:"90561869235",sifra:"014-28551",pojas:"Žuti pojas",kyu:"8. KYU"},
-  {ime:"Danyl",prezime:"Marchenko",datRod:"2016-06-22",oib:"19579752466",sifra:"014-28576",pojas:"Bijeli pojas",kyu:"9. KYU"},
-  {ime:"Yaroslav",prezime:"Marchenko",datRod:"2019-10-24",oib:"98288865833",sifra:"014-28578",pojas:"Bijeli pojas",kyu:"9. KYU"},
-  {ime:"Yehor",prezime:"Marchenko",datRod:"2015-05-24",oib:"39691415631",sifra:"014-28577",pojas:"Bijeli pojas",kyu:"9. KYU"},
-  {ime:"Erik",prezime:"Matočec Španić",datRod:"2014-10-04",oib:"93256539321",sifra:"014-28527",pojas:"Bijeli pojas",kyu:""},
-  {ime:"David",prezime:"Mikulić",datRod:"2013-10-29",oib:"43302005429",sifra:"014-28528",pojas:"Bijeli pojas",kyu:""},
-  {ime:"Josip",prezime:"Mikulić",datRod:"2013-10-29",oib:"74014108960",sifra:"014-28529",pojas:"Bijeli pojas",kyu:""},
-  {ime:"Lana",prezime:"Modrić",datRod:"2010-05-13",oib:"12468548578",sifra:"014-28541",pojas:"Plavi pojas",kyu:"4. KYU"},
-  {ime:"Leona",prezime:"Modrić",datRod:"2012-09-24",oib:"21398350642",sifra:"014-28540",pojas:"Plavi pojas",kyu:"4. KYU"},
-  {ime:"Nika",prezime:"Pandur",datRod:"2012-11-16",oib:"48264879609",sifra:"014-28518",pojas:"Smeđi pojas",kyu:"3. KYU"},
-  {ime:"Antonija",prezime:"Petrović",datRod:"2006-05-23",oib:"61537561921",sifra:"014-28559",pojas:"Smeđi pojas",kyu:"3. KYU"},
-  {ime:"Pavlo",prezime:"Petrukhin",datRod:"2013-07-07",oib:"31928625821",sifra:"014-28566",pojas:"Bijeli pojas",kyu:"9. KYU"},
-  {ime:"Borna",prezime:"Prevedan",datRod:"2015-11-19",oib:"52868015795",sifra:"014-28544",pojas:"Žuti pojas",kyu:"8. KYU"},
-  {ime:"Mateja",prezime:"Prevedan",datRod:"2003-04-08",oib:"59237264906",sifra:"014-28556",pojas:"Bijeli pojas",kyu:""},
-  {ime:"Valerio",prezime:"Prevedan",datRod:"2006-10-14",oib:"53139277454",sifra:"014-28560",pojas:"Smeđi pojas",kyu:"2. KYU"},
-  {ime:"Leon",prezime:"Prilika",datRod:"2013-08-17",oib:"99471549818",sifra:"014-28570",pojas:"Bijeli pojas",kyu:""},
-  {ime:"Alisa",prezime:"Razenko",datRod:"2014-05-03",oib:"88106700446",sifra:"014-28568",pojas:"Žuti pojas",kyu:"8. KYU"},
-  {ime:"Rubi Tereza",prezime:"Roštan",datRod:"2016-04-02",oib:"52056421173",sifra:"014-28548",pojas:"Zeleni pojas",kyu:"6. KYU"},
-  {ime:"Filip",prezime:"Šipek",datRod:"2010-06-14",oib:"65517843136",sifra:"014-28536",pojas:"Narančasti pojas",kyu:"7. KYU"},
-  {ime:"Patrik",prezime:"Škurdija",datRod:"2014-06-21",oib:"17426278798",sifra:"014-28535",pojas:"Narančasti pojas",kyu:"7. KYU"},
-  {ime:"Kostiantyn",prezime:"Sluzhenko",datRod:"2011-11-23",oib:"84697363605",sifra:"014-28567",pojas:"Bijeli pojas",kyu:"9. KYU"},
-  {ime:"Marko",prezime:"Šokec",datRod:"2011-05-13",oib:"30541672007",sifra:"014-28533",pojas:"Bijeli pojas",kyu:""},
-  {ime:"Karlo",prezime:"Šostarec",datRod:"2019-01-13",oib:"78708278465",sifra:"014-28573",pojas:"Bijeli pojas",kyu:"9. KYU"},
-  {ime:"Emanuel",prezime:"Stanešić",datRod:"2011-09-12",oib:"87816933831",sifra:"014-28538",pojas:"Plavi pojas",kyu:"5. KYU"},
-  {ime:"Karlo",prezime:"Vincek",datRod:"2013-09-20",oib:"25532004167",sifra:"014-28526",pojas:"Plavi pojas",kyu:"4. KYU"},
-  {ime:"Alex",prezime:"Vunak",datRod:"2009-10-24",oib:"42347944599",sifra:"014-28534",pojas:"Bijeli pojas",kyu:""},
-  {ime:"Patrik",prezime:"Zlatec",datRod:"2007-08-02",oib:"58724182708",sifra:"014-25458",pojas:"Smeđi pojas",kyu:"2. KYU"}
+  {ime:"Test",prezime:"Jedan",datRod:"2010-01-15",oib:"00000000001",sifra:"014-00001",pojas:"Bijeli pojas",kyu:"9. KYU"},
+  {ime:"Test",prezime:"Dva",datRod:"2008-06-20",oib:"00000000002",sifra:"014-00002",pojas:"Žuti pojas",kyu:"8. KYU"},
+  {ime:"Test",prezime:"Tri",datRod:"2005-03-10",oib:"00000000003",sifra:"014-00003",pojas:"Zeleni pojas",kyu:"6. KYU"}
 ];
 
 function importHksClanovi() {

@@ -7535,7 +7535,7 @@ function printDnevnikStats() {
 
 function printClanovi() {
   const status = document.getElementById('filterStatus')?.value || '';
-  const kat = document.getElementById('filterKat')?.value || '';
+  const kat = document.getElementById('filterKategorija')?.value || '';
   const lista = state.clanovi.filter(c => {
     if (status && c.status !== status) return false;
     if (kat && kategorija(c.datRod) !== kat) return false;
@@ -9150,7 +9150,7 @@ function spremiIzjavu() {
   if (!c || !window._izjavaTekst) { toast('Nema podataka za spremanje!', 'err'); return; }
   
   // Provjeri postoji li izjava za ovog člana
-  const existingIdx = izjaveLista.findIndex(i => i.clanId === c.id);
+  const existingIdx = izjaveLista.findIndex(i => String(i.clanId) === String(c.id));
   const izjava = {
     id: existingIdx >= 0 ? izjaveLista[existingIdx].id : Date.now().toString(),
     clanId: String(c.id),

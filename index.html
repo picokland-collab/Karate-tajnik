@@ -5792,6 +5792,7 @@ async function sendAI() {
   const loadId = appendMsg('assistant', '<div class="loading-dots"><span></span><span></span><span></span></div>');
   document.getElementById('btnSendAI').disabled = true;
 
+  const todayStr = new Date().toLocaleDateString('hr-HR', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
   const systemContent = trenutniKorisnik?.uloga === 'trener'
     ? `Ti si AI asistent koji ISKLJUČIVO pomaže treneru karate kluba s pisanjem IZVJEŠTAJA S NATJECANJA za web stranice, Facebook i sportske portale. Odgovaraš ISKLJUČIVO na hrvatskom jeziku. Danas je ${todayStr}. PODACI O KLUBU: KK Đurđevac, Đurđevac. Pišeš živahne, kratke sportske izvještaje na temelju podataka koje ti trener da (natjecanje, datum, natjecatelji, rezultati, medalje). NIKADA ne izmišljaj rezultate — koristi samo ono što ti trener kaže u razgovoru. Ako te pitaju za bilo što drugo (odluke, molbe, dopise, obavijesti roditeljima, financije, statute, akte), ljubazno odbij i reci: "Za tu vrstu dokumenta obratite se predsjedniku ili tajnici kluba."`
     : (getSystemPrompt() + buildAILiveContext());
@@ -9270,7 +9271,7 @@ async function sbSaveClanovi() {
       kategorija: c.kategorija || null,
       sifra: c.sifra || null,
       gdpr: c.gdpr || 'ne',
-      foto: c.foto && c.foto.startsWith('data:') ? null : c.foto
+      foto: c.foto || null
     }));
     const { error } = await sb.from('clanovi').upsert(rows, { onConflict: 'id' });
     if (error) console.error('sbSaveClanovi error:', error);

@@ -27,7 +27,7 @@ module.exports = async function handler(req, res) {
       service_id:  EMAILJS_SERVICE_ID,
       template_id: EMAILJS_TEMPLATE_ID,
       user_id:     mask(EMAILJS_PUBLIC_KEY),
-      secret_key:  mask(EMAILJS_PRIVATE_KEY),
+      accessToken: mask(EMAILJS_PRIVATE_KEY),
       template_params: { to_email, to_name: to_name || to_email, subject: subject || '', message: '(omitted)' }
     });
 
@@ -37,8 +37,8 @@ module.exports = async function handler(req, res) {
       body: JSON.stringify({
         service_id:  EMAILJS_SERVICE_ID,
         template_id: EMAILJS_TEMPLATE_ID,
-        user_id:     EMAILJS_PUBLIC_KEY,
-        secret_key:  EMAILJS_PRIVATE_KEY,
+        user_id:      EMAILJS_PUBLIC_KEY,
+        accessToken:  EMAILJS_PRIVATE_KEY,
         template_params: {
           to_email:     to_email,
           to_name:      to_name  || to_email,

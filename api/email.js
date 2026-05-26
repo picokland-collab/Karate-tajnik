@@ -40,10 +40,15 @@ module.exports = async function handler(req, res) {
         user_id:     EMAILJS_PUBLIC_KEY,
         secret_key:  EMAILJS_PRIVATE_KEY,
         template_params: {
-          to_email: to_email,
-          to_name:  to_name  || to_email,
-          subject:  subject  || '',
-          message:  message  || ''
+          to_email:     to_email,
+          to_name:      to_name  || to_email,
+          subject:      subject  || '',
+          message:      message  || '',
+          email:        to_email,
+          ime:          to_name  || to_email,
+          naslov:       subject  || '',
+          poruka:       message  || '',
+          poruka_tijelo: message || ''
         }
       })
     });

@@ -112,7 +112,8 @@
     padding: 6px 12px;
     border-radius: 20px;
   }
-  .header-ai::before { content: '●'; animation: pulse 2s infinite; }
+  .header-ai::before { content: '●'; }
+  .header-ai.processing::before { animation: pulse 2s infinite; }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
   /* LAYOUT */
@@ -991,6 +992,7 @@
     padding: 16px;
   }
   .mobile-grid-tile {
+    position: relative;
     aspect-ratio: 1;
     background: var(--surface);
     border: 1px solid var(--border);
@@ -4098,11 +4100,17 @@ function renderMobileGrid() {
     if (t.role === 'superadmin') return jeSuperAdmin;
     return false;
   });
-  grid.innerHTML = filtered.map(t =>
-    `<div class="mobile-grid-tile${t.id === activeId ? ' active' : ''}" onclick="closeMobileGrid();showSection('${t.id}')">
-      <div class="tile-icon">${t.icon}</div>
+  grid.innerHTML = filtered.map(t => {
+    let badge = '';
+    if (t.id === 'lijecnicki') {
+      const b = ljBadgeInfo();
+      if (b.count > 0) badge = `<span class="dn-badge${b.type === 'warn' ? ' warn' : ''}">${b.count}</span>`;
+    }
+    return `<div class="mobile-grid-tile${t.id === activeId ? ' active' : ''}" onclick="closeMobileGrid();showSection('${t.id}')">
+      ${badge}<div class="tile-icon">${t.icon}</div>
       <div class="tile-label">${t.label}</div>
-    </div>`
+    </div>`;
+  })
   ).join('');
 }
 
@@ -5844,6 +5852,7 @@ async function sendAI() {
 
   const loadId = appendMsg('assistant', '<div class="loading-dots"><span></span><span></span><span></span></div>');
   document.getElementById('btnSendAI').disabled = true;
+  document.getElementById('headerAI')?.classList.add('processing');
 
   const todayStr = new Date().toLocaleDateString('hr-HR', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
   const systemContent = trenutniKorisnik?.uloga === 'trener'
@@ -5872,6 +5881,7 @@ async function sendAI() {
   }
 
   document.getElementById('btnSendAI').disabled = false;
+  document.getElementById('headerAI')?.classList.remove('processing');
 }
 
 function appendMsg(role, content) {

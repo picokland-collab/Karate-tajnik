@@ -8729,10 +8729,16 @@ function importHksClanovi() {
 
 
 
-function posaljiMailAktivni() {
+async function posaljiMailAktivni() {
   const u = window._aktivnaUplatnica;
   if (!u || !u.email) return;
-  posaljiMailObj(u);
+  try {
+    toast('Šalje se...');
+    await posaljiMailObj(u);
+    toast('✅ Mail poslan: ' + u.email);
+  } catch(e) {
+    toast('Greška: ' + e.message, 'err');
+  }
 }
 
 function initUplatnice() {
@@ -8997,27 +9003,44 @@ Sportski pozdrav,
 ${up.primatelj}${up.tel ? '\nTel: ' + up.tel : ''}${up.email_klub ? '\nE-mail: ' + up.email_klub : ''}`;
 }
 
-function posaljiMailObj(u) {
-  const subject = encodeURIComponent('KK Djurdjevac - Clanarina ' + u.mjesec + ' ' + u.godina + ' - ' + u.ime + ' ' + u.prezime);
-  const body = encodeURIComponent(napraviMailBody(u));
-  const a = document.createElement('a');
-  a.href = 'mailto:' + u.email + '?subject=' + subject + '&body=' + body;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+async function posaljiMailObj(u) {
+  const subject = 'KK Djurdjevac - Clanarina ' + u.mjesec + ' ' + u.godina + ' - ' + u.ime + ' ' + u.prezime;
+  const message = napraviMailBody(u);
+  const resp = await fetch('/api/email', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      to_email: u.email,
+      to_name:  u.roditelji || u.ime + ' ' + u.prezime,
+      subject,
+      message
+    })
+  });
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(err.error || 'Greška pri slanju');
+  }
+  return true;
 }
 
-function posaljiSveMailove() {
+async function posaljiSveMailove() {
   const lista = window._zadnjeUplatnice;
   if (!lista || lista.length === 0) { toast('Najprije generirajte uplatnice!', 'err'); return; }
   const bezMaila = (window._zadnjeUplatnice_svi || []).filter(u => u.iznos > 0 && !u.email);
-  if (!confirm(`Otvorit će se ${lista.length} mail prozora (samo oni koji imaju e-mail adresu).${bezMaila.length > 0 ? ' ' + bezMaila.length + ' članova nema e-mail.' : ''} Nastaviti?`)) return;
-  lista.forEach((u, i) => {
-    setTimeout(() => {
-      posaljiMailObj(u);
-    }, i * 800);
-  });
-  toast(`Šalje se ${lista.length} mailova...`);
+  if (!confirm(`Šalje se ${lista.length} mailova${bezMaila.length > 0 ? ' (' + bezMaila.length + ' članova nema e-mail)' : ''}. Nastaviti?`)) return;
+  let ok = 0, fail = 0;
+  for (let i = 0; i < lista.length; i++) {
+    toast(`Šalje se ${i + 1} / ${lista.length}...`);
+    try {
+      await posaljiMailObj(lista[i]);
+      ok++;
+    } catch(e) {
+      fail++;
+      console.error('Mail greška (' + lista[i].email + '):', e.message);
+    }
+    if (i < lista.length - 1) await new Promise(r => setTimeout(r, 1200));
+  }
+  toast(fail === 0 ? `✅ Poslano ${ok} mailova!` : `Poslano ${ok}, greška na ${fail}`, fail > 0 ? 'err' : 'success');
 }
 
 function prikaziUplatnicuIdx(idx) {
@@ -9026,10 +9049,16 @@ function prikaziUplatnicuIdx(idx) {
   prikaziUplatnicuObj(u);
 }
 
-function posaljiMailIdx(idx) {
+async function posaljiMailIdx(idx) {
   const u = window._sveUplatnice[idx];
   if (!u) return;
-  posaljiMailObj(u);
+  try {
+    toast('Šalje se...');
+    await posaljiMailObj(u);
+    toast('✅ Mail poslan: ' + u.email);
+  } catch(e) {
+    toast('Greška: ' + e.message, 'err');
+  }
 }
 
 function prikaziUplatnicu(encoded) {
@@ -9037,9 +9066,15 @@ function prikaziUplatnicu(encoded) {
   prikaziUplatnicuObj(u);
 }
 
-function posaljiMail(encoded) {
+async function posaljiMail(encoded) {
   const u = JSON.parse(decodeURIComponent(encoded));
-  posaljiMailObj(u);
+  try {
+    toast('Šalje se...');
+    await posaljiMailObj(u);
+    toast('✅ Mail poslan: ' + u.email);
+  } catch(e) {
+    toast('Greška: ' + e.message, 'err');
+  }
 }
 
 function prikaziUplatnicuObj(u) {

@@ -119,22 +119,20 @@
   /* LAYOUT */
   /* ========== TOP NAV BAR (desktop) ========== */
   #topNavBar {
-    display: flex;
-    align-items: center;
+    display: grid;
+    grid-template-rows: repeat(2, auto);
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
     gap: 8px;
-    padding: 10px 16px;
+    padding: 12px 16px;
     background: var(--black);
     border-bottom: 1px solid var(--border);
-    overflow-x: auto;
     flex-shrink: 0;
-    scrollbar-width: none;
   }
-  #topNavBar::-webkit-scrollbar { display: none; }
   @media (max-width: 768px) { #topNavBar { display: none; } }
   .top-nav-tile {
-    flex: 1;
     min-width: 0;
-    height: 80px;
+    height: 86px;
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 12px;
@@ -193,9 +191,9 @@
   .top-nav-tile:hover { background: var(--surface2); border-color: rgba(200,16,46,0.3); }
   .top-nav-tile:active { transform: scale(0.93); }
   .top-nav-tile.active { border-color: var(--red); background: rgba(200,16,46,0.15); }
-  .top-nav-tile .tn-icon { font-size: 32px; line-height: 1; flex-shrink: 0; }
+  .top-nav-tile .tn-icon { font-size: 36px; line-height: 1; flex-shrink: 0; }
   .top-nav-tile .tn-label {
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 500;
     color: var(--text);
     font-family: 'DM Sans', sans-serif;

@@ -120,17 +120,18 @@
   /* ========== TOP NAV BAR (desktop) ========== */
   #topNavBar {
     display: grid;
-    grid-template-rows: repeat(2, auto);
-    grid-auto-flow: column;
-    grid-auto-columns: 1fr;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
     gap: 8px;
     padding: 12px 16px;
+    width: 100%;
+    box-sizing: border-box;
     background: var(--black);
     border-bottom: 1px solid var(--border);
     flex-shrink: 0;
   }
   @media (max-width: 768px) { #topNavBar { display: none; } }
   .top-nav-tile {
+    width: 100%;
     min-width: 0;
     height: 86px;
     background: var(--surface);

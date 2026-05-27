@@ -120,9 +120,9 @@
   /* ========== TOP NAV BAR (desktop) ========== */
   #topNavBar {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
-    gap: 8px;
-    padding: 12px 16px;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 16px;
+    padding: 16px;
     width: 100%;
     box-sizing: border-box;
     background: var(--black);
@@ -133,7 +133,7 @@
   .top-nav-tile {
     width: 100%;
     min-width: 0;
-    height: 86px;
+    min-height: 140px;
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 12px;
@@ -141,9 +141,9 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 5px;
+    gap: 10px;
     cursor: pointer;
-    padding: 6px 4px;
+    padding: 16px 8px;
     transition: background 0.12s, border-color 0.12s, transform 0.1s;
     -webkit-tap-highlight-color: transparent;
     user-select: none;
@@ -192,10 +192,10 @@
   .top-nav-tile:hover { background: var(--surface2); border-color: rgba(200,16,46,0.3); }
   .top-nav-tile:active { transform: scale(0.93); }
   .top-nav-tile.active { border-color: var(--red); background: rgba(200,16,46,0.15); }
-  .top-nav-tile .tn-icon { font-size: 36px; line-height: 1; flex-shrink: 0; }
+  .top-nav-tile .tn-icon { font-size: 48px; line-height: 1; flex-shrink: 0; }
   .top-nav-tile .tn-label {
-    font-size: 12px;
-    font-weight: 500;
+    font-size: 14px;
+    font-weight: 600;
     color: var(--text);
     font-family: 'DM Sans', sans-serif;
     text-align: center;

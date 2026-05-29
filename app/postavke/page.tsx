@@ -1,11 +1,129 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import AppLayout from '@/components/layout/AppLayout';
-import { Building2, Mail, Phone, Globe, Save, Shield, Bell, Users, Palette } from 'lucide-react';
-import { club } from '@/lib/mock-data';
+import { Building2, Save, Bell, Users, Shield, Check, Loader2, Download, FileArchive, AlertCircle } from 'lucide-react';
+import { fetchKlubPodaci, updateKlub } from '@/lib/queries/dashboard';
+import type { KlubPodaci } from '@/lib/queries/dashboard';
 import { formatDate } from '@/lib/utils';
 
+function Field({
+  label, value, onChange, type = 'text', placeholder, hint,
+}: {
+  label: string; value: string; onChange: (v: string) => void;
+  type?: string; placeholder?: string; hint?: string;
+}) {
+  return (
+    <div>
+      <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-1.5">{label}</label>
+      <input
+        type={type}
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-slate-100 outline-none focus:border-red-500 transition-colors placeholder:text-slate-600"
+      />
+      {hint && <p className="text-xs text-slate-600 mt-1">{hint}</p>}
+    </div>
+  );
+}
+
 export default function PostavkePage() {
+  const [klub, setKlub] = useState<KlubPodaci | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving]       = useState(false);
+  const [saved, setSaved]         = useState(false);
+  const [error, setError]         = useState('');
+  const [exporting, setExporting] = useState(false);
+  const [exportDone, setExportDone] = useState(false);
+  const [exportError, setExportError] = useState('');
+
+  const [form, setForm] = useState({
+    naziv: '',
+    oib: '',
+    grad: '',
+    kontakt_email: '',
+    predsjednik: '',
+    datum_mandata: '',
+    godina_osnivanja: '',
+  });
+
+  useEffect(() => {
+    fetchKlubPodaci().then(data => {
+      if (data) {
+        setKlub(data);
+        setForm({
+          naziv:            data.naziv ?? '',
+          oib:              data.oib ?? '',
+          grad:             data.grad ?? '',
+          kontakt_email:    data.kontakt_email ?? '',
+          predsjednik:      data.predsjednik ?? '',
+          datum_mandata:    data.datum_mandata ?? '',
+          godina_osnivanja: data.godina_osnivanja != null ? String(data.godina_osnivanja) : '',
+        });
+      }
+    }).finally(() => setLoading(false));
+  }, []);
+
+  const set = (k: keyof typeof form) => (v: string) => setForm(f => ({ ...f, [k]: v }));
+
+  const handleExport = async () => {
+    setExporting(true);
+    setExportError('');
+    setExportDone(false);
+    try {
+      const res = await fetch('/api/export/inspekcija', { method: 'POST' });
+      if (!res.ok) {
+        const msg = await res.text();
+        throw new Error(msg || `HTTP ${res.status}`);
+      }
+      const disposition = res.headers.get('Content-Disposition') ?? '';
+      const match       = disposition.match(/filename="([^"]+)"/);
+      const filename    = match?.[1] ?? 'digitalni-tajnik-arhiva.zip';
+      const blob        = await res.blob();
+      const url         = URL.createObjectURL(blob);
+      const a           = document.createElement('a');
+      a.href            = url;
+      a.download        = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      setExportDone(true);
+      setTimeout(() => setExportDone(false), 5000);
+    } catch (e) {
+      setExportError(e instanceof Error ? e.message : 'Greška pri generiranju.');
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!klub) return;
+    if (!form.naziv.trim()) { setError('Naziv kluba je obavezan.'); return; }
+    if (form.oib && !/^\d{11}$/.test(form.oib)) { setError('OIB mora imati točno 11 znamenki.'); return; }
+    setSaving(true);
+    setError('');
+    setSaved(false);
+    try {
+      await updateKlub(klub.id, {
+        naziv:            form.naziv.trim(),
+        oib:              form.oib.trim() || null,
+        grad:             form.grad.trim() || null,
+        kontakt_email:    form.kontakt_email.trim() || null,
+        predsjednik:      form.predsjednik.trim() || null,
+        datum_mandata:    form.datum_mandata || null,
+        godina_osnivanja: form.godina_osnivanja ? Number(form.godina_osnivanja) : null,
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Greška pri spremanju.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <AppLayout title="Postavke" subtitle="Upravljanje podacima kluba i konfiguracija">
       <div className="max-w-2xl mx-auto space-y-6">
@@ -22,27 +140,102 @@ export default function PostavkePage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            {[
-              { label: 'Naziv kluba', value: club.name },
-              { label: 'OIB', value: club.oib },
-              { label: 'Adresa', value: `${club.address}, ${club.city}` },
-              { label: 'Godina osnivanja', value: club.founded.toString() },
-              { label: 'Predsjednik', value: club.presidentName },
-              { label: 'Istek mandata', value: formatDate(club.presidentMandateExpiry) },
-              { label: 'Tajnica', value: club.secretaryName },
-              { label: 'E-mail', value: club.email },
-            ].map(({ label, value }) => (
-              <div key={label}>
-                <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-1.5">{label}</label>
-                <input defaultValue={value}
-                  className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-slate-100 outline-none focus:border-red-500 transition-colors" />
+          {loading ? (
+            <div className="flex items-center justify-center py-10">
+              <Loader2 className="w-5 h-5 text-slate-600 animate-spin" />
+            </div>
+          ) : !klub ? (
+            <p className="text-sm text-slate-500 text-center py-6">
+              Podaci kluba nisu pronađeni. Molimo provjerite vaš račun ili kontaktirajte podršku.
+            </p>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="col-span-2">
+                  <Field label="Naziv kluba *" value={form.naziv} onChange={set('naziv')} placeholder="npr. Karate klub Đurđevac" />
+                </div>
+                <Field label="OIB" value={form.oib} onChange={set('oib')} placeholder="11-znamenkasti broj" />
+                <Field label="Grad" value={form.grad} onChange={set('grad')} placeholder="npr. Đurđevac" />
+                <Field label="Kontakt e-mail" value={form.kontakt_email} onChange={set('kontakt_email')} type="email" placeholder="tajnik@klub.hr" />
+                <Field label="Godina osnivanja" value={form.godina_osnivanja} onChange={set('godina_osnivanja')} type="number" placeholder="npr. 1987" />
+                <Field label="Predsjednik" value={form.predsjednik} onChange={set('predsjednik')} placeholder="Ime i prezime" />
+                <Field label="Istek mandata predsjednika" value={form.datum_mandata} onChange={set('datum_mandata')} type="date" hint="dd.mm.gggg." />
               </div>
+
+              {error && (
+                <p className="text-xs text-red-400 bg-red-950/40 border border-red-800/40 rounded-xl px-3 py-2">
+                  {error}
+                </p>
+              )}
+
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className="flex items-center gap-2 bg-red-600 hover:bg-red-500 disabled:bg-slate-700 disabled:text-slate-500 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-colors"
+              >
+                {saving
+                  ? <Loader2 className="w-4 h-4 animate-spin" />
+                  : saved
+                  ? <Check className="w-4 h-4" />
+                  : <Save className="w-4 h-4" />}
+                {saving ? 'Sprema…' : saved ? 'Spremljeno!' : 'Spremi promjene'}
+              </button>
+            </>
+          )}
+        </div>
+
+        {/* Inspector export */}
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
+          <div className="flex items-center gap-3 pb-4 border-b border-slate-800">
+            <div className="w-10 h-10 rounded-xl bg-violet-500/15 flex items-center justify-center">
+              <FileArchive className="w-5 h-5 text-violet-400" />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-slate-100">Inspekcijska arhiva</p>
+              <p className="text-xs text-slate-500">ZIP s PDF-ovima, CSV-om i SHA-256 manifestom za MO Sporta, HKS i poreznu</p>
+            </div>
+          </div>
+
+          <div className="bg-slate-800/60 rounded-xl p-4 space-y-1.5 text-xs text-slate-400">
+            {[
+              '01-clanovi/  — popis-clanova.pdf + .csv',
+              '02-privole/  — gdpr-status.pdf + privola-nedostaje.txt',
+              '03-skupstine/ — skupstine-pregled.pdf + .txt po skupštini',
+              '04-lijecnicki/ — pregledi-status.pdf',
+              'MANIFEST.txt — SHA-256 otisci svih datoteka',
+            ].map(line => (
+              <p key={line} className="font-mono">{line}</p>
             ))}
           </div>
 
-          <button className="flex items-center gap-2 bg-red-600 hover:bg-red-500 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-colors">
-            <Save className="w-4 h-4" /> Spremi promjene
+          {exportError && (
+            <div className="flex items-start gap-2 text-xs text-red-400 bg-red-950/40 border border-red-800/40 rounded-xl px-3 py-2.5">
+              <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+              <span>{exportError}</span>
+            </div>
+          )}
+
+          <button
+            onClick={handleExport}
+            disabled={exporting || !klub}
+            className="w-full flex items-center justify-center gap-2.5 bg-violet-600 hover:bg-violet-500 disabled:bg-slate-700 disabled:text-slate-500 text-white text-sm font-semibold px-4 py-3 rounded-xl transition-colors"
+          >
+            {exporting ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Generiranje arhive... (može potrajati ~10s)</span>
+              </>
+            ) : exportDone ? (
+              <>
+                <Check className="w-4 h-4 text-green-300" />
+                <span className="text-green-300">Arhiva preuzeta!</span>
+              </>
+            ) : (
+              <>
+                <Download className="w-4 h-4" />
+                <span>Preuzmi inspekcijsku arhivu (.zip)</span>
+              </>
+            )}
           </button>
         </div>
 

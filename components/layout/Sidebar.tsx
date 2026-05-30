@@ -1,15 +1,17 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard,
   Users,
+  GraduationCap,
   FileText,
   Calendar,
   Trophy,
   Sparkles,
+  BarChart3,
   Settings,
   ChevronLeft,
   ChevronRight,
@@ -17,13 +19,24 @@ import {
   LogOut,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { createClient } from '@/lib/supabase-browser';
+
+const ULOGA_LABEL: Record<string, string> = {
+  admin:       'Administrator',
+  predsjednik: 'Predsjednik',
+  tajnik:      'Tajnik/ica',
+  trener:      'Trener/ica',
+  clan:        'Član',
+};
 
 const navItems = [
   { href: '/dashboard',  icon: LayoutDashboard, label: 'Nadzorna ploča' },
   { href: '/clanovi',    icon: Users,            label: 'Članovi' },
+  { href: '/treneri',    icon: GraduationCap,    label: 'Treneri' },
   { href: '/dokumenti',  icon: FileText,         label: 'Dokumenti' },
   { href: '/skupstine',  icon: Calendar,         label: 'Skupštine' },
   { href: '/natjecanja', icon: Trophy,           label: 'Natjecanja' },
+  { href: '/analitika',  icon: BarChart3,        label: 'Analitika' },
   { href: '/ai-tajnik',  icon: Sparkles,         label: 'AI Tajnik' },
 ];
 
@@ -33,7 +46,34 @@ const bottomItems = [
 
 export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
+  const [profile, setProfile] = useState<{ puno_ime: string; uloga: string; klubovi: { naziv: string } | null } | null>(null);
   const pathname = usePathname();
+  const router = useRouter();
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return;
+      supabase
+        .from('profili')
+        .select('puno_ime, uloga, klubovi(naziv)')
+        .eq('id', user.id)
+        .single()
+        .then(({ data }) => {
+          if (!data) return;
+          const raw = data as { puno_ime: string; uloga: string; klubovi: { naziv: string }[] | { naziv: string } | null };
+          const klubovi = Array.isArray(raw.klubovi) ? (raw.klubovi[0] ?? null) : raw.klubovi;
+          setProfile({ puno_ime: raw.puno_ime, uloga: raw.uloga, klubovi });
+        });
+    });
+  }, []);
+
+  const handleLogout = async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push('/login');
+    router.refresh();
+  };
 
   return (
     <aside
@@ -62,7 +102,9 @@ export default function Sidebar() {
       {!collapsed && (
         <div className="px-4 py-3 border-b border-slate-800 fade-in">
           <p className="text-xs text-slate-500 uppercase tracking-widest font-medium">Klub</p>
-          <p className="text-sm font-semibold text-slate-200 mt-0.5">KK Rijeka</p>
+          <p className="text-sm font-semibold text-slate-200 mt-0.5">
+            {profile?.klubovi?.naziv ?? '...'}
+          </p>
         </div>
       )}
 
@@ -115,21 +157,33 @@ export default function Sidebar() {
           </Link>
         ))}
 
-        {/* User avatar */}
-        <div className={cn(
-          'flex items-center gap-3 rounded-xl px-3 py-2.5 mt-2 cursor-pointer hover:bg-slate-800 transition-all',
-          collapsed && 'justify-center px-0'
-        )}>
+        {/* User avatar + logout */}
+        <div
+          onClick={handleLogout}
+          title="Odjava"
+          className={cn(
+            'flex items-center gap-3 rounded-xl px-3 py-2.5 mt-2 cursor-pointer hover:bg-slate-800 transition-all group',
+            collapsed && 'justify-center px-0'
+          )}
+        >
           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-slate-600 to-slate-700 flex items-center justify-center flex-shrink-0 text-xs font-bold text-slate-200">
-            MH
+            {profile
+              ? profile.puno_ime.split(' ').filter(Boolean).map(n => n[0]).join('').slice(0, 2).toUpperCase()
+              : '·'}
           </div>
           {!collapsed && (
             <div className="flex-1 min-w-0 fade-in">
-              <p className="text-xs font-semibold text-slate-200 truncate">Maja Horvat</p>
-              <p className="text-xs text-slate-500 truncate">Tajnica</p>
+              <p className="text-xs font-semibold text-slate-200 truncate">
+                {profile?.puno_ime ?? '...'}
+              </p>
+              <p className="text-xs text-slate-500 truncate">
+                {profile ? (ULOGA_LABEL[profile.uloga] ?? profile.uloga) : ''}
+              </p>
             </div>
           )}
-          {!collapsed && <LogOut className="w-4 h-4 text-slate-600 hover:text-slate-400 flex-shrink-0" />}
+          {!collapsed && (
+            <LogOut className="w-4 h-4 text-slate-600 group-hover:text-slate-400 flex-shrink-0 transition-colors" />
+          )}
         </div>
       </div>
 

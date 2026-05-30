@@ -2,17 +2,21 @@ import JSZip from 'jszip';
 import { createHash } from 'crypto';
 import type { Member } from '@/lib/types';
 import type { Sjednica } from '@/lib/queries/sjednice';
+import type { Trener } from '@/lib/queries/treneri';
+import { ULOGA_LABEL, LICENCA_LABEL } from '@/lib/queries/treneri';
 import {
   renderClanoviPdf,
   renderGdprPdf,
   renderLijecnickiPdf,
   renderSkupstinePdf,
+  renderTreneriPdf,
 } from './templates';
 
 export interface ExportData {
   klubNaziv: string;
   clanovi: Member[];
   sjednice: Sjednica[];
+  treneri: Trener[];
 }
 
 // ── HELPERS ───────────────────────────────────────────────────
@@ -121,11 +125,31 @@ function buildSjednicaTxt(sj: Sjednica, klubNaziv: string): Buffer {
 
 // ── MANIFEST BUILDER ──────────────────────────────────────────
 
+function buildTreneriCsv(treneri: Trener[]): Buffer {
+  const cols = [
+    'Rb', 'Ime', 'Prezime', 'Uloga', 'Vrsta licence',
+    'Broj licence', 'Vrijedi do', 'E-mail', 'Mobitel', 'Status',
+  ];
+  const rows = treneri.map((t, i) => [
+    i + 1,
+    q(t.ime), q(t.prezime),
+    t.uloga   ? (ULOGA_LABEL[t.uloga]   ?? t.uloga)   : '',
+    t.licenca ? (LICENCA_LABEL[t.licenca] ?? t.licenca) : '',
+    q(t.brLic),
+    t.licVrijedi || '',
+    t.email || '',
+    t.mob   || '',
+    t.status,
+  ].join(','));
+  return Buffer.from('﻿' + [cols.join(','), ...rows].join('\r\n'), 'utf-8');
+}
+
 function buildManifest(
   hashes: { path: string; sha256: string }[],
   klubNaziv: string,
   clanovi: Member[],
   sjednice: Sjednica[],
+  treneri: Trener[],
 ): Buffer {
   const now = new Date().toLocaleString('hr-HR', {
     timeZone: 'Europe/Zagreb',
@@ -153,6 +177,7 @@ function buildManifest(
     `Ukupno clanova:   ${clanovi.length} (${clanovi.filter(c => c.status === 'aktivan').length} aktivnih)`,
     `S GDPR privolom:  ${clanovi.filter(c => c.consentSigned).length}/${clanovi.length}`,
     `Skupstine:        ${sjednice.length}`,
+    `Treneri:          ${treneri.length} (${treneri.filter(t => t.status === 'aktivan').length} aktivnih)`,
     '',
     line,
     'NAPOMENA O INTEGRITETU',
@@ -176,7 +201,7 @@ function buildManifest(
 export async function buildInspekcijskiZip(
   data: ExportData,
 ): Promise<{ zip: Uint8Array; filename: string }> {
-  const { klubNaziv, clanovi, sjednice } = data;
+  const { klubNaziv, clanovi, sjednice, treneri } = data;
 
   const datum    = new Date().toISOString().slice(0, 10);
   const filename = `digitalni-tajnik-${slugify(klubNaziv)}-${datum}.zip`;
@@ -190,11 +215,12 @@ export async function buildInspekcijskiZip(
   }
 
   // ── Generate PDFs in parallel ──────────────────────────────
-  const [clanoviPdf, gdprPdf, lijecnickiPdf, skupstinePdf] = await Promise.all([
+  const [clanoviPdf, gdprPdf, lijecnickiPdf, skupstinePdf, treneriPdf] = await Promise.all([
     renderClanoviPdf(clanovi, klubNaziv),
     renderGdprPdf(clanovi, klubNaziv),
     renderLijecnickiPdf(clanovi, klubNaziv),
     renderSkupstinePdf(sjednice, klubNaziv),
+    renderTreneriPdf(treneri, klubNaziv),
   ]);
 
   // ── 01-clanovi ────────────────────────────────────────────
@@ -223,8 +249,12 @@ export async function buildInspekcijskiZip(
   // ── 04-lijecnicki ─────────────────────────────────────────
   addFile('04-lijecnicki/pregledi-status.pdf', lijecnickiPdf);
 
+  // ── 05-treneri ────────────────────────────────────────────
+  addFile('05-treneri/popis-trenera.pdf', treneriPdf);
+  addFile('05-treneri/popis-trenera.csv', buildTreneriCsv(treneri));
+
   // ── MANIFEST (last — after all hashes computed) ───────────
-  const manifestBuf = buildManifest(hashes, klubNaziv, clanovi, sjednice);
+  const manifestBuf = buildManifest(hashes, klubNaziv, clanovi, sjednice, treneri);
   zip.file('MANIFEST.txt', manifestBuf); // NOT in hashes by convention
 
   // ── Compress ──────────────────────────────────────────────

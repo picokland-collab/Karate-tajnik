@@ -3,6 +3,7 @@ import { NextRequest } from 'next/server';
 import { buildInspekcijskiZip } from '@/lib/export/buildZip';
 import type { Member, BeltColor, MemberStatus, TipClanstva } from '@/lib/types';
 import type { Sjednica, SjednicaStatus, SjednicaVrsta } from '@/lib/queries/sjednice';
+import type { Trener, TrenerStatus } from '@/lib/queries/treneri';
 
 export const maxDuration = 60;
 
@@ -40,7 +41,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Fetch everything in parallel
-  const [klubRes, clanoviRes, lijecnickiRes, sjedniceRes] = await Promise.all([
+  const [klubRes, clanoviRes, lijecnickiRes, sjedniceRes, treneriRes] = await Promise.all([
     supabase.from('klubovi').select('naziv').maybeSingle(),
     supabase.from('clanovi').select('*').order('prezime').order('ime'),
     supabase.from('lijecnicki')
@@ -49,6 +50,9 @@ export async function POST(req: NextRequest) {
     supabase.from('sjednice')
       .select('id, vrsta, zakazano_za, lokacija, status, napomena, tocke_dnevnog_reda(redni_broj, tekst)')
       .order('zakazano_za', { ascending: false }),
+    supabase.from('treneri')
+      .select('id, ime, prezime, uloga, licenca, brlic, licvrijedi, mob, email, status')
+      .order('prezime').order('ime'),
   ]);
 
   if (clanoviRes.error) {
@@ -104,8 +108,21 @@ export async function POST(req: NextRequest) {
     };
   });
 
+  const treneri: Trener[] = (treneriRes.data ?? []).map(t => ({
+    id:         String(t.id ?? ''),
+    ime:        String(t.ime ?? ''),
+    prezime:    String(t.prezime ?? ''),
+    uloga:      t.uloga      ? String(t.uloga)      : undefined,
+    licenca:    t.licenca    ? String(t.licenca)    : undefined,
+    brLic:      t.brlic      ? String(t.brlic)      : undefined,
+    licVrijedi: t.licvrijedi ? String(t.licvrijedi) : undefined,
+    mob:        t.mob        ? String(t.mob)        : undefined,
+    email:      t.email      ? String(t.email)      : undefined,
+    status:     (t.status === 'neaktivan' ? 'neaktivan' : 'aktivan') as TrenerStatus,
+  }));
+
   try {
-    const { zip, filename } = await buildInspekcijskiZip({ klubNaziv, clanovi, sjednice });
+    const { zip, filename } = await buildInspekcijskiZip({ klubNaziv, clanovi, sjednice, treneri });
 
     return new Response(Buffer.from(zip), {
       headers: {

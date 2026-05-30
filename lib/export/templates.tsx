@@ -6,6 +6,8 @@ import {
 import { renderToBuffer } from '@react-pdf/renderer';
 import type { Member } from '@/lib/types';
 import type { Sjednica } from '@/lib/queries/sjednice';
+import type { Trener } from '@/lib/queries/treneri';
+import { ULOGA_LABEL as ULOGA_PDF, LICENCA_LABEL as LICENCA_PDF } from '@/lib/queries/treneri';
 
 // Fonts are registered lazily so process.cwd() resolves correctly at runtime.
 // public/fonts/ contains full WOFF files (roboto-fontface, 85KB each, all glyphs
@@ -407,6 +409,89 @@ function SkupstineDoc({ sjednice, klubNaziv }: { sjednice: Sjednica[]; klubNaziv
   );
 }
 
+// ── TRENERI PDF ───────────────────────────────────────────────
+
+function TreneriDoc({ treneri, klubNaziv }: { treneri: Trener[]; klubNaziv: string }) {
+  const aktivni   = treneri.filter(t => t.status === 'aktivan');
+  const istekle   = aktivni.filter(t => isExpired(t.licVrijedi ?? ''));
+  const uskoro    = aktivni.filter(t => !isExpired(t.licVrijedi ?? '') && isExpiringSoon(t.licVrijedi ?? '', 90));
+  const valjane   = aktivni.filter(t => t.licVrijedi && !isExpired(t.licVrijedi) && !isExpiringSoon(t.licVrijedi, 90));
+
+  return (
+    <Document title={`Popis trenera — ${klubNaziv}`} author="Digitalni tajnik">
+      <Page size="A4" style={s.page}>
+        <Header
+          title="Treneri i HKF licence"
+          subtitle={`Ukupno: ${treneri.length} · Aktivnih: ${aktivni.length} · Isteklih licenci: ${istekle.length} · Uskoro istjece: ${uskoro.length}`}
+          klubNaziv={klubNaziv}
+        />
+
+        <View style={s.summaryRow}>
+          {[
+            { v: String(aktivni.length),  l: 'Aktivnih',         color: RED   },
+            { v: String(valjane.length),  l: 'Valjana licenca',  color: GREEN },
+            { v: String(uskoro.length),   l: 'Uskoro istjece',   color: AMBER },
+            { v: String(istekle.length),  l: 'Istekla licenca',  color: DANGER },
+          ].map(({ v, l, color }) => (
+            <View key={l} style={s.summaryItem}>
+              <Text style={[s.summaryValue, { color }]}>{v}</Text>
+              <Text style={s.summaryLabel}>{l}</Text>
+            </View>
+          ))}
+        </View>
+
+        <Text style={s.sectionLabel}>POPIS SVIH TRENERA</Text>
+
+        <View style={s.thRow}>
+          <Text style={[s.thCell, { width: '22%' }]}>Ime i prezime</Text>
+          <Text style={[s.thCell, { width: '18%' }]}>Uloga</Text>
+          <Text style={[s.thCell, { width: '22%' }]}>Vrsta licence</Text>
+          <Text style={[s.thCell, { width: '16%' }]}>Broj licence</Text>
+          <Text style={[s.thCell, { width: '10%' }]}>Status</Text>
+          <Text style={[s.thCell, { width: '12%' }]}>Vrijedi do</Text>
+        </View>
+
+        {treneri.map((t, i) => {
+          const expired      = isExpired(t.licVrijedi ?? '');
+          const expiringSoon = !expired && isExpiringSoon(t.licVrijedi ?? '', 90);
+          const dateColor    = expired ? DANGER : expiringSoon ? AMBER : t.licVrijedi ? GREEN : GRAY;
+          return (
+            <View key={t.id} style={[s.tdRow, i % 2 === 1 ? s.tdRowAlt : {}]}>
+              <Text style={[s.tdCell, { width: '22%', fontWeight: 700 }]}>{t.ime} {t.prezime}</Text>
+              <Text style={[s.tdCell, { width: '18%' }]}>{t.uloga ? (ULOGA_PDF[t.uloga] ?? t.uloga) : '—'}</Text>
+              <Text style={[s.tdCell, { width: '22%' }]}>{t.licenca ? (LICENCA_PDF[t.licenca] ?? t.licenca) : '—'}</Text>
+              <Text style={[s.tdCell, { width: '16%', color: GRAY, fontSize: 7 }]}>{t.brLic || '—'}</Text>
+              <Text style={[s.tdCell, { width: '10%', color: t.status === 'aktivan' ? GREEN : GRAY }]}>
+                {t.status === 'aktivan' ? 'Aktivan' : 'Neaktivan'}
+              </Text>
+              <Text style={[s.tdCell, { width: '12%', color: dateColor }]}>
+                {t.licVrijedi ? fmtDate(t.licVrijedi) : '—'}
+              </Text>
+            </View>
+          );
+        })}
+
+        {istekle.length > 0 && (
+          <>
+            <Text style={[s.sectionLabel, { color: DANGER, marginTop: 16 }]}>
+              UPOZORENJE — ISTEKLE LICENCE ({istekle.length})
+            </Text>
+            {istekle.map((t, i) => (
+              <View key={t.id} style={[s.tdRow, i % 2 === 1 ? s.tdRowAlt : {}]}>
+                <Text style={[s.tdCell, { width: '40%', fontWeight: 700, color: DANGER }]}>{t.ime} {t.prezime}</Text>
+                <Text style={[s.tdCell, { width: '35%' }]}>{t.licenca ? (LICENCA_PDF[t.licenca] ?? t.licenca) : '—'}</Text>
+                <Text style={[s.tdCell, { width: '25%', color: DANGER }]}>{fmtDate(t.licVrijedi)}</Text>
+              </View>
+            ))}
+          </>
+        )}
+
+        <Footer klubNaziv={klubNaziv} title="Treneri i HKF licence" />
+      </Page>
+    </Document>
+  );
+}
+
 // ── PUBLIC RENDER FUNCTIONS ───────────────────────────────────
 
 export async function renderClanoviPdf(clanovi: Member[], klubNaziv: string): Promise<Buffer> {
@@ -427,4 +512,9 @@ export async function renderLijecnickiPdf(clanovi: Member[], klubNaziv: string):
 export async function renderSkupstinePdf(sjednice: Sjednica[], klubNaziv: string): Promise<Buffer> {
   ensureFonts();
   return renderToBuffer(<SkupstineDoc sjednice={sjednice} klubNaziv={klubNaziv} />);
+}
+
+export async function renderTreneriPdf(treneri: Trener[], klubNaziv: string): Promise<Buffer> {
+  ensureFonts();
+  return renderToBuffer(<TreneriDoc treneri={treneri} klubNaziv={klubNaziv} />);
 }

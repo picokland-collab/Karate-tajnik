@@ -1,4 +1,5 @@
 import React from 'react';
+import path from 'path';
 import {
   Document, Page, Text, View, StyleSheet, Font,
 } from '@react-pdf/renderer';
@@ -6,13 +7,22 @@ import { renderToBuffer } from '@react-pdf/renderer';
 import type { Member } from '@/lib/types';
 import type { Sjednica } from '@/lib/queries/sjednice';
 
-Font.register({
-  family: 'Roboto',
-  fonts: [
-    { src: 'https://fonts.gstatic.com/s/roboto/v30/KFOmCnqEu92Fr1Mu4mxP.ttf' },
-    { src: 'https://fonts.gstatic.com/s/roboto/v30/KFOlCnqEu92Fr1MmEU9fBBc9.ttf', fontWeight: 700 },
-  ],
-});
+// Fonts are registered lazily so process.cwd() resolves correctly at runtime.
+// public/fonts/ contains full WOFF files (roboto-fontface, 85KB each, all glyphs
+// including Croatian: š č ć ž đ) bundled locally — no external CDN dependency.
+let _fontsReady = false;
+function ensureFonts() {
+  if (_fontsReady) return;
+  const dir = path.join(process.cwd(), 'public', 'fonts');
+  Font.register({
+    family: 'Roboto',
+    fonts: [
+      { src: path.join(dir, 'Roboto-Regular.woff') },
+      { src: path.join(dir, 'Roboto-Bold.woff'), fontWeight: 700 },
+    ],
+  });
+  _fontsReady = true;
+}
 
 const RED    = '#c0392b';
 const DARK   = '#1e293b';
@@ -400,17 +410,21 @@ function SkupstineDoc({ sjednice, klubNaziv }: { sjednice: Sjednica[]; klubNaziv
 // ── PUBLIC RENDER FUNCTIONS ───────────────────────────────────
 
 export async function renderClanoviPdf(clanovi: Member[], klubNaziv: string): Promise<Buffer> {
+  ensureFonts();
   return renderToBuffer(<ClanoviDoc clanovi={clanovi} klubNaziv={klubNaziv} />);
 }
 
 export async function renderGdprPdf(clanovi: Member[], klubNaziv: string): Promise<Buffer> {
+  ensureFonts();
   return renderToBuffer(<GdprDoc clanovi={clanovi} klubNaziv={klubNaziv} />);
 }
 
 export async function renderLijecnickiPdf(clanovi: Member[], klubNaziv: string): Promise<Buffer> {
+  ensureFonts();
   return renderToBuffer(<LijecnickiDoc clanovi={clanovi} klubNaziv={klubNaziv} />);
 }
 
 export async function renderSkupstinePdf(sjednice: Sjednica[], klubNaziv: string): Promise<Buffer> {
+  ensureFonts();
   return renderToBuffer(<SkupstineDoc sjednice={sjednice} klubNaziv={klubNaziv} />);
 }

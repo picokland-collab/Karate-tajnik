@@ -27,21 +27,27 @@ export const HKS_CAT_LABEL: Record<HksCategory, string> = {
 export function computeHksCategory(birthDateStr: string | null | undefined): HksCategory | null {
   if (!birthDateStr) return null;
 
-  const birth = new Date(birthDateStr);
-  if (isNaN(birth.getTime())) return null;
+  // Parse ISO date components directly — avoids new Date("YYYY-MM-DD") being
+  // treated as UTC midnight which shifts the date in non-UTC timezones.
+  const parts = birthDateStr.split('-');
+  if (parts.length !== 3) return null;
+  const [y, m, d] = parts.map(Number);
+  if (!y || !m || !d || isNaN(y) || isNaN(m) || isNaN(d)) return null;
 
-  const today = new Date();
-  let age = today.getFullYear() - birth.getFullYear();
-  const monthDiff = today.getMonth() - birth.getMonth();
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-    age--;
-  }
+  const today  = new Date();
+  const todayY = today.getFullYear();
+  const todayM = today.getMonth() + 1; // getMonth() is 0-indexed
+  const todayD = today.getDate();
 
-  if (age < 0)   return null;        // invalid future date
-  if (age < 14)  return 'mali_karatist';
-  if (age < 16)  return 'kadet';
-  if (age < 18)  return 'junior';
-  if (age < 35)  return 'senior';
+  let age = todayY - y;
+  const mDiff = todayM - m;
+  if (mDiff < 0 || (mDiff === 0 && todayD < d)) age--;
+
+  if (age < 0)  return null;        // future date — skip
+  if (age < 14) return 'mali_karatist';
+  if (age < 16) return 'kadet';
+  if (age < 18) return 'junior';
+  if (age < 35) return 'senior';
   return 'veteran';
 }
 

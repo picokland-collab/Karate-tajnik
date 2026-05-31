@@ -10,6 +10,7 @@ import {
   FileText,
   Calendar,
   Trophy,
+  Euro,
   Sparkles,
   BarChart3,
   Settings,
@@ -36,6 +37,7 @@ const navItems = [
   { href: '/dokumenti',  icon: FileText,         label: 'Dokumenti' },
   { href: '/skupstine',  icon: Calendar,         label: 'Skupštine' },
   { href: '/natjecanja', icon: Trophy,           label: 'Natjecanja' },
+  { href: '/financije',  icon: Euro,             label: 'Financije'  },
   { href: '/analitika',  icon: BarChart3,        label: 'Analitika' },
   { href: '/ai-tajnik',  icon: Sparkles,         label: 'AI Tajnik' },
 ];

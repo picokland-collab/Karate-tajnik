@@ -10,6 +10,8 @@ export type FinancijeKategorija =
   | 'natjecanje'
   | 'oprema'
   | 'donacija'
+  | 'najam'
+  | 'clanarine_savez'
   | 'ostalo';
 
 export const VRSTA_LABEL: Record<FinancijeVrsta, string> = {
@@ -29,8 +31,77 @@ export const KATEGORIJA_LABEL: Record<FinancijeKategorija, string> = {
   natjecanje:     'Natjecanje',
   oprema:         'Oprema',
   donacija:       'Donacija',
+  najam:          'Najam dvorane',
+  clanarine_savez:'Članarine savezu',
   ostalo:         'Ostalo',
 };
+
+// ── ANALYTICS TYPES ───────────────────────────────────────────
+
+export interface MjesecniPodatak {
+  mjesec:  string;   // "Sij", "Velj", ... (Croatian short month name)
+  prihod:  number;
+  rashod:  number;
+}
+
+export interface KategorijaStats {
+  kategorija: string;
+  label:      string;
+  vrsta:      FinancijeVrsta;
+  ukupno:     number;
+  postotak:   number;   // % of total for that vrsta
+}
+
+const MONTHS_HR = ['Sij','Velj','Ožu','Tra','Svi','Lip','Srp','Kol','Ruj','Lis','Stu','Pro'];
+
+/** Builds monthly prihod/rashod aggregates for the given year from an already-loaded records array. */
+export function buildMjesecniPodaci(
+  records: Pick<FinancijaZapis, 'datum' | 'vrsta' | 'iznos' | 'status'>[],
+  year: number,
+): MjesecniPodatak[] {
+  const months: MjesecniPodatak[] = MONTHS_HR.map(m => ({ mjesec: m, prihod: 0, rashod: 0 }));
+  for (const r of records) {
+    if (r.status === 'stornirano') continue;
+    const parts = r.datum.split('-');
+    if (parts.length < 2 || Number(parts[0]) !== year) continue;
+    const idx = Number(parts[1]) - 1;
+    if (idx < 0 || idx > 11) continue;
+    months[idx][r.vrsta] += r.iznos;
+  }
+  return months;
+}
+
+/** Builds category distribution stats from already-loaded records. */
+export function buildKategorijaStats(
+  records: Pick<FinancijaZapis, 'vrsta' | 'kategorija' | 'iznos' | 'status'>[],
+): { prihodi: KategorijaStats[]; rashodi: KategorijaStats[] } {
+  const map = new Map<string, { vrsta: FinancijeVrsta; ukupno: number }>();
+
+  for (const r of records) {
+    if (r.status === 'stornirano') continue;
+    const key = `${r.vrsta}:${r.kategorija}`;
+    const entry = map.get(key) ?? { vrsta: r.vrsta, ukupno: 0 };
+    entry.ukupno += r.iznos;
+    map.set(key, entry);
+  }
+
+  const toStats = (vrsta: FinancijeVrsta): KategorijaStats[] => {
+    const rows = [...map.entries()]
+      .filter(([k]) => k.startsWith(vrsta))
+      .map(([k, v]) => ({ kat: k.split(':')[1], ...v }))
+      .sort((a, b) => b.ukupno - a.ukupno);
+    const total = rows.reduce((s, r) => s + r.ukupno, 0);
+    return rows.map(r => ({
+      kategorija: r.kat,
+      label:      KATEGORIJA_LABEL[r.kat as FinancijeKategorija] ?? r.kat,
+      vrsta,
+      ukupno:     r.ukupno,
+      postotak:   total > 0 ? Math.round((r.ukupno / total) * 100) : 0,
+    }));
+  };
+
+  return { prihodi: toStats('prihod'), rashodi: toStats('rashod') };
+}
 
 export interface FinancijaZapis {
   id: string;

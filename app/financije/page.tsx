@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, useMemo, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import AppLayout from '@/components/layout/AppLayout';
 import {
@@ -8,6 +8,10 @@ import {
   CheckCircle, Clock, XCircle, Check, Ban, Plus,
   AlertTriangle, Loader2, ChevronDown, Edit, Save, User,
 } from 'lucide-react';
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid,
+  Tooltip, ResponsiveContainer,
+} from 'recharts';
 import {
   fetchFinancije,
   fetchFinancijeSažetak,
@@ -17,6 +21,8 @@ import {
   KATEGORIJA_LABEL,
   VRSTA_LABEL,
   STATUS_LABEL,
+  buildMjesecniPodaci,
+  buildKategorijaStats,
 } from '@/lib/queries/financije';
 import type {
   FinancijaZapis,
@@ -161,8 +167,42 @@ async function fetchMemberOptions(): Promise<MemberOption[]> {
 
 const KAT_BY_VRSTA: Record<FinancijeVrsta, FinancijeKategorija[]> = {
   prihod: ['clanarina', 'sufinanciranje', 'donacija', 'ostalo'],
-  rashod: ['natjecanje', 'oprema', 'ostalo'],
+  rashod: ['natjecanje', 'oprema', 'najam', 'clanarine_savez', 'ostalo'],
 };
+
+// ── CHART COLORS ──────────────────────────────────────────────
+
+const KAT_CHART_COLORS: Record<string, string> = {
+  clanarina:      '#3b82f6', // blue-500
+  sufinanciranje: '#8b5cf6', // violet-500
+  donacija:       '#22c55e', // green-500
+  natjecanje:     '#f59e0b', // amber-500
+  oprema:         '#f97316', // orange-500
+  najam:          '#ec4899', // pink-500
+  clanarine_savez:'#6366f1', // indigo-500
+  ostalo:         '#64748b', // slate-500
+};
+
+// ── CUSTOM RECHARTS TOOLTIP ───────────────────────────────────
+
+function ChartTooltip({ active, payload, label }: {
+  active?: boolean;
+  payload?: { name: string; value: number; color: string }[];
+  label?: string;
+}) {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs shadow-xl">
+      <p className="font-bold text-slate-200 mb-1.5">{label}</p>
+      {payload.map(p => (
+        <p key={p.name} style={{ color: p.color }} className="flex justify-between gap-4">
+          <span>{p.name === 'prihod' ? 'Prihodi' : 'Rashodi'}</span>
+          <span className="font-bold">{formatEUR(p.value)}</span>
+        </p>
+      ))}
+    </div>
+  );
+}
 
 // ── ZAPIS MODAL ───────────────────────────────────────────────
 
@@ -518,6 +558,25 @@ function FinancijeContent() {
 
   const naČekanju = records.filter(r => r.status === 'ceka').length;
 
+  // ── CHART DATA (derived from loaded records) ────────────────
+
+  const currentYear = new Date().getFullYear();
+
+  const monthlyData = useMemo(
+    () => buildMjesecniPodaci(records, currentYear),
+    [records, currentYear],
+  );
+
+  const { prihodi: katPrihodi, rashodi: katRashodi } = useMemo(
+    () => buildKategorijaStats(records),
+    [records],
+  );
+
+  const maxMonthly = useMemo(
+    () => Math.max(...monthlyData.flatMap(m => [m.prihod, m.rashod]), 1),
+    [monthlyData],
+  );
+
   // ── ACTIONS ────────────────────────────────────────────────
 
   const handleStatusChange = async (id: string, status: FinancijeStatus) => {
@@ -588,6 +647,116 @@ function FinancijeContent() {
             sub={naČekanju > 0 ? 'Zahtijeva akciju' : 'Sve plaćeno'}
           />
         </div>
+
+        {/* Analytics section */}
+        {!loading && records.length > 0 && (
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+
+            {/* ── Monthly bar chart ── */}
+            <div className="xl:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-5">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <p className="text-sm font-bold text-slate-100">Trendovi {currentYear}</p>
+                  <p className="text-xs text-slate-500">Prihodi vs. Rashodi po mjesecu</p>
+                </div>
+                <div className="flex items-center gap-4 text-xs text-slate-500">
+                  <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-green-500 inline-block" /> Prihodi</span>
+                  <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-red-500 inline-block" /> Rashodi</span>
+                </div>
+              </div>
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart
+                  data={monthlyData}
+                  barGap={2}
+                  margin={{ top: 4, right: 4, left: 0, bottom: 0 }}
+                >
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke="#1e293b"
+                    vertical={false}
+                  />
+                  <XAxis
+                    dataKey="mjesec"
+                    tick={{ fill: '#64748b', fontSize: 11 }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    tick={{ fill: '#64748b', fontSize: 11 }}
+                    axisLine={false}
+                    tickLine={false}
+                    tickFormatter={v => v >= 1000 ? `${v / 1000}k` : String(v)}
+                    width={36}
+                    domain={[0, maxMonthly * 1.1]}
+                  />
+                  <Tooltip
+                    content={<ChartTooltip />}
+                    cursor={{ fill: 'rgba(255,255,255,0.03)' }}
+                  />
+                  <Bar dataKey="prihod" fill="#22c55e" radius={[4, 4, 0, 0]} maxBarSize={28} />
+                  <Bar dataKey="rashod"  fill="#ef4444" radius={[4, 4, 0, 0]} maxBarSize={28} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* ── Category distribution ── */}
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-5">
+              <div>
+                <p className="text-sm font-bold text-slate-100 mb-1">Raspodjela</p>
+                <p className="text-xs text-slate-500">Kategorije (bez storniranih)</p>
+              </div>
+
+              {/* Prihodi */}
+              {katPrihodi.length > 0 && (
+                <div className="space-y-2.5">
+                  <p className="text-xs font-semibold text-green-400 uppercase tracking-wider">Prihodi</p>
+                  {katPrihodi.map(k => (
+                    <div key={k.kategorija}>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs text-slate-300 truncate flex-1">{k.label}</span>
+                        <span className="text-xs font-bold text-slate-200 ml-2 flex-shrink-0">{k.postotak}%</span>
+                      </div>
+                      <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                        <div
+                          className="h-full rounded-full transition-all"
+                          style={{
+                            width: `${k.postotak}%`,
+                            backgroundColor: KAT_CHART_COLORS[k.kategorija] ?? '#64748b',
+                          }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Rashodi */}
+              {katRashodi.length > 0 && (
+                <div className="space-y-2.5">
+                  <p className="text-xs font-semibold text-red-400 uppercase tracking-wider">Rashodi</p>
+                  {katRashodi.map(k => (
+                    <div key={k.kategorija}>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs text-slate-300 truncate flex-1">{k.label}</span>
+                        <span className="text-xs font-bold text-slate-200 ml-2 flex-shrink-0">{k.postotak}%</span>
+                      </div>
+                      <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                        <div
+                          className="h-full rounded-full transition-all"
+                          style={{
+                            width: `${k.postotak}%`,
+                            backgroundColor: KAT_CHART_COLORS[k.kategorija] ?? '#64748b',
+                          }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+          </div>
+        )}
 
         {/* Action error */}
         {actionError && (

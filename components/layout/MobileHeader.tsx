@@ -19,9 +19,9 @@ export default function MobileHeader({ title, actions, onHamburger }: MobileHead
       {/* Page title */}
       <p className="flex-1 text-sm font-bold text-slate-100 truncate">{title}</p>
 
-      {/* Optional action slot (e.g. "Novi član" button) */}
+      {/* Optional action slot — shrunk to icon+label on mobile */}
       {actions && (
-        <div className="flex items-center gap-2 [&>a]:text-xs [&>a]:px-3 [&>a]:py-1.5 [&>button]:text-xs [&>button]:px-3 [&>button]:py-1.5">
+        <div className="flex items-center flex-shrink-0 [&>a]:text-xs [&>a]:px-2.5 [&>a]:py-1.5 [&>button]:text-xs [&>button]:px-2.5 [&>button]:py-1.5 [&>button]:gap-1">
           {actions}
         </div>
       )}

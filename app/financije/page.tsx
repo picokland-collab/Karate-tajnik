@@ -6,7 +6,7 @@ import AppLayout from '@/components/layout/AppLayout';
 import {
   Wallet, TrendingUp, TrendingDown, Euro, Search, X,
   CheckCircle, Clock, XCircle, Check, Ban, Plus,
-  AlertTriangle, Loader2, ChevronDown, Edit, Save, User,
+  AlertTriangle, Loader2, ChevronDown, Edit, Save, User, Lock,
 } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
@@ -33,6 +33,7 @@ import type {
   FinancijaInput,
 } from '@/lib/queries/financije';
 import { createClient } from '@/lib/supabase-browser';
+import { useRole } from '@/lib/hooks/useRole';
 import { formatDate, cn } from '@/lib/utils';
 
 // ── HELPERS ───────────────────────────────────────────────────
@@ -505,6 +506,11 @@ function ZapisModal({
 type VrstaTabs = 'sve' | FinancijeVrsta;
 
 function FinancijeContent() {
+  // ── ROLE GATE ─────────────────────────────────────────────────
+  const { isAdmin, roleLoaded: roleChecked } = useRole();
+  const accessDenied = roleChecked && !isAdmin;
+
+  // ── DATA STATE ────────────────────────────────────────────────
   const [records, setRecords]       = useState<FinancijaZapis[]>([]);
   const [sažetak, setSažetak]       = useState<FinancijeSažetak | null>(null);
   const [loading, setLoading]       = useState(true);
@@ -596,6 +602,44 @@ function FinancijeContent() {
   // ── SALDO SIGN ─────────────────────────────────────────────
 
   const saldoPositive = (sažetak?.saldo ?? 0) >= 0;
+
+  // ── ROLE GUARD RENDERS ───────────────────────────────────────
+
+  if (!roleChecked) {
+    return (
+      <AppLayout title="Financije" subtitle="Provjera pristupa...">
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="w-5 h-5 animate-spin text-slate-500" />
+        </div>
+      </AppLayout>
+    );
+  }
+
+  if (accessDenied) {
+    return (
+      <AppLayout title="Financije" subtitle="Pristup ograničen">
+        <div className="max-w-md mx-auto mt-16 px-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 text-center space-y-5">
+            <div className="w-16 h-16 rounded-2xl bg-red-500/10 border border-red-800/30 flex items-center justify-center mx-auto">
+              <Lock className="w-8 h-8 text-red-400" />
+            </div>
+            <div className="space-y-2">
+              <h2 className="text-xl font-bold text-red-400">Pristup odbijen</h2>
+              <p className="text-sm text-slate-400 leading-relaxed">
+                Nemate ovlasti za pregled financijskih podataka kluba.
+                Kontaktirajte administratora.
+              </p>
+            </div>
+            <div className="pt-1 border-t border-slate-800 text-xs text-slate-600">
+              Uloga: <span className="font-mono text-slate-500">trener / preglednik</span>
+            </div>
+          </div>
+        </div>
+      </AppLayout>
+    );
+  }
+
+  // ── MAIN CONTENT (admin only beyond this point) ───────────────
 
   return (
     <AppLayout

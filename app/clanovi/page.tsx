@@ -12,6 +12,7 @@ import {
 import { beltLabels } from '@/lib/mock-data';
 import { fetchClanovi, insertClan, updateClan } from '@/lib/queries/clanovi';
 import type { ClanMedInput } from '@/lib/queries/clanovi';
+import { useRole } from '@/lib/hooks/useRole';
 import { runAutoRecategorization } from '@/lib/queries/rekategorizacija';
 import type { RecategorizationChange } from '@/lib/queries/rekategorizacija';
 import { HKS_CAT_LABEL } from '@/lib/utils/hksAge';
@@ -521,11 +522,12 @@ function EditMemberModal({
 
 /* ── MEMBER DETAIL DRAWER ─────────────────────────────────── */
 function MemberDetailDrawer({
-  member, onClose, onEdit,
+  member, onClose, onEdit, canEdit = false,
 }: {
   member: Member;
   onClose: () => void;
   onEdit: () => void;
+  canEdit?: boolean;
 }) {
   const belt = beltLabels[member.belt];
   const hasVotingRights = getAge(member.birthDate) >= 18 && member.tipClanstva === 'redovni';
@@ -636,17 +638,26 @@ function MemberDetailDrawer({
           </div>
         </div>
 
-        {/* Footer */}
+        {/* Footer — edit button for admin; close button for trener / preglednik */}
         <div
           className="px-6 pt-4 pb-6 md:px-8 border-t border-slate-800 bg-slate-900 flex-shrink-0"
           style={{ paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom, 0px))' }}
         >
-          <button
-            onClick={onEdit}
-            className="w-full flex items-center justify-center gap-2 bg-red-600 hover:bg-red-500 text-white text-sm font-semibold py-3 md:py-3.5 rounded-xl transition-colors"
-          >
-            <Edit className="w-4 h-4" /> Uredi podatke
-          </button>
+          {canEdit ? (
+            <button
+              onClick={onEdit}
+              className="w-full flex items-center justify-center gap-2 bg-red-600 hover:bg-red-500 text-white text-sm font-semibold py-3 md:py-3.5 rounded-xl transition-colors"
+            >
+              <Edit className="w-4 h-4" /> Uredi podatke
+            </button>
+          ) : (
+            <button
+              onClick={onClose}
+              className="w-full flex items-center justify-center bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-400 text-sm font-semibold py-3 md:py-3.5 rounded-xl transition-colors"
+            >
+              Zatvori
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -658,6 +669,12 @@ type FilterStatus = 'svi' | 'aktivni' | 'neaktivni';
 type FilterBelt = 'svi' | BeltColor;
 
 function ClanoviContent() {
+  // ── ROLE GATE ─────────────────────────────────────────────────
+  // admin + trener can add members; only admin can edit existing ones
+  const { isAdmin, canAdd, roleLoaded } = useRole();
+  const canEdit = isAdmin;
+
+  // ── DATA STATE ────────────────────────────────────────────────
   const [showModal, setShowModal]           = useState(false);
   const [editingMember, setEditingMember]   = useState<Member | null>(null);
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
@@ -724,15 +741,17 @@ function ClanoviContent() {
       title="Registar članova"
       subtitle={loading ? 'Učitavanje...' : `${allMembers.filter(m => m.status === 'aktivan').length} aktivnih · ${allMembers.length} ukupno`}
       actions={
-        <button
-          onClick={() => setShowModal(true)}
-          className="flex items-center gap-2 bg-red-600 hover:bg-red-500 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors shadow-lg shadow-red-900/30"
-        >
-          <UserPlus className="w-4 h-4" /> Novi član
-        </button>
+        roleLoaded && canAdd ? (
+          <button
+            onClick={() => setShowModal(true)}
+            className="flex items-center gap-2 bg-red-600 hover:bg-red-500 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors shadow-lg shadow-red-900/30"
+          >
+            <UserPlus className="w-4 h-4" /> Novi član
+          </button>
+        ) : undefined
       }
     >
-      {showModal && (
+      {showModal && canAdd && (
         <NewMemberModal
           onClose={() => setShowModal(false)}
           onSaved={() => { reload(); setShowModal(false); }}
@@ -895,6 +914,7 @@ function ClanoviContent() {
           member={selectedMember}
           onClose={() => setSelectedMember(null)}
           onEdit={() => setEditingMember(selectedMember)}
+          canEdit={canEdit}
         />
       )}
     </AppLayout>

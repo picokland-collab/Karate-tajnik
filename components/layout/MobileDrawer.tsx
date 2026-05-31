@@ -1,12 +1,22 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
-  X, Shield, LayoutDashboard, Users, FileText,
-  Calendar, Trophy, Sparkles, Settings, LogOut,
+  X, Shield, LayoutDashboard, Users, Stethoscope, FileText,
+  Calendar, Trophy, Sparkles, BarChart3, Settings, LogOut,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { createClient } from '@/lib/supabase-browser';
+
+const ULOGA_LABEL: Record<string, string> = {
+  admin:       'Administrator',
+  predsjednik: 'Predsjednik',
+  tajnik:      'Tajnik/ica',
+  trener:      'Trener/ica',
+  clan:        'Član',
+};
 
 interface MobileDrawerProps {
   open: boolean;
@@ -16,15 +26,49 @@ interface MobileDrawerProps {
 const navItems = [
   { href: '/dashboard',  icon: LayoutDashboard, label: 'Nadzorna ploča' },
   { href: '/clanovi',    icon: Users,            label: 'Članovi' },
+  { href: '/lijecnicki', icon: Stethoscope,      label: 'Liječnički' },
   { href: '/dokumenti',  icon: FileText,         label: 'Dokumenti' },
   { href: '/skupstine',  icon: Calendar,         label: 'Skupštine' },
   { href: '/natjecanja', icon: Trophy,           label: 'Natjecanja' },
+  { href: '/analitika',  icon: BarChart3,        label: 'Analitika' },
   { href: '/ai-tajnik',  icon: Sparkles,         label: 'AI Tajnik' },
   { href: '/postavke',   icon: Settings,         label: 'Postavke' },
 ];
 
 export default function MobileDrawer({ open, onClose }: MobileDrawerProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const [profile, setProfile] = useState<{ puno_ime: string; uloga: string; klubovi: { naziv: string } | null } | null>(null);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return;
+      supabase
+        .from('profili')
+        .select('puno_ime, uloga, klubovi(naziv)')
+        .eq('id', user.id)
+        .single()
+        .then(({ data }) => {
+          if (!data) return;
+          const raw = data as { puno_ime: string; uloga: string; klubovi: { naziv: string }[] | { naziv: string } | null };
+          const klubovi = Array.isArray(raw.klubovi) ? (raw.klubovi[0] ?? null) : raw.klubovi;
+          setProfile({ puno_ime: raw.puno_ime, uloga: raw.uloga, klubovi });
+        });
+    });
+  }, []);
+
+  const handleLogout = async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    onClose();
+    router.push('/login');
+    router.refresh();
+  };
+
+  const initials = profile
+    ? profile.puno_ime.split(' ').filter(Boolean).map(n => n[0]).join('').slice(0, 2).toUpperCase()
+    : '·';
 
   return (
     /* Outer overlay — always rendered, visibility toggled via opacity + pointer-events */
@@ -59,7 +103,7 @@ export default function MobileDrawer({ open, onClose }: MobileDrawerProps) {
           </div>
           <div className="flex-1">
             <p className="text-sm font-bold text-slate-50 leading-tight">Digitalni tajnik</p>
-            <p className="text-xs text-red-400 font-semibold">KK Rijeka</p>
+            <p className="text-xs text-red-400 font-semibold">{profile?.klubovi?.naziv ?? '...'}</p>
           </div>
           <button
             onClick={onClose}
@@ -95,15 +139,18 @@ export default function MobileDrawer({ open, onClose }: MobileDrawerProps) {
 
         {/* User row */}
         <div className="px-3 pb-6 border-t border-slate-800 pt-4">
-          <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-800/50">
+          <div
+            onClick={handleLogout}
+            className="flex items-center gap-3 p-3 rounded-xl bg-slate-800/50 cursor-pointer hover:bg-slate-800 transition-colors group"
+          >
             <div className="w-9 h-9 rounded-full bg-gradient-to-br from-slate-600 to-slate-700 flex items-center justify-center text-xs font-bold text-slate-200 flex-shrink-0">
-              MH
+              {initials}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-slate-200 truncate">Maja Horvat</p>
-              <p className="text-xs text-slate-500">Tajnica</p>
+              <p className="text-sm font-semibold text-slate-200 truncate">{profile?.puno_ime ?? '...'}</p>
+              <p className="text-xs text-slate-500">{profile ? (ULOGA_LABEL[profile.uloga] ?? profile.uloga) : ''}</p>
             </div>
-            <LogOut className="w-4 h-4 text-slate-600" />
+            <LogOut className="w-4 h-4 text-slate-600 group-hover:text-slate-400 transition-colors" />
           </div>
         </div>
       </div>

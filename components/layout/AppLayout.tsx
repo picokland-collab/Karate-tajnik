@@ -42,10 +42,14 @@ export default function AppLayout({ children, title, subtitle, actions }: AppLay
           onHamburger={() => setDrawerOpen(true)}
         />
 
-        {/* Scrollable content
-            pb-20 on mobile to clear the fixed bottom nav (h-16 + 4px safety) */}
-        <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 pb-4 md:p-4 [padding-bottom:calc(1rem+env(safe-area-inset-bottom,0px))] md:[padding-bottom:1rem] mobile-pb">
-          {children}
+        {/* Scrollable content area.
+            overflow-x-hidden is NOT placed on this element — iOS Safari coerces it
+            to overflow-x:auto when overflow-y is also set. Instead the html/body
+            carry overflow-x:hidden. The inner div provides a non-scroll clip layer. */}
+        <main className="flex-1 overflow-y-auto p-4 mobile-pb">
+          <div className="w-full overflow-x-hidden">
+            {children}
+          </div>
         </main>
       </div>
 

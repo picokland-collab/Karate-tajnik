@@ -45,3 +45,5 @@ next-env.d.ts
 run-and-screenshot*.ps1
 screenshot-check.mjs
 screenshot-mobile.mjs
+
+.vercel

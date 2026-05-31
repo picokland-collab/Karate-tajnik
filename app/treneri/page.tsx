@@ -14,6 +14,7 @@ import {
 import { fetchKlubInfo } from '@/lib/queries/dashboard';
 import type { Trener, TrenerInput, TrenerStatus } from '@/lib/queries/treneri';
 import { formatDate, isExpired, isExpiringSoon, daysUntil, cn } from '@/lib/utils';
+import { useRole } from '@/lib/hooks/useRole';
 
 // ── HELPERS ───────────────────────────────────────────────────
 
@@ -277,11 +278,12 @@ function ZahtjevModal({ trener, klubNaziv, predsjednikIme, onClose }: {
 
 // ── TRENER CARD ───────────────────────────────────────────────
 
-function TrenerCard({ t, onEdit, onDelete, onZahtjev }: {
+function TrenerCard({ t, onEdit, onDelete, onZahtjev, canEdit = false }: {
   t: Trener;
   onEdit: () => void;
   onDelete: () => void;
   onZahtjev: () => void;
+  canEdit?: boolean;
 }) {
   const expired     = isExpired(t.licVrijedi ?? '');
   const expiringSoon = isExpiringSoon(t.licVrijedi ?? '', 90);
@@ -332,20 +334,24 @@ function TrenerCard({ t, onEdit, onDelete, onZahtjev }: {
         </div>
       )}
 
-      {/* Actions */}
+      {/* Actions — Zahtjev HKF visible to all; Edit + Delete admin only */}
       <div className="flex gap-2 pt-1 border-t border-slate-800">
         <button onClick={onZahtjev}
           className="flex-1 flex items-center justify-center gap-1.5 text-xs text-violet-400 bg-violet-900/20 border border-violet-800/40 hover:bg-violet-900/30 px-3 py-2 rounded-xl transition-colors font-medium">
           <FileText className="w-3.5 h-3.5" /> Zahtjev HKF
         </button>
-        <button onClick={onEdit}
-          className="flex items-center justify-center gap-1.5 text-xs text-slate-400 bg-slate-800 border border-slate-700 hover:bg-slate-700 px-3 py-2 rounded-xl transition-colors">
-          <Edit className="w-3.5 h-3.5" />
-        </button>
-        <button onClick={onDelete}
-          className="flex items-center justify-center gap-1.5 text-xs text-red-400 bg-red-900/20 border border-red-800/40 hover:bg-red-900/30 px-3 py-2 rounded-xl transition-colors">
-          <Trash2 className="w-3.5 h-3.5" />
-        </button>
+        {canEdit && (
+          <>
+            <button onClick={onEdit}
+              className="flex items-center justify-center gap-1.5 text-xs text-slate-400 bg-slate-800 border border-slate-700 hover:bg-slate-700 px-3 py-2 rounded-xl transition-colors">
+              <Edit className="w-3.5 h-3.5" />
+            </button>
+            <button onClick={onDelete}
+              className="flex items-center justify-center gap-1.5 text-xs text-red-400 bg-red-900/20 border border-red-800/40 hover:bg-red-900/30 px-3 py-2 rounded-xl transition-colors">
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          </>
+        )}
       </div>
     </div>
   );
@@ -354,6 +360,11 @@ function TrenerCard({ t, onEdit, onDelete, onZahtjev }: {
 // ── MAIN PAGE ─────────────────────────────────────────────────
 
 function TrenerContent() {
+  // ── ROLE GATE ─────────────────────────────────────────────────
+  const { isAdmin, roleLoaded } = useRole();
+  const canEdit = isAdmin;
+
+  // ── DATA STATE ────────────────────────────────────────────────
   const [treneri, setTreneri]           = useState<Trener[]>([]);
   const [loading, setLoading]           = useState(true);
   const [search, setSearch]             = useState('');
@@ -405,12 +416,14 @@ function TrenerContent() {
       title="Treneri i licence"
       subtitle={loading ? 'Učitavanje...' : `${aktivni.length} aktivnih · ${treneri.length} ukupno`}
       actions={
-        <button
-          onClick={() => { setEditingTrener(undefined); setShowModal(true); }}
-          className="flex items-center gap-2 bg-red-600 hover:bg-red-500 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors shadow-lg shadow-red-900/30"
-        >
-          <Plus className="w-4 h-4" /> Novi trener
-        </button>
+        roleLoaded && canEdit ? (
+          <button
+            onClick={() => { setEditingTrener(undefined); setShowModal(true); }}
+            className="flex items-center gap-2 bg-red-600 hover:bg-red-500 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors shadow-lg shadow-red-900/30"
+          >
+            <Plus className="w-4 h-4" /> Novi trener
+          </button>
+        ) : undefined
       }
     >
       {showModal && (
@@ -524,6 +537,7 @@ function TrenerContent() {
                 onEdit={() => { setEditingTrener(t); setShowModal(true); }}
                 onDelete={() => setDeleteConfirm(t.id)}
                 onZahtjev={() => setZahtjevTrener(t)}
+                canEdit={canEdit}
               />
             ))}
           </div>
@@ -537,12 +551,14 @@ function TrenerContent() {
             </div>
             <p className="text-sm font-semibold text-slate-400 mb-1">Nema unesenih trenera</p>
             <p className="text-xs text-slate-600 mb-5">Dodaj trenera i prati istek HKF licence</p>
-            <button
-              onClick={() => { setEditingTrener(undefined); setShowModal(true); }}
-              className="flex items-center gap-2 bg-red-600 hover:bg-red-500 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors mx-auto"
-            >
-              <Plus className="w-4 h-4" /> Dodaj prvog trenera
-            </button>
+            {canEdit && (
+              <button
+                onClick={() => { setEditingTrener(undefined); setShowModal(true); }}
+                className="flex items-center gap-2 bg-red-600 hover:bg-red-500 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors mx-auto"
+              >
+                <Plus className="w-4 h-4" /> Dodaj prvog trenera
+              </button>
+            )}
           </div>
         )}
 

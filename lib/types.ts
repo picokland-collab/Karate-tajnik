@@ -11,6 +11,8 @@ export type BeltColor =
 
 export type MemberStatus = 'aktivan' | 'neaktivan' | 'suspendiran';
 
+export type TipClanstva = 'redovni' | 'podupiruci' | 'pocasni';
+
 export type DocumentStatus = 'nacrt' | 'na_odobrenju' | 'usvojeno';
 
 export type MeetingStatus = 'planirana' | 'završena' | 'otkazana';
@@ -45,6 +47,8 @@ export interface Member {
   status: MemberStatus;
   medicalExpiry: string;
   consentSigned: boolean;
+  adresa?: string;
+  tipClanstva?: TipClanstva;
   guardian?: string;
   notes?: string;
   avatar?: string;

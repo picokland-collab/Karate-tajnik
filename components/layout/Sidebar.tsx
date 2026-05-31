@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   Users,
   GraduationCap,
+  Stethoscope,
   FileText,
   Calendar,
   Trophy,
@@ -33,6 +34,7 @@ const ULOGA_LABEL: Record<string, string> = {
 const navItems = [
   { href: '/dashboard',  icon: LayoutDashboard, label: 'Nadzorna ploča' },
   { href: '/clanovi',    icon: Users,            label: 'Članovi' },
+  { href: '/lijecnicki', icon: Stethoscope,      label: 'Liječnički' },
   { href: '/treneri',    icon: GraduationCap,    label: 'Treneri' },
   { href: '/dokumenti',  icon: FileText,         label: 'Dokumenti' },
   { href: '/skupstine',  icon: Calendar,         label: 'Skupštine' },

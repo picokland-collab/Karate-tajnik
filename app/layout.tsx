@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { Providers } from "@/components/Providers";
 
 export const metadata: Metadata = {
   title: "Digitalni tajnik — Karate klub",
@@ -12,7 +13,7 @@ export default function RootLayout({
   return (
     <html lang="hr" className="h-full">
       <body className="h-full bg-slate-950 text-slate-50 antialiased">
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

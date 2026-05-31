@@ -9,29 +9,34 @@ import {
   Calendar, ArrowRight, Star,
   FileText, Zap, UserPlus, Share2,
 } from 'lucide-react';
-import { competitions, members } from '@/lib/mock-data';
+import {
+  fetchNatjecanja, insertNatjecanje, fetchMemberOptions,
+  RAZINA_LABEL,
+} from '@/lib/queries/natjecanja';
+import { fetchKlubInfo } from '@/lib/queries/dashboard';
+import type { Natjecanje, NatjecanjeRazina, NatjecanjeVrsta, MedaljaTip, MemberOption } from '@/lib/queries/natjecanja';
 import { formatDate, cn } from '@/lib/utils';
-import type { Competition, CompetitionResult } from '@/lib/types';
 
 /* ── AI REPORTS ────────────────────────────────────────────── */
 
-function buildOfficialReport(form: CompForm): string {
+function buildOfficialReport(form: CompForm, klubNaziv: string): string {
+  const naziv = klubNaziv || 'Karate kluba';
   const medals = form.results.filter(r => r.medal);
-  const gold = medals.filter(r => r.medal === 'zlato');
+  const gold   = medals.filter(r => r.medal === 'zlato');
   const silver = medals.filter(r => r.medal === 'srebro');
   const bronze = medals.filter(r => r.medal === 'bronca');
 
   return `IZVJEŠTAJ O NASTUPU
-Karate kluba Rijeka
+${naziv}
 
 Natjecanje: ${form.name || '—'}
 Datum: ${form.date || '—'}
 Mjesto: ${form.location || '—'}
-Razina: ${form.level || '—'}
+Razina: ${form.razina ? RAZINA_LABEL[form.razina] : '—'}
 
 SAŽETAK NASTUPA:
 
-Karate klub Rijeka nastupio je na natjecanju ${form.name || '[naziv]'} održanom ${form.date ? formatDate(form.date) : '[datum]'} u ${form.location || '[mjesto]'} s ukupno ${form.results.length} natjecatelja u disciplinama kata i kumite.
+${naziv} nastupio je na natjecanju ${form.name || '[naziv]'} održanom ${form.date ? formatDate(form.date) : '[datum]'} u ${form.location || '[mjesto]'} s ukupno ${form.results.length} natjecatelja u disciplinama kata i kumite.
 
 OSVAJAČI MEDALJA:
 
@@ -44,16 +49,17 @@ ${bronze.length > 0 ? `🥉 BRONČANE MEDALJE (${bronze.length}):\n${bronze.map(
 UKUPAN REZULTAT KLUBA:
 ${gold.length} zlatnih · ${silver.length} srebrnih · ${bronze.length} brončanih odličja
 
-Ovim nastupom Karate klub Rijeka potvrdio je visoku razinu natjecateljske forme i nastavlja tradiciju izvrsnosti u hrvatskom karateu.
+Ovim nastupom ${naziv} potvrdio je visoku razinu natjecateljske forme i nastavlja tradiciju izvrsnosti u hrvatskom karateu.
 
-Za Karate klub Rijeka,
+Za ${naziv},
 Uprava kluba
 Datum izvještaja: ${new Date().toLocaleDateString('hr-HR')}`;
 }
 
-function buildSocialPost(form: CompForm): string {
+function buildSocialPost(form: CompForm, klubNaziv: string): string {
+  const naziv = klubNaziv || 'Karate kluba';
   const medals = form.results.filter(r => r.medal);
-  const gold = medals.filter(r => r.medal === 'zlato');
+  const gold   = medals.filter(r => r.medal === 'zlato');
   const silver = medals.filter(r => r.medal === 'srebro');
   const bronze = medals.filter(r => r.medal === 'bronca');
 
@@ -65,39 +71,40 @@ ${gold.map(r => `🥇 ${r.memberName} — ZLATO u ${r.event}! BRAVO!!! 🎉`).jo
 ${silver.map(r => `🥈 ${r.memberName} — SREBRO u ${r.event}! Fantastično! 👏`).join('\n')}
 ${bronze.map(r => `🥉 ${r.memberName} — BRONCA u ${r.event}! Svaka čast! 💪`).join('\n')}
 
-Ukupno ${gold.length + silver.length + bronze.length} medalja za KK Rijeka! 🎊
+Ukupno ${gold.length + silver.length + bronze.length} medalja za ${naziv}! 🎊
 
 Ovakvi rezultati su plod dugogodišnjeg rada, odricanja i predanosti. Ponosni smo na sve naše sportaše!
 
 Posebne čestitke trenerima koji su sve ovo omogućili! 👨‍🏫
 
-${form.level === 'međunarodno' ? '🌍 Ovo je međunarodni uspjeh koji ide daleko!' : '🇭🇷 Ponosni Riječani!'}
+${form.razina === 'medjunarodno' ? '🌍 Ovo je međunarodni uspjeh koji ide daleko!' : '🇭🇷 Ponos naše zajednice!'}
 
-#karaterijeka #karate #kkrijeka #sport #rijeka #karatekid #medalja #prvak
-${form.level === 'međunarodno' ? '#internationalkarate #croatia' : '#hrvatska #sport'}`;
+#karate #sport #medalja #prvak
+${form.razina === 'medjunarodno' ? '#internationalkarate #croatia' : '#hrvatska #sport'}`;
 }
 
 /* ── TYPES ─────────────────────────────────────────────────── */
 interface ResultEntry {
+  clanUuid: string;
   memberName: string;
   category: string;
   event: string;
-  medal: 'zlato' | 'srebro' | 'bronca' | '';
+  medal: MedaljaTip | '';
 }
 
 interface CompForm {
   name: string;
   date: string;
   location: string;
-  level: string;
-  type: string;
+  razina: NatjecanjeRazina;
+  type: NatjecanjeVrsta;
   results: ResultEntry[];
 }
 
 type AiTab = 'official' | 'social';
 
 /* ── MEDAL REPORT TABS ─────────────────────────────────────── */
-function MediaReportTabs({ form }: { form: CompForm }) {
+function MediaReportTabs({ form, klubNaziv }: { form: CompForm; klubNaziv: string }) {
   const [activeTab, setActiveTab] = useState<AiTab>('official');
   const [copied, setCopied] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -109,7 +116,7 @@ function MediaReportTabs({ form }: { form: CompForm }) {
   };
 
   const copy = () => {
-    const text = activeTab === 'official' ? buildOfficialReport(form) : buildSocialPost(form);
+    const text = activeTab === 'official' ? buildOfficialReport(form, klubNaziv) : buildSocialPost(form, klubNaziv);
     navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -117,7 +124,6 @@ function MediaReportTabs({ form }: { form: CompForm }) {
 
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
-      {/* Header */}
       <div className="bg-gradient-to-r from-amber-950/50 to-slate-900 border-b border-slate-800 px-6 py-4 flex items-center gap-3">
         <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center">
           <Sparkles className="w-5 h-5 text-amber-400" />
@@ -158,7 +164,6 @@ function MediaReportTabs({ form }: { form: CompForm }) {
 
         {generated && (
           <div className="space-y-4 fade-in">
-            {/* Tabs */}
             <div className="flex gap-2">
               <button
                 onClick={() => setActiveTab('official')}
@@ -184,7 +189,6 @@ function MediaReportTabs({ form }: { form: CompForm }) {
               </button>
             </div>
 
-            {/* Preview */}
             <div className={cn(
               'border rounded-xl p-4 max-h-72 overflow-y-auto',
               activeTab === 'social'
@@ -192,11 +196,10 @@ function MediaReportTabs({ form }: { form: CompForm }) {
                 : 'bg-slate-800/60 border-slate-700'
             )}>
               <pre className="text-xs text-slate-300 whitespace-pre-wrap leading-relaxed font-mono">
-                {activeTab === 'official' ? buildOfficialReport(form) : buildSocialPost(form)}
+                {activeTab === 'official' ? buildOfficialReport(form, klubNaziv) : buildSocialPost(form, klubNaziv)}
               </pre>
             </div>
 
-            {/* Copy button */}
             <button
               onClick={copy}
               className={cn(
@@ -225,25 +228,74 @@ function MediaReportTabs({ form }: { form: CompForm }) {
 }
 
 /* ── NEW COMPETITION FORM ──────────────────────────────────── */
-function NewCompetitionPanel({ onClose }: { onClose: () => void }) {
+function NewCompetitionPanel({
+  onClose,
+  onSaved,
+  memberOptions,
+  klubNaziv,
+}: {
+  onClose: () => void;
+  onSaved: () => void;
+  memberOptions: MemberOption[];
+  klubNaziv: string;
+}) {
   const [form, setForm] = useState<CompForm>({
     name: '',
     date: '',
     location: '',
-    level: 'državno',
+    razina: 'drzavno',
     type: 'oboje',
-    results: [{ memberName: '', category: '', event: 'Kumite', medal: '' }],
+    results: [{ clanUuid: '', memberName: '', category: '', event: 'Kumite', medal: '' }],
   });
+  const [saving, setSaving] = useState(false);
 
-  const setField = (k: keyof CompForm, v: string) => setForm(f => ({ ...f, [k]: v }));
+  const setField = <K extends keyof CompForm>(k: K, v: CompForm[K]) =>
+    setForm(f => ({ ...f, [k]: v }));
+
   const addResult = () => setForm(f => ({
     ...f,
-    results: [...f.results, { memberName: '', category: '', event: 'Kumite', medal: '' }],
+    results: [...f.results, { clanUuid: '', memberName: '', category: '', event: 'Kumite', medal: '' }],
   }));
-  const updateResult = (i: number, k: keyof ResultEntry, v: string) =>
-    setForm(f => ({ ...f, results: f.results.map((r, idx) => idx === i ? { ...r, [k]: v } : r) }));
+
+  const updateResult = (i: number, patch: Partial<ResultEntry>) =>
+    setForm(f => ({ ...f, results: f.results.map((r, idx) => idx === i ? { ...r, ...patch } : r) }));
+
   const removeResult = (i: number) =>
     setForm(f => ({ ...f, results: f.results.filter((_, idx) => idx !== i) }));
+
+  const handleMemberSelect = (i: number, uuid: string) => {
+    const opt = memberOptions.find(m => m.uuid === uuid);
+    updateResult(i, { clanUuid: uuid, memberName: opt?.name ?? '' });
+  };
+
+  const handleSave = async () => {
+    if (!form.name || !form.date) return;
+    setSaving(true);
+    try {
+      await insertNatjecanje({
+        naziv: form.name,
+        datum: form.date,
+        lokacija: form.location,
+        vrsta: form.type,
+        razina: form.razina,
+        rezultati: form.results
+          .filter(r => r.clanUuid)
+          .map(r => ({
+            clanUuid: r.clanUuid,
+            kategorija: r.category,
+            disciplina: r.event,
+            plasman: r.medal === 'zlato' ? 1 : r.medal === 'srebro' ? 2 : r.medal === 'bronca' ? 3 : 4,
+            medalja: r.medal as MedaljaTip | '',
+          })),
+      });
+      onSaved();
+      onClose();
+    } catch (e) {
+      console.error('Greška pri spremi natjecanja:', e);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
@@ -256,7 +308,6 @@ function NewCompetitionPanel({ onClose }: { onClose: () => void }) {
           </button>
         </div>
 
-        {/* Competition name */}
         <div>
           <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1.5">Naziv natjecanja *</label>
           <input value={form.name} onChange={e => setField('name', e.target.value)}
@@ -264,19 +315,18 @@ function NewCompetitionPanel({ onClose }: { onClose: () => void }) {
             className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-slate-100 placeholder:text-slate-600 outline-none focus:border-amber-500 transition-colors" />
         </div>
 
-        {/* Date + Location */}
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1.5">Datum</label>
+            <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1.5">Datum *</label>
             <input type="date" value={form.date} onChange={e => setField('date', e.target.value)}
               className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-slate-100 outline-none focus:border-amber-500 transition-colors" />
           </div>
           <div>
             <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1.5">Razina</label>
-            <select value={form.level} onChange={e => setField('level', e.target.value)}
+            <select value={form.razina} onChange={e => setField('razina', e.target.value as NatjecanjeRazina)}
               className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-slate-100 outline-none focus:border-amber-500 cursor-pointer">
-              {['klubsko', 'županijsko', 'državno', 'međunarodno'].map(l => (
-                <option key={l} value={l} className="capitalize">{l}</option>
+              {(Object.entries(RAZINA_LABEL) as [NatjecanjeRazina, string][]).map(([val, label]) => (
+                <option key={val} value={val}>{label}</option>
               ))}
             </select>
           </div>
@@ -291,9 +341,7 @@ function NewCompetitionPanel({ onClose }: { onClose: () => void }) {
 
         {/* Results */}
         <div>
-          <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-2">
-            Osvajači medalja
-          </label>
+          <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-2">Osvajači medalja</label>
           <div className="space-y-3">
             {form.results.map((result, i) => (
               <div key={i} className="bg-slate-800 rounded-xl p-3 space-y-2 border border-slate-700">
@@ -305,39 +353,47 @@ function NewCompetitionPanel({ onClose }: { onClose: () => void }) {
                     </button>
                   )}
                 </div>
-                <input
-                  value={result.memberName}
-                  onChange={e => updateResult(i, 'memberName', e.target.value)}
-                  placeholder="Ime i prezime"
-                  className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 outline-none focus:border-amber-500 transition-colors"
-                />
+
+                {/* Member dropdown */}
+                <select
+                  value={result.clanUuid}
+                  onChange={e => handleMemberSelect(i, e.target.value)}
+                  className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-500 cursor-pointer"
+                >
+                  <option value="">— odaberi člana —</option>
+                  {memberOptions.map(m => (
+                    <option key={m.uuid} value={m.uuid}>{m.name}</option>
+                  ))}
+                </select>
+
                 <div className="grid grid-cols-2 gap-2">
                   <input
                     value={result.category}
-                    onChange={e => updateResult(i, 'category', e.target.value)}
+                    onChange={e => updateResult(i, { category: e.target.value })}
                     placeholder="Kategorija (npr. Junior -68kg)"
                     className="bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-xs text-slate-300 placeholder:text-slate-500 outline-none focus:border-amber-500 transition-colors"
                   />
                   <select
                     value={result.event}
-                    onChange={e => updateResult(i, 'event', e.target.value)}
+                    onChange={e => updateResult(i, { event: e.target.value })}
                     className="bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-xs text-slate-300 outline-none focus:border-amber-500 cursor-pointer"
                   >
                     <option>Kumite</option>
                     <option>Kata</option>
                   </select>
                 </div>
+
                 {/* Medal picker */}
                 <div className="flex gap-2">
                   {([
-                    { value: 'zlato', emoji: '🥇', label: 'Zlato' },
+                    { value: 'zlato',  emoji: '🥇', label: 'Zlato' },
                     { value: 'srebro', emoji: '🥈', label: 'Srebro' },
                     { value: 'bronca', emoji: '🥉', label: 'Bronca' },
-                    { value: '', emoji: '4️⃣', label: '4. mj.' },
+                    { value: '',       emoji: '4️⃣', label: '4. mj.' },
                   ] as const).map(opt => (
                     <button
                       key={opt.value}
-                      onClick={() => updateResult(i, 'medal', opt.value)}
+                      onClick={() => updateResult(i, { medal: opt.value as MedaljaTip | '' })}
                       className={cn(
                         'flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all',
                         result.medal === opt.value
@@ -356,10 +412,19 @@ function NewCompetitionPanel({ onClose }: { onClose: () => void }) {
             <Plus className="w-3.5 h-3.5" /> Dodaj sportaša
           </button>
         </div>
+
+        <button
+          onClick={handleSave}
+          disabled={saving || !form.name || !form.date}
+          className="w-full flex items-center justify-center gap-2 bg-amber-600 hover:bg-amber-500 disabled:bg-slate-800 disabled:text-slate-600 text-white font-bold py-3 rounded-xl text-sm transition-colors"
+        >
+          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+          {saving ? 'Sprema se...' : 'Spremi natjecanje'}
+        </button>
       </div>
 
       {/* Right: Media report */}
-      <MediaReportTabs form={form} />
+      <MediaReportTabs form={form} klubNaziv={klubNaziv} />
     </div>
   );
 }
@@ -367,17 +432,38 @@ function NewCompetitionPanel({ onClose }: { onClose: () => void }) {
 /* ── MAIN PAGE ─────────────────────────────────────────────── */
 function NatjecanjaContent() {
   const [showNew, setShowNew] = useState(false);
+  const [natjecanja, setNatjecanja] = useState<Natjecanje[]>([]);
+  const [memberOptions, setMemberOptions] = useState<MemberOption[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [klubNaziv, setKlubNaziv] = useState('');
   const searchParams = useSearchParams();
+
+  const loadAll = () => {
+    setLoading(true);
+    Promise.all([fetchNatjecanja(), fetchMemberOptions()])
+      .then(([nat, members]) => { setNatjecanja(nat); setMemberOptions(members); })
+      .finally(() => setLoading(false));
+  };
 
   useEffect(() => {
     if (searchParams.get('action') === 'new') setShowNew(true);
   }, [searchParams]);
+
+  useEffect(() => {
+    loadAll();
+    fetchKlubInfo().then(info => { if (info) setKlubNaziv(info.naziv); });
+  }, []);
 
   const medalColors = {
     zlato:  { bg: 'bg-yellow-900/30', border: 'border-yellow-700/40', text: 'text-yellow-300', emoji: '🥇' },
     srebro: { bg: 'bg-slate-700/40',  border: 'border-slate-600/40',  text: 'text-slate-300',  emoji: '🥈' },
     bronca: { bg: 'bg-amber-900/30',  border: 'border-amber-700/40',  text: 'text-amber-400',  emoji: '🥉' },
   };
+
+  const allRezultati = natjecanja.flatMap(n => n.rezultati);
+  const zlatne  = allRezultati.filter(r => r.medalja === 'zlato').length;
+  const srebrne = allRezultati.filter(r => r.medalja === 'srebro').length;
+  const broncane = allRezultati.filter(r => r.medalja === 'bronca').length;
 
   return (
     <AppLayout
@@ -401,16 +487,21 @@ function NatjecanjaContent() {
 
         {showNew && (
           <div className="fade-in">
-            <NewCompetitionPanel onClose={() => setShowNew(false)} />
+            <NewCompetitionPanel
+              onClose={() => setShowNew(false)}
+              onSaved={() => { loadAll(); setShowNew(false); }}
+              memberOptions={memberOptions}
+              klubNaziv={klubNaziv}
+            />
           </div>
         )}
 
         {/* Stats */}
         <div className="grid grid-cols-3 gap-4">
           {[
-            { emoji: '🥇', value: '1', label: 'Zlatnih medalja', color: 'text-yellow-300' },
-            { emoji: '🥈', value: '1', label: 'Srebrnih medalja', color: 'text-slate-300' },
-            { emoji: '🥉', value: '1', label: 'Brončanih medalja', color: 'text-amber-400' },
+            { emoji: '🥇', value: String(zlatne),   label: 'Zlatnih medalja',   color: 'text-yellow-300' },
+            { emoji: '🥈', value: String(srebrne),  label: 'Srebrnih medalja',  color: 'text-slate-300' },
+            { emoji: '🥉', value: String(broncane), label: 'Brončanih medalja', color: 'text-amber-400' },
           ].map(s => (
             <div key={s.label} className="bg-slate-900 border border-slate-800 rounded-2xl p-4 text-center">
               <p className="text-3xl mb-1">{s.emoji}</p>
@@ -422,51 +513,60 @@ function NatjecanjaContent() {
 
         {/* Competitions list */}
         <div>
-          <h2 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Nedavna natjecanja</h2>
-          <div className="space-y-4">
-            {competitions.map(comp => (
-              <div key={comp.id} className="bg-slate-900 border border-slate-800 rounded-2xl p-5 hover:border-slate-700 transition-colors">
-                <div className="flex items-start justify-between gap-4 mb-4">
-                  <div>
-                    <div className="flex items-center gap-2 flex-wrap mb-1">
-                      <h3 className="text-sm font-bold text-slate-100">{comp.name}</h3>
-                      <span className={cn(
-                        'text-xs px-2 py-0.5 rounded-full font-medium capitalize',
-                        comp.level === 'međunarodno' ? 'bg-amber-900/30 text-amber-300 border border-amber-800/40' : 'bg-blue-900/20 text-blue-300 border border-blue-800/30'
-                      )}>
-                        {comp.level}
+          <h2 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Natjecanja</h2>
+          {loading ? (
+            <div className="flex items-center justify-center py-16">
+              <Loader2 className="w-6 h-6 text-slate-600 animate-spin" />
+            </div>
+          ) : natjecanja.length === 0 ? (
+            <div className="text-center py-16 text-slate-600 text-sm">Nema zabilježenih natjecanja.</div>
+          ) : (
+            <div className="space-y-4">
+              {natjecanja.map(nat => (
+                <div key={nat.id} className="bg-slate-900 border border-slate-800 rounded-2xl p-5 hover:border-slate-700 transition-colors">
+                  <div className="flex items-start justify-between gap-4 mb-4">
+                    <div>
+                      <div className="flex items-center gap-2 flex-wrap mb-1">
+                        <h3 className="text-sm font-bold text-slate-100">{nat.naziv}</h3>
+                        <span className={cn(
+                          'text-xs px-2 py-0.5 rounded-full font-medium',
+                          nat.razina === 'medjunarodno'
+                            ? 'bg-amber-900/30 text-amber-300 border border-amber-800/40'
+                            : 'bg-blue-900/20 text-blue-300 border border-blue-800/30'
+                        )}>
+                          {RAZINA_LABEL[nat.razina]}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3 text-xs text-slate-500">
+                        <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {formatDate(nat.datum)}</span>
+                        <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {nat.lokacija}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span className="text-xs text-slate-500 bg-slate-800 px-2 py-1 rounded-full">
+                        {nat.rezultati.filter(r => r.medalja).length} medalja
                       </span>
                     </div>
-                    <div className="flex items-center gap-3 text-xs text-slate-500">
-                      <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {formatDate(comp.date)}</span>
-                      <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {comp.location}</span>
-                    </div>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <span className="text-xs text-slate-500 bg-slate-800 px-2 py-1 rounded-full">
-                      {comp.results.filter(r => r.medal).length} medalja
-                    </span>
-                  </div>
-                </div>
 
-                {/* Results */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                  {comp.results.filter(r => r.medal).map((result, i) => {
-                    const mc = medalColors[result.medal as keyof typeof medalColors];
-                    return (
-                      <div key={i} className={cn('flex items-center gap-2.5 rounded-xl p-2.5 border', mc.bg, mc.border)}>
-                        <span className="text-xl">{mc.emoji}</span>
-                        <div className="min-w-0">
-                          <p className={cn('text-xs font-bold truncate', mc.text)}>{result.memberName}</p>
-                          <p className="text-xs text-slate-500 truncate">{result.event} · {result.category}</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                    {nat.rezultati.filter(r => r.medalja).map((result, i) => {
+                      const mc = medalColors[result.medalja as keyof typeof medalColors];
+                      return (
+                        <div key={i} className={cn('flex items-center gap-2.5 rounded-xl p-2.5 border', mc.bg, mc.border)}>
+                          <span className="text-xl">{mc.emoji}</span>
+                          <div className="min-w-0">
+                            <p className={cn('text-xs font-bold truncate', mc.text)}>{result.imeClana}</p>
+                            <p className="text-xs text-slate-500 truncate">{result.disciplina} · {result.kategorija}</p>
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
 
       </div>

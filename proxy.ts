@@ -33,10 +33,15 @@ export async function proxy(request: NextRequest) {
   const isOnboarding   = path === '/onboarding';
   const isApiRoute     = path.startsWith('/api/');
 
-  // Neprijavljeni → /login
+  // API routes handle their own auth (session check or WEBHOOK_SECRET header).
+  // Redirecting them to /login would return HTML instead of a proper response.
+  if (isApiRoute) return supabaseResponse;
+
+  // Neprijavljeni → /login (preserve intended destination for post-login redirect)
   if (!user && !isLoginPage) {
     const url = request.nextUrl.clone();
     url.pathname = '/login';
+    url.searchParams.set('next', path);
     return NextResponse.redirect(url);
   }
 

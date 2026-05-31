@@ -40,6 +40,16 @@ export async function POST(req: NextRequest) {
     return new Response('Unauthorized', { status: 401 });
   }
 
+  const { data: profil } = await supabase
+    .from('profili')
+    .select('uloga')
+    .eq('id', user.id)
+    .single();
+
+  if (!profil || profil.uloga !== 'admin') {
+    return new Response('Forbidden', { status: 403 });
+  }
+
   // Fetch everything in parallel
   const [klubRes, clanoviRes, lijecnickiRes, sjedniceRes, treneriRes] = await Promise.all([
     supabase.from('klubovi').select('naziv').maybeSingle(),

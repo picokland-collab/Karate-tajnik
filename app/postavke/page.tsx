@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import AppLayout from '@/components/layout/AppLayout';
-import { Building2, Save, Bell, Users, Shield, Check, Loader2, Download, FileArchive, AlertCircle, RefreshCw, Activity } from 'lucide-react';
+import { Building2, Save, Bell, Users, Shield, Check, Loader2, Download, FileArchive, AlertCircle, RefreshCw, Activity, ChevronRight } from 'lucide-react';
 import { fetchKlubPodaci, updateKlub } from '@/lib/queries/dashboard';
 import type { KlubPodaci } from '@/lib/queries/dashboard';
 import { formatDate } from '@/lib/utils';
@@ -357,22 +358,32 @@ export default function PostavkePage() {
           </button>
         </div>
 
-        {/* Section cards */}
-        {[
-          { icon: Users, title: 'Korisnici i dozvole', desc: 'Upravljanje korisničkim računima i razinama pristupa za administratore i trenere.' },
-          { icon: Shield, title: 'Sigurnost i GDPR', desc: 'Postavke privatnosti, izvoz podataka i upravljanje pristancima sukladno GDPR-u.' },
-        ].map(({ icon: Icon, title, desc }) => (
-          <div key={title} className="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex items-center gap-4 hover:border-slate-700 transition-colors cursor-pointer group">
-            <div className="w-11 h-11 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center flex-shrink-0">
-              <Icon className="w-5 h-5 text-slate-400" />
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-bold text-slate-100">{title}</p>
-              <p className="text-xs text-slate-500 mt-0.5">{desc}</p>
-            </div>
-            <Shield className="w-4 h-4 text-slate-700 group-hover:text-slate-500 transition-colors" />
+        {/* Korisnici i dozvole — live link */}
+        <Link
+          href="/postavke/korisnici"
+          className="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex items-center gap-4 hover:border-slate-700 transition-colors group"
+        >
+          <div className="w-11 h-11 rounded-xl bg-red-500/10 border border-red-800/30 flex items-center justify-center flex-shrink-0">
+            <Users className="w-5 h-5 text-red-400" />
           </div>
-        ))}
+          <div className="flex-1">
+            <p className="text-sm font-bold text-slate-100">Korisnici i dozvole</p>
+            <p className="text-xs text-slate-500 mt-0.5">Upravljanje korisničkim računima i razinama pristupa za administratore i trenere.</p>
+          </div>
+          <ChevronRight className="w-4 h-4 text-slate-600 group-hover:text-slate-400 transition-colors flex-shrink-0" />
+        </Link>
+
+        {/* Sigurnost i GDPR — placeholder */}
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex items-center gap-4 opacity-60">
+          <div className="w-11 h-11 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center flex-shrink-0">
+            <Shield className="w-5 h-5 text-slate-500" />
+          </div>
+          <div className="flex-1">
+            <p className="text-sm font-bold text-slate-400">Sigurnost i GDPR</p>
+            <p className="text-xs text-slate-600 mt-0.5">Postavke privatnosti, izvoz podataka i upravljanje pristancima sukladno GDPR-u.</p>
+          </div>
+          <span className="text-xs text-slate-600 font-medium flex-shrink-0">uskoro</span>
+        </div>
       </div>
     </AppLayout>
   );

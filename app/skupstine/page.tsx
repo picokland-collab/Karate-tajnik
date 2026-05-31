@@ -6,63 +6,141 @@ import AppLayout from '@/components/layout/AppLayout';
 import {
   Calendar, Plus, Sparkles, X, ChevronDown, ChevronUp,
   FileText, Check, Clock, AlertCircle, Copy, Download,
-  Loader2, CheckCircle, ArrowRight, Edit3,
+  Loader2, CheckCircle, ArrowRight, Edit3, Users,
 } from 'lucide-react';
-import { meetings } from '@/lib/mock-data';
+import { fetchSjednice, insertSjednica } from '@/lib/queries/sjednice';
+import { fetchKlubInfo } from '@/lib/queries/dashboard';
+import { fetchVotingMemberCount } from '@/lib/queries/clanovi';
+import type { Sjednica } from '@/lib/queries/sjednice';
 import { formatDate, cn } from '@/lib/utils';
-import type { Meeting } from '@/lib/types';
+import { useRole } from '@/lib/hooks/useRole';
 
-/* ── GENERATED DOCUMENTS EXAMPLES ─────────────────────────── */
+/* ── HELPERS ───────────────────────────────────────────────── */
 
-function generateZapisnik(meeting: Partial<MeetingForm>): string {
+function quorumNeeded(total: number, termination: boolean): number {
+  if (termination) return Math.ceil((total * 2) / 3);
+  return Math.floor(total / 2) + 1;
+}
+
+function signatureBlock(predsjednikIme: string, date: string, location: string): string {
+  const predsj = predsjednikIme || '______________________';
+  return `Za točnost ovog Zapisnika potpisuju:
+
+Predsjednik kluba:                    Zapisničar:
+______________________________        ______________________________
+${predsj.padEnd(30)}        ______________________________
+
+
+Ovjerovitelj zapisnika:               Ovjerovitelj zapisnika:
+______________________________        ______________________________
+______________________________        ______________________________
+
+Datum i mjesto: ${date || '___________'}, ${location || '___________'}`;
+}
+
+/* ── GENERATED DOCUMENTS ───────────────────────────────────── */
+
+function generateZapisnik(
+  meeting: Partial<MeetingForm>,
+  klubNaziv: string,
+  predsjednikIme: string,
+  ukupnoGlasaca: number,
+): string {
+  const naziv = klubNaziv || 'Karate kluba';
+  const predsjednik = predsjednikIme || 'predsjednik/ca kluba';
+  const prisutni = meeting.prisutniGlasaci ?? 0;
+  const isTermination = (meeting.agenda ?? []).some(a =>
+    /prestanak\s+rada|raspuštanje/i.test(a)
+  );
+  const needed = quorumNeeded(ukupnoGlasaca, isTermination);
+  const quorumMet = ukupnoGlasaca > 0 && prisutni > 0 && prisutni >= needed;
+  const quorumLabel = isTermination
+    ? `2/3 glasača (čl. 40. Statuta) — ${needed} od ${ukupnoGlasaca}`
+    : `više od polovice (čl. 24. Statuta) — ${needed} od ${ukupnoGlasaca}`;
+
+  const quorumBlock = ukupnoGlasaca > 0 && prisutni > 0
+    ? `Ukupno članova s pravom glasa: ${ukupnoGlasaca}
+Prisutno s pravom glasa:       ${prisutni}
+Kvorum potreban (${quorumLabel})
+Status kvoruma: ${quorumMet
+      ? `KVORUM POSTIGNUT ✓  (${prisutni}/${ukupnoGlasaca} prisutnih)`
+      : `KVORUM NIJE POSTIGNUT ✗  (${prisutni}/${ukupnoGlasaca}, potrebno ≥ ${needed})`
+    }`
+    : `Ukupno članova s pravom glasa: ${ukupnoGlasaca || '___'}
+Prisutno s pravom glasa:       ${prisutni || '___'}
+Kvorum potreban: ___ (unijeti broj prisutnih u obrazac)
+Status kvoruma: [izračun dostupan nakon unosa broja prisutnih]`;
+
   return `ZAPISNIK
-s ${meeting.type === 'izvanredna' ? 'Izvanredne' : 'Redovne'} godišnje skupštine
-Karate kluba Rijeka
+s ${meeting.type === 'izvanredna' ? 'Izvanredne' : 'Redovne'} skupštine
+${naziv}
 
 Datum i vrijeme: ${meeting.date || '—'} u ${meeting.time || '—'} sati
 Mjesto održavanja: ${meeting.location || '—'}
 
+═══════════════════════════════════════════
+GLASAČKI KVORUM (čl. 24. Statuta)
+═══════════════════════════════════════════
+${quorumBlock}
+
 PRISUTNI ČLANOVI: [popis prisutnih]
-Broj prisutnih: ____ od ukupno ____ članova kluba
 
 DNEVNI RED:
-${(meeting.agenda || []).map((item, i) => `${i + 1}. ${item}`).join('\n')}
+${(meeting.agenda ?? []).map((item, i) => `${i + 1}. ${item}`).join('\n')}
 
-TIJEK SJEDNICE:
+═══════════════════════════════════════════
+TIJEK SJEDNICE
+═══════════════════════════════════════════
 
-Ad. 1) Otvaranje skupštine
-Skupštinu je otvorio/la predsjednik/ca Ante Marković koji je utvrdio da je prisutan dovoljan broj članova za pravovaljano odlučivanje te da Skupština može raditi.
+Ad. 1) Otvaranje skupštine i provjera kvoruma
+Skupštinu je otvorio/la predsjednik/ca ${predsjednik} koji/a je utvrdio/la da je na skupštini prisutno ${prisutni || '____'} od ${ukupnoGlasaca || '____'} članova s pravom glasa${quorumMet ? ', čime je postignut zakonski kvorum za pravovaljano odlučivanje' : '. Kvorum nije postignut.'}.
 
-${meeting.aiNotes ? `NAPOMENE IZ SJEDNICE:\n${meeting.aiNotes}\n\n` : ''}
-
+${meeting.aiNotes ? `NAPOMENE IZ SJEDNICE:\n${meeting.aiNotes}\n` : ''}
 ZAKLJUČAK:
-Skupština je završila u __:__ sati, a ovaj Zapisnik su potpisali:
+Skupština je završila u __:__ sati.
 
-Predsjednik skupštine: _________________    Zapisničar: _________________
-
-Datum: ${meeting.date || '___________'}`;
+${signatureBlock(predsjednikIme, meeting.date ?? '', meeting.location ?? '')}`;
 }
 
-function generateOdluka(meeting: Partial<MeetingForm>): string {
-  return `ODLUKA SKUPŠTINE KARATE KLUBA RIJEKA
+function generateOdluka(
+  meeting: Partial<MeetingForm>,
+  klubNaziv: string,
+  predsjednikIme: string,
+  ukupnoGlasaca: number,
+): string {
+  const naziv = klubNaziv || 'Karate kluba';
+  const predsjednik = predsjednikIme || 'predsjednik/ca kluba';
+  const prisutni = meeting.prisutniGlasaci ?? 0;
+  const isTermination = (meeting.agenda ?? []).some(a =>
+    /prestanak\s+rada|raspuštanje/i.test(a)
+  );
+  const needed = quorumNeeded(ukupnoGlasaca, isTermination);
+  const quorumMet = ukupnoGlasaca > 0 && prisutni > 0 && prisutni >= needed;
 
-Temeljem članka 24. Statuta Karate kluba Rijeka, Skupština Karate kluba Rijeka na sjednici održanoj dana ${meeting.date || '___'} u ${meeting.location || '___'} donosi sljedeće:
+  const glasanjeOpis = prisutni > 0
+    ? `glasanjem ${prisutni} prisutnih članova s pravom glasa (od ukupno ${ukupnoGlasaca} ovlaštenih glasača; kvorum ${quorumMet ? 'postignut ✓' : 'NIJE postignut ✗'})`
+    : 'glasanjem prisutnih članova s pravom glasa';
 
-O D L U K E:
+  return `ODLUKA SKUPŠTINE ${naziv.toUpperCase()}
 
-1. Skupština prihvaća Godišnji izvještaj o radu kluba za proteklu godinu jednoglasno.
+Temeljem članka 24. Statuta ${naziv}, Skupština ${naziv} na sjednici
+održanoj dana ${meeting.date || '___'} u ${meeting.location || '___'} donosi sljedeće:
 
-2. Skupština usvaja Financijsko izvješće za proteklu poslovnu godinu s ____ glasova ZA i ____ PROTIV.
+═══════════════════════════════════════════
+O D L U K E
+═══════════════════════════════════════════
+
+1. Skupština prihvaća Godišnji izvještaj o radu kluba za proteklu godinu.
+
+2. Skupština usvaja Financijsko izvješće za proteklu poslovnu godinu.
 
 3. Skupština odobrava Plan aktivnosti za nadolazeće natjecateljsko razdoblje.
 
-Odluke su donesene na osnovi ${meeting.aiNotes?.includes('jednoglasno') ? 'jednoglasne suglasnosti' : 'glasanja'} prisutnih članova.
+${meeting.aiNotes ? `Napomene iz sjednice:\n${meeting.aiNotes}\n\n` : ''}Odluke su donesene ${glasanjeOpis}.
 
-Za izvršenje ove Odluke zadužuje se Uprava kluba.
+Za izvršenje ovih Odluka zadužuje se Uprava kluba.
 
-Predsjednik skupštine: _________________
-
-Datum: ${meeting.date || '___________'}, ${meeting.location || '___________'}`;
+${signatureBlock(predsjednikIme, meeting.date ?? '', meeting.location ?? '')}`;
 }
 
 /* ── TYPES ─────────────────────────────────────────────────── */
@@ -73,12 +151,20 @@ interface MeetingForm {
   location: string;
   agenda: string[];
   aiNotes: string;
+  prisutniGlasaci: number;
 }
 
 type AiState = 'idle' | 'generating' | 'done';
 
 /* ── AI GENERATION PANEL ───────────────────────────────────── */
-function AIGeneratorPanel({ form }: { form: MeetingForm }) {
+function AIGeneratorPanel({
+  form, klubNaziv, predsjednikIme, ukupnoGlasaca,
+}: {
+  form: MeetingForm;
+  klubNaziv: string;
+  predsjednikIme: string;
+  ukupnoGlasaca: number;
+}) {
   const [aiState, setAiState] = useState<AiState>('idle');
   const [activeDoc, setActiveDoc] = useState<'zapisnik' | 'odluka'>('zapisnik');
   const [copied, setCopied] = useState(false);
@@ -89,7 +175,9 @@ function AIGeneratorPanel({ form }: { form: MeetingForm }) {
   };
 
   const copy = () => {
-    const text = activeDoc === 'zapisnik' ? generateZapisnik(form) : generateOdluka(form);
+    const text = activeDoc === 'zapisnik'
+      ? generateZapisnik(form, klubNaziv, predsjednikIme, ukupnoGlasaca)
+      : generateOdluka(form, klubNaziv, predsjednikIme, ukupnoGlasaca);
     navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -98,7 +186,7 @@ function AIGeneratorPanel({ form }: { form: MeetingForm }) {
   const progressMessages = [
     'Analizira dnevni red...',
     'Primjenjuje pravnu terminologiju...',
-    'Generira strukturu dokumenta...',
+    'Izračunava kvorum sukladno Statutu...',
     'Dodaje zakonske odrednice...',
     'Finalizira dokumente...',
   ];
@@ -112,6 +200,11 @@ function AIGeneratorPanel({ form }: { form: MeetingForm }) {
     return () => clearInterval(interval);
   }, [aiState]);
 
+  const prisutni = form.prisutniGlasaci;
+  const isTermination = form.agenda.some(a => /prestanak\s+rada|raspuštanje/i.test(a));
+  const needed = ukupnoGlasaca > 0 ? quorumNeeded(ukupnoGlasaca, isTermination) : null;
+  const quorumMet = needed !== null && prisutni >= needed;
+
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
       {/* AI section header */}
@@ -124,6 +217,27 @@ function AIGeneratorPanel({ form }: { form: MeetingForm }) {
           <p className="text-xs text-slate-500">Unesi natuknice iz sjednice i prepusti AI-ju pisanje</p>
         </div>
       </div>
+
+      {/* Quorum status panel */}
+      {ukupnoGlasaca > 0 && (
+        <div className={cn(
+          'mx-6 mt-5 flex items-center gap-3 px-4 py-3 rounded-xl border text-xs',
+          prisutni === 0
+            ? 'bg-slate-800/60 border-slate-700 text-slate-400'
+            : quorumMet
+            ? 'bg-green-900/20 border-green-700/40 text-green-300'
+            : 'bg-red-900/20 border-red-700/40 text-red-300',
+        )}>
+          <Users className="w-4 h-4 flex-shrink-0" />
+          <span>
+            {prisutni === 0
+              ? `Ukupno glasača: ${ukupnoGlasaca} — unesi broj prisutnih u obrascu`
+              : quorumMet
+              ? `Kvorum postignut ✓ — ${prisutni}/${ukupnoGlasaca} prisutnih (potrebno ≥ ${needed})`
+              : `Kvorum nije postignut ✗ — ${prisutni}/${ukupnoGlasaca} prisutnih (potrebno ≥ ${needed})`}
+          </span>
+        </div>
+      )}
 
       <div className="p-6 space-y-5">
         {/* Notes textarea */}
@@ -207,7 +321,9 @@ function AIGeneratorPanel({ form }: { form: MeetingForm }) {
             {/* Document preview */}
             <div className="bg-slate-800/60 border border-slate-700 rounded-xl p-4 max-h-64 overflow-y-auto">
               <pre className="text-xs text-slate-300 whitespace-pre-wrap font-mono leading-relaxed">
-                {activeDoc === 'zapisnik' ? generateZapisnik(form) : generateOdluka(form)}
+                {activeDoc === 'zapisnik'
+                  ? generateZapisnik(form, klubNaziv, predsjednikIme, ukupnoGlasaca)
+                  : generateOdluka(form, klubNaziv, predsjednikIme, ukupnoGlasaca)}
               </pre>
             </div>
 
@@ -239,7 +355,15 @@ function AIGeneratorPanel({ form }: { form: MeetingForm }) {
 }
 
 /* ── NEW MEETING FORM ──────────────────────────────────────── */
-function NewMeetingPanel({ onClose }: { onClose: () => void }) {
+function NewMeetingPanel({
+  onClose, onSaved, klubNaziv, predsjednikIme, ukupnoGlasaca,
+}: {
+  onClose: () => void;
+  onSaved: () => void;
+  klubNaziv: string;
+  predsjednikIme: string;
+  ukupnoGlasaca: number;
+}) {
   const [form, setForm] = useState<MeetingForm>({
     type: 'redovna',
     date: '',
@@ -247,8 +371,10 @@ function NewMeetingPanel({ onClose }: { onClose: () => void }) {
     location: '',
     agenda: ['Otvaranje skupštine i provjera kvoruma', 'Usvajanje dnevnog reda', ''],
     aiNotes: '',
+    prisutniGlasaci: 0,
   });
 
+  const [saving, setSaving] = useState(false);
   const set = (k: keyof MeetingForm, v: string) => setForm(f => ({ ...f, [k]: v }));
 
   const addAgendaItem = () => setForm(f => ({ ...f, agenda: [...f.agenda, ''] }));
@@ -256,6 +382,26 @@ function NewMeetingPanel({ onClose }: { onClose: () => void }) {
     setForm(f => ({ ...f, agenda: f.agenda.map((a, idx) => (idx === i ? v : a)) }));
   const removeAgenda = (i: number) =>
     setForm(f => ({ ...f, agenda: f.agenda.filter((_, idx) => idx !== i) }));
+
+  const handleSave = async () => {
+    if (!form.date || !form.location) return;
+    setSaving(true);
+    try {
+      await insertSjednica({
+        vrsta: form.type,
+        datum: form.date,
+        vrijeme: form.time,
+        lokacija: form.location,
+        dnevni_red: form.agenda.filter(a => a.trim()),
+      });
+      onSaved();
+      onClose();
+    } catch (e) {
+      console.error('Greška pri spremi sjednice:', e);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
@@ -306,6 +452,27 @@ function NewMeetingPanel({ onClose }: { onClose: () => void }) {
             className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-slate-100 placeholder:text-slate-600 outline-none focus:border-red-500 transition-colors" />
         </div>
 
+        {/* Voting count */}
+        <div>
+          <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1.5">
+            Prisutni s pravom glasa
+            {ukupnoGlasaca > 0 && (
+              <span className="ml-1.5 normal-case font-normal text-slate-600">
+                (od ukupno {ukupnoGlasaca} ovlaštenih)
+              </span>
+            )}
+          </label>
+          <input
+            type="number"
+            min={0}
+            max={ukupnoGlasaca || 9999}
+            value={form.prisutniGlasaci || ''}
+            onChange={e => setForm(f => ({ ...f, prisutniGlasaci: Math.max(0, Number(e.target.value)) }))}
+            placeholder="0"
+            className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-slate-100 placeholder:text-slate-600 outline-none focus:border-red-500 transition-colors"
+          />
+        </div>
+
         {/* Agenda */}
         <div>
           <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-2">Dnevni red</label>
@@ -344,118 +511,178 @@ function NewMeetingPanel({ onClose }: { onClose: () => void }) {
             className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-slate-300 placeholder:text-slate-600 outline-none focus:border-violet-500 transition-colors h-24 resize-none"
           />
         </div>
+
+        <button
+          onClick={handleSave}
+          disabled={saving || !form.date || !form.location}
+          className="w-full flex items-center justify-center gap-2 bg-red-600 hover:bg-red-500 disabled:bg-slate-800 disabled:text-slate-600 text-white font-bold py-3 rounded-xl text-sm transition-colors"
+        >
+          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+          {saving ? 'Sprema se...' : 'Spremi skupštinu'}
+        </button>
       </div>
 
       {/* Right: AI Generator */}
-      <AIGeneratorPanel form={form} />
+      <AIGeneratorPanel
+        form={form}
+        klubNaziv={klubNaziv}
+        predsjednikIme={predsjednikIme}
+        ukupnoGlasaca={ukupnoGlasaca}
+      />
     </div>
   );
 }
 
 /* ── MAIN PAGE ─────────────────────────────────────────────── */
 function SkupstineContent() {
+  // ── ROLE GATE ─────────────────────────────────────────────────
+  const { isAdmin, roleLoaded } = useRole();
+  const canEdit = isAdmin;
+
+  // ── DATA STATE ────────────────────────────────────────────────
   const [showNew, setShowNew] = useState(false);
+  const [sjednice, setSjednice] = useState<Sjednica[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [klubNaziv, setKlubNaziv] = useState('');
+  const [predsjednikIme, setPredsjednikIme] = useState('');
+  const [ukupnoGlasaca, setUkupnoGlasaca] = useState(0);
   const searchParams = useSearchParams();
+
+  const loadSjednice = () => {
+    setLoading(true);
+    fetchSjednice()
+      .then(setSjednice)
+      .finally(() => setLoading(false));
+  };
 
   useEffect(() => {
     if (searchParams.get('action') === 'new') setShowNew(true);
   }, [searchParams]);
 
+  useEffect(() => {
+    loadSjednice();
+    fetchKlubInfo().then(info => {
+      if (info) {
+        setKlubNaziv(info.naziv);
+        setPredsjednikIme(info.predsjednik ?? '');
+      }
+    });
+    fetchVotingMemberCount().then(setUkupnoGlasaca);
+  }, []);
+
   const statusConfig = {
     planirana: { label: 'Planirana', color: 'text-blue-400', bg: 'bg-blue-900/20 border-blue-800/40' },
-    završena:  { label: 'Završena', color: 'text-green-400', bg: 'bg-green-900/20 border-green-800/40' },
+    zavrsena:  { label: 'Završena', color: 'text-green-400', bg: 'bg-green-900/20 border-green-800/40' },
     otkazana:  { label: 'Otkazana', color: 'text-red-400', bg: 'bg-red-900/20 border-red-800/40' },
   };
 
   return (
     <AppLayout
       title="Skupštine i dokumenti"
-      subtitle="Organiziraj sjednice i generiraj dokumente uz pomoć AI-ja"
+      subtitle={ukupnoGlasaca > 0
+        ? `${ukupnoGlasaca} članova s pravom glasa · Organiziraj sjednice uz pomoć AI-ja`
+        : 'Organiziraj sjednice i generiraj dokumente uz pomoć AI-ja'}
       actions={
-        <button
-          onClick={() => setShowNew(!showNew)}
-          className={cn(
-            'flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-xl transition-colors shadow-lg',
-            showNew
-              ? 'bg-slate-700 text-slate-200 hover:bg-slate-600'
-              : 'bg-red-600 hover:bg-red-500 text-white shadow-red-900/30'
-          )}
-        >
-          {showNew ? <><X className="w-4 h-4" /> Zatvori</> : <><Plus className="w-4 h-4" /> Nova skupština</>}
-        </button>
+        roleLoaded && canEdit ? (
+          <button
+            onClick={() => setShowNew(!showNew)}
+            className={cn(
+              'flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-xl transition-colors shadow-lg',
+              showNew
+                ? 'bg-slate-700 text-slate-200 hover:bg-slate-600'
+                : 'bg-red-600 hover:bg-red-500 text-white shadow-red-900/30'
+            )}
+          >
+            {showNew ? <><X className="w-4 h-4" /> Zatvori</> : <><Plus className="w-4 h-4" /> Nova skupština</>}
+          </button>
+        ) : undefined
       }
     >
       <div className="max-w-7xl mx-auto space-y-6">
 
-        {/* New meeting form */}
-        {showNew && (
+        {/* New meeting form — admin only */}
+        {showNew && canEdit && (
           <div className="fade-in">
-            <NewMeetingPanel onClose={() => setShowNew(false)} />
+            <NewMeetingPanel
+              onClose={() => setShowNew(false)}
+              onSaved={() => { loadSjednice(); setShowNew(false); }}
+              klubNaziv={klubNaziv}
+              predsjednikIme={predsjednikIme}
+              ukupnoGlasaca={ukupnoGlasaca}
+            />
           </div>
         )}
 
         {/* Meetings list */}
         <div>
-          <h2 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Prethodne skupštine</h2>
-          <div className="space-y-3">
-            {meetings.map(meeting => {
-              const status = statusConfig[meeting.status];
-              return (
-                <div key={meeting.id} className="bg-slate-900 border border-slate-800 rounded-2xl p-5 hover:border-slate-700 transition-colors">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 rounded-2xl bg-violet-900/30 border border-violet-800/40 flex flex-col items-center justify-center flex-shrink-0">
-                        <span className="text-xs font-bold text-violet-300 leading-none">
-                          {new Date(meeting.date).getDate()}
-                        </span>
-                        <span className="text-xs text-violet-500 leading-none mt-0.5 capitalize">
-                          {new Date(meeting.date).toLocaleDateString('hr-HR', { month: 'short' })}
-                        </span>
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <p className="text-sm font-bold text-slate-100 capitalize">
-                            {meeting.type} skupština
-                          </p>
-                          <span className={cn('text-xs px-2 py-0.5 rounded-full border font-medium', status.color, status.bg)}>
-                            {status.label}
+          <h2 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Skupštine</h2>
+          {loading ? (
+            <div className="flex items-center justify-center py-16">
+              <Loader2 className="w-6 h-6 text-slate-600 animate-spin" />
+            </div>
+          ) : sjednice.length === 0 ? (
+            <div className="text-center py-16 text-slate-600 text-sm">Nema zabilježenih skupština.</div>
+          ) : (
+            <div className="space-y-3">
+              {sjednice.map(sjednica => {
+                const status = statusConfig[sjednica.status];
+                return (
+                  <div key={sjednica.id} className="bg-slate-900 border border-slate-800 rounded-2xl p-5 hover:border-slate-700 transition-colors">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex items-start gap-4">
+                        <div className="w-12 h-12 rounded-2xl bg-violet-900/30 border border-violet-800/40 flex flex-col items-center justify-center flex-shrink-0">
+                          <span className="text-xs font-bold text-violet-300 leading-none">
+                            {new Date(sjednica.datum).getDate()}
+                          </span>
+                          <span className="text-xs text-violet-500 leading-none mt-0.5 capitalize">
+                            {new Date(sjednica.datum).toLocaleDateString('hr-HR', { month: 'short' })}
                           </span>
                         </div>
-                        <p className="text-xs text-slate-500 mt-1">
-                          {formatDate(meeting.date)} u {meeting.time}h · {meeting.location}
-                        </p>
-                        {meeting.agenda.length > 0 && (
-                          <div className="flex flex-wrap gap-1 mt-2">
-                            {meeting.agenda.slice(0, 3).map((item, i) => (
-                              <span key={i} className="text-xs bg-slate-800 text-slate-500 px-2 py-0.5 rounded-full">
-                                {item.length > 30 ? item.slice(0, 30) + '...' : item}
-                              </span>
-                            ))}
-                            {meeting.agenda.length > 3 && (
-                              <span className="text-xs bg-slate-800 text-slate-600 px-2 py-0.5 rounded-full">
-                                +{meeting.agenda.length - 3} više
-                              </span>
-                            )}
+                        <div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="text-sm font-bold text-slate-100 capitalize">
+                              {sjednica.vrsta} skupština
+                            </p>
+                            <span className={cn('text-xs px-2 py-0.5 rounded-full border font-medium', status.color, status.bg)}>
+                              {status.label}
+                            </span>
                           </div>
+                          <p className="text-xs text-slate-500 mt-1">
+                            {formatDate(sjednica.datum)} u {sjednica.vrijeme}h · {sjednica.lokacija}
+                          </p>
+                          {sjednica.dnevni_red.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-2">
+                              {sjednica.dnevni_red.slice(0, 3).map((item, i) => (
+                                <span key={i} className="text-xs bg-slate-800 text-slate-500 px-2 py-0.5 rounded-full">
+                                  {item.length > 30 ? item.slice(0, 30) + '...' : item}
+                                </span>
+                              ))}
+                              {sjednica.dnevni_red.length > 3 && (
+                                <span className="text-xs bg-slate-800 text-slate-600 px-2 py-0.5 rounded-full">
+                                  +{sjednica.dnevni_red.length - 3} više
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        {sjednica.broj_dokumenata > 0 && (
+                          <span className="flex items-center gap-1 text-xs text-slate-400 bg-slate-800 px-2.5 py-1 rounded-full">
+                            <FileText className="w-3.5 h-3.5" /> {sjednica.broj_dokumenata} dok.
+                          </span>
                         )}
+                        <button className="w-8 h-8 rounded-xl bg-slate-800 flex items-center justify-center hover:bg-slate-700 transition-colors">
+                          <ArrowRight className="w-4 h-4 text-slate-400" />
+                        </button>
                       </div>
                     </div>
-
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      {meeting.documents.length > 0 && (
-                        <span className="flex items-center gap-1 text-xs text-slate-400 bg-slate-800 px-2.5 py-1 rounded-full">
-                          <FileText className="w-3.5 h-3.5" /> {meeting.documents.length} dok.
-                        </span>
-                      )}
-                      <button className="w-8 h-8 rounded-xl bg-slate-800 flex items-center justify-center hover:bg-slate-700 transition-colors">
-                        <ArrowRight className="w-4 h-4 text-slate-400" />
-                      </button>
-                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
       </div>

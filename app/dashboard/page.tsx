@@ -6,9 +6,17 @@ import {
   AlertTriangle, Info, AlertCircle,
   UserPlus, Calendar, Trophy, Sparkles,
   ChevronRight, Users, FileText, TrendingUp,
-  Clock, CheckCircle, Heart, ArrowUpRight,
+  Clock, CheckCircle, Heart, ArrowUpRight, Settings,
 } from 'lucide-react';
-import { alerts, activityLog, members, competitions, club } from '@/lib/mock-data';
+import { useState, useEffect } from 'react';
+import { useRole } from '@/lib/hooks/useRole';
+import { fetchMemberCount } from '@/lib/queries/clanovi';
+import {
+  fetchUpozorenja, fetchMedaljeCount, fetchKlubInfo,
+  fetchDnevnikAktivnosti, fetchCurrentUserName,
+} from '@/lib/queries/dashboard';
+import { fetchDokumenti } from '@/lib/queries/dokumenti';
+import type { DnevnikEntry } from '@/lib/queries/dashboard';
 import { formatDateTime, daysUntil } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 import type { Alert } from '@/lib/types';
@@ -22,6 +30,7 @@ const quickActions = [
     glow: 'hover:shadow-blue-900/30',
     iconBg: 'bg-blue-500/20',
     iconColor: 'text-blue-400',
+    permission: 'canAdd' as const,
   },
   {
     icon: Calendar,
@@ -31,6 +40,7 @@ const quickActions = [
     glow: 'hover:shadow-violet-900/30',
     iconBg: 'bg-violet-500/20',
     iconColor: 'text-violet-400',
+    permission: 'isAdmin' as const,
   },
   {
     icon: Trophy,
@@ -40,6 +50,7 @@ const quickActions = [
     glow: 'hover:shadow-amber-900/30',
     iconBg: 'bg-amber-500/20',
     iconColor: 'text-amber-400',
+    permission: 'all' as const,
   },
   {
     icon: Sparkles,
@@ -49,11 +60,18 @@ const quickActions = [
     glow: 'hover:shadow-emerald-900/30',
     iconBg: 'bg-emerald-500/20',
     iconColor: 'text-emerald-400',
+    permission: 'all' as const,
   },
 ];
 
-const activityIcons: Record<string, React.FC<{ className?: string }>> = {
-  UserPlus, Sparkles, Calendar, Heart, CheckCircle, FileText,
+const VRSTA_ICON: Record<string, React.FC<{ className?: string }>> = {
+  sjednica:   Calendar,
+  natjecanje: Trophy,
+  clan:       UserPlus,
+  klub:       Settings,
+  sustav:     CheckCircle,
+  dokument:   FileText,
+  korisnik:   UserPlus,
 };
 
 function AlertCard({ alert }: { alert: Alert }) {
@@ -88,27 +106,22 @@ function AlertCard({ alert }: { alert: Alert }) {
 
   return (
     <div className={cn('rounded-xl border px-3 py-2.5 flex gap-2.5 fade-in', config.border, config.bg)}>
-      {/* ↑ p-4→px-3 py-2.5 (–5px vertical), rounded-2xl→rounded-xl */}
       <div className={cn('w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5', config.bg)}>
-        {/* ↑ w-9 h-9→w-7 h-7 */}
         <Icon className={cn('w-3.5 h-3.5', config.iconColor)} />
-        {/* ↑ w-5 h-5→w-3.5 h-3.5 */}
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5 flex-wrap">
           <p className="text-xs font-semibold text-slate-100">{alert.title}</p>
-          {/* ↑ text-sm→text-xs */}
           <span className={cn('text-xs px-1.5 py-0 rounded-full border font-medium leading-5', config.badge)}>
             {config.badgeText}
           </span>
-          {alert.count && (
+          {alert.count != null && (
             <span className="text-xs bg-slate-700 text-slate-300 px-1.5 rounded-full font-bold leading-5">
               {alert.count}
             </span>
           )}
         </div>
         <p className="text-xs text-slate-400 mt-0.5 leading-snug">{alert.description}</p>
-        {/* ↑ mt-1→mt-0.5 */}
         {alert.action && (
           <Link
             href={alert.actionUrl || '#'}
@@ -123,52 +136,90 @@ function AlertCard({ alert }: { alert: Alert }) {
 }
 
 export default function DashboardPage() {
-  const activeMembers = members.filter(m => m.status === 'aktivan').length;
-  const mandateDays = daysUntil(club.presidentMandateExpiry);
-  const lastComp = competitions[0];
+  const { isAdmin, canAdd, roleLoaded } = useRole();
+  const [memberCount, setMemberCount]   = useState({ active: 0, total: 0 });
+  const [upozorenja, setUpozorenja]     = useState<Alert[]>([]);
+  const [medaljeCount, setMedaljeCount] = useState(0);
+  const [klubInfo, setKlubInfo]         = useState<{ predsjednik: string | null; datumMandata: string | null } | null>(null);
+  const [dnevnik, setDnevnik]           = useState<DnevnikEntry[]>([]);
+  const [userName, setUserName]         = useState('');
+  const [dokumentiCount, setDokumentiCount] = useState(0);
+  const [loading, setLoading]           = useState(true);
+
+  useEffect(() => {
+    Promise.all([
+      fetchMemberCount(),
+      fetchUpozorenja(),
+      fetchMedaljeCount(),
+      fetchKlubInfo(),
+      fetchDnevnikAktivnosti(),
+      fetchCurrentUserName(),
+      fetchDokumenti(),
+    ]).then(([members, alerts, medalje, klub, dnevnikData, name, dokumenti]) => {
+      setMemberCount(members);
+      setUpozorenja(alerts);
+      setMedaljeCount(medalje);
+      setKlubInfo(klub);
+      setDnevnik(dnevnikData);
+      setUserName(name);
+      setDokumentiCount(dokumenti.length);
+    }).finally(() => setLoading(false));
+  }, []);
+
+  const mandateDays = klubInfo?.datumMandata ? daysUntil(klubInfo.datumMandata) : null;
+  const greeting    = userName ? userName.split(' ')[0] : '...';
+
+  // While role is loading keep all tiles so the layout doesn't jump for admin.
+  // Once settled, filter to only the tiles the current role may see.
+  const visibleActions = !roleLoaded
+    ? quickActions
+    : quickActions.filter(a => {
+        if (a.permission === 'canAdd')  return canAdd;
+        if (a.permission === 'isAdmin') return isAdmin;
+        return true;
+      });
 
   return (
     <AppLayout
       title="Nadzorna ploča"
-      subtitle={`Dobrodošli natrag, Maja · ${new Date().toLocaleDateString('hr-HR', { weekday: 'long', day: 'numeric', month: 'long' })}`}
+      subtitle={`Dobrodošli natrag, ${greeting} · ${new Date().toLocaleDateString('hr-HR', { weekday: 'long', day: 'numeric', month: 'long' })}`}
     >
-      {/* ↓ space-y-8→space-y-4, mx-auto bez dodat. paddinga */}
       <div className="max-w-7xl mx-auto space-y-4">
 
-        {/* Stats row — 2 cols on mobile, 4 on desktop */}
+        {/* Stats row */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-3">
           {[
             {
               icon: Users,
-              value: activeMembers,
+              value: memberCount.active,
               label: 'Aktivnih članova',
-              sub: `od ${members.length} ukupno`,
+              sub: `od ${memberCount.total} ukupno`,
               color: 'text-blue-400',
               bg: 'bg-blue-500/10',
             },
             {
               icon: FileText,
-              value: '2',
+              value: dokumentiCount,
               label: 'Dokumenata',
-              sub: '1 čeka odobrenje',
+              sub: dokumentiCount === 0 ? 'nema u arhivi' : 'u arhivi kluba',
               color: 'text-violet-400',
               bg: 'bg-violet-500/10',
             },
             {
               icon: Trophy,
-              value: '3',
+              value: medaljeCount,
               label: 'Medalje ove sezone',
-              sub: lastComp?.name.split(' ')[0] ?? '',
+              sub: 'ukupno osvajanja',
               color: 'text-amber-400',
               bg: 'bg-amber-500/10',
             },
             {
               icon: Clock,
-              value: `${mandateDays}d`,
+              value: mandateDays != null ? `${mandateDays}d` : '—',
               label: 'Do isteka mandata',
-              sub: club.presidentName,
-              color: mandateDays < 60 ? 'text-red-400' : 'text-green-400',
-              bg: mandateDays < 60 ? 'bg-red-500/10' : 'bg-green-500/10',
+              sub: klubInfo?.predsjednik ?? '—',
+              color: mandateDays != null && mandateDays < 60 ? 'text-red-400' : 'text-green-400',
+              bg: mandateDays != null && mandateDays < 60 ? 'bg-red-500/10' : 'bg-green-500/10',
             },
           ].map((stat, i) => (
             <div
@@ -187,41 +238,46 @@ export default function DashboardPage() {
 
         {/* Main 2-col grid */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-          {/* ↑ gap-6→gap-4 */}
 
-          {/* Left column: Alerts + Quick Actions */}
+          {/* Left: Alerts + Quick Actions */}
           <div className="xl:col-span-2 space-y-3">
-            {/* ↑ space-y-6→space-y-3 */}
 
             {/* Alerts */}
             <section>
               <div className="flex items-center justify-between mb-2">
-                {/* ↑ mb-3→mb-2 */}
                 <h2 className="text-sm font-bold text-slate-100 flex items-center gap-2">
-                  {/* ↑ text-base→text-sm */}
                   <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
                   Zahtijeva pažnju
                 </h2>
                 <span className="text-xs text-slate-500 bg-slate-800 px-2 py-0.5 rounded-full">
-                  {alerts.length} stavki
+                  {upozorenja.length} stavki
                 </span>
               </div>
               <div className="space-y-2">
-                {/* ↑ space-y-3→space-y-2 */}
-                {alerts.map(alert => (
-                  <AlertCard key={alert.id} alert={alert} />
-                ))}
+                {loading ? (
+                  <div className="rounded-xl border border-slate-800 px-3 py-4 text-xs text-slate-600 text-center">
+                    Učitavam upozorenja...
+                  </div>
+                ) : upozorenja.length === 0 ? (
+                  <div className="rounded-xl border border-slate-800 px-3 py-4 text-xs text-slate-600 text-center">
+                    Nema aktivnih upozorenja.
+                  </div>
+                ) : (
+                  upozorenja.map(alert => (
+                    <AlertCard key={alert.id} alert={alert} />
+                  ))
+                )}
               </div>
             </section>
 
-            {/* Quick Actions — horizontal compact layout (icon-left) */}
+            {/* Quick Actions */}
             <section>
               <h2 className="text-sm font-bold text-slate-100 mb-2 flex items-center gap-2">
                 <TrendingUp className="w-3.5 h-3.5 text-slate-500" />
                 Brze akcije
               </h2>
               <div className="grid grid-cols-2 gap-2">
-                {quickActions.map((action, i) => (
+                {visibleActions.map((action, i) => (
                   <Link
                     key={i}
                     href={action.href}
@@ -232,16 +288,13 @@ export default function DashboardPage() {
                       action.glow
                     )}
                   >
-                    {/* Icon — kompaktni kvadrat lijevo */}
                     <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0', action.iconBg)}>
                       <action.icon className={cn('w-4 h-4', action.iconColor)} />
                     </div>
-                    {/* Tekst */}
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-bold text-slate-100 leading-tight truncate">{action.label}</p>
                       <p className="text-xs text-slate-500 truncate">{action.description}</p>
                     </div>
-                    {/* Arrow */}
                     <ArrowUpRight className={cn('w-3.5 h-3.5 flex-shrink-0', action.iconColor, 'opacity-60 group-hover:opacity-100 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all')} />
                   </Link>
                 ))}
@@ -249,55 +302,45 @@ export default function DashboardPage() {
             </section>
           </div>
 
-          {/* Right column: Activity feed */}
+          {/* Right: Activity feed */}
           <div>
             <section className="bg-slate-900 border border-slate-800 rounded-xl p-4 h-full">
-              {/* ↑ rounded-2xl→rounded-xl, p-5→p-4 */}
               <h2 className="text-sm font-bold text-slate-100 mb-3 flex items-center gap-2">
-                {/* ↑ text-base→text-sm, mb-4→mb-3 */}
                 <Clock className="w-3.5 h-3.5 text-slate-500" />
                 Nedavne aktivnosti
               </h2>
               <div className="space-y-0.5">
-                {/* ↑ space-y-1→space-y-0.5 */}
-                {activityLog.map((log, i) => {
-                  const Icon = activityIcons[log.icon] ?? FileText;
-                  return (
-                    <div key={log.id} className="relative">
-                      {i < activityLog.length - 1 && (
-                        <div className="absolute left-3.5 top-8 bottom-0 w-px bg-slate-800" />
-                        // ↑ left-4→left-3.5, top-9→top-8
-                      )}
-                      <div className="flex gap-2.5 px-1.5 py-1.5 rounded-lg hover:bg-slate-800/50 transition-colors">
-                        {/* ↑ gap-3→gap-2.5, p-2→px-1.5 py-1.5, rounded-xl→rounded-lg */}
-                        <div className="w-7 h-7 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center flex-shrink-0 z-10">
-                          {/* ↑ w-8 h-8 rounded-xl → w-7 h-7 rounded-lg */}
-                          <Icon className="w-3.5 h-3.5 text-slate-400" />
-                          {/* ↑ w-4 h-4→w-3.5 h-3.5 */}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs text-slate-300 leading-snug">
-                            <span className="font-semibold text-slate-100">{log.userName}</span>{' '}
-                            {log.action}
-                          </p>
-                          <p className="text-xs text-slate-600 mt-0.5">
-                            {/* ↑ mt-1→mt-0.5 */}
-                            {formatDateTime(log.timestamp)}
-                          </p>
+                {dnevnik.length === 0 ? (
+                  <p className="text-xs text-slate-600 py-4 text-center">Nema zabilježenih aktivnosti.</p>
+                ) : (
+                  dnevnik.map((log, i) => {
+                    const Icon = VRSTA_ICON[log.vrsta_entiteta] ?? FileText;
+                    return (
+                      <div key={log.id} className="relative">
+                        {i < dnevnik.length - 1 && (
+                          <div className="absolute left-3.5 top-8 bottom-0 w-px bg-slate-800" />
+                        )}
+                        <div className="flex gap-2.5 px-1.5 py-1.5 rounded-lg hover:bg-slate-800/50 transition-colors">
+                          <div className="w-7 h-7 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center flex-shrink-0 z-10">
+                            <Icon className="w-3.5 h-3.5 text-slate-400" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs text-slate-300 leading-snug">{log.radnja}</p>
+                            <p className="text-xs text-slate-600 mt-0.5">{formatDateTime(log.created_at)}</p>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })
+                )}
               </div>
               <Link href="#" className="flex items-center gap-1 text-xs text-slate-500 hover:text-slate-300 mt-3 font-medium transition-colors">
-                {/* ↑ mt-4→mt-3 */}
                 Prikaži sve aktivnosti <ChevronRight className="w-3 h-3" />
               </Link>
             </section>
           </div>
-        </div>
 
+        </div>
       </div>
     </AppLayout>
   );

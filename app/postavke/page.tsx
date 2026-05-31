@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import AppLayout from '@/components/layout/AppLayout';
-import { Building2, Save, Bell, Users, Shield, Check, Loader2, Download, FileArchive, AlertCircle } from 'lucide-react';
+import { Building2, Save, Bell, Users, Shield, Check, Loader2, Download, FileArchive, AlertCircle, RefreshCw, Activity } from 'lucide-react';
 import { fetchKlubPodaci, updateKlub } from '@/lib/queries/dashboard';
 import type { KlubPodaci } from '@/lib/queries/dashboard';
 import { formatDate } from '@/lib/utils';
@@ -34,9 +34,12 @@ export default function PostavkePage() {
   const [saving, setSaving]       = useState(false);
   const [saved, setSaved]         = useState(false);
   const [error, setError]         = useState('');
-  const [exporting, setExporting] = useState(false);
-  const [exportDone, setExportDone] = useState(false);
+  const [exporting, setExporting]     = useState(false);
+  const [exportDone, setExportDone]   = useState(false);
   const [exportError, setExportError] = useState('');
+  const [cronRunning, setCronRunning] = useState(false);
+  const [cronResult, setCronResult]   = useState<{ newItems: number; emailsSent: number; emailsFailed: number } | null>(null);
+  const [cronError, setCronError]     = useState('');
 
   const [form, setForm] = useState({
     naziv: '',
@@ -66,6 +69,31 @@ export default function PostavkePage() {
   }, []);
 
   const set = (k: keyof typeof form) => (v: string) => setForm(f => ({ ...f, [k]: v }));
+
+  const handleCronTrigger = async () => {
+    setCronRunning(true);
+    setCronResult(null);
+    setCronError('');
+    try {
+      const secret = process.env.NEXT_PUBLIC_WEBHOOK_SECRET_HINT ?? '';
+      const res = await fetch('/api/cron/obavijesti', {
+        method: 'GET',
+        headers: { 'x-cron-secret': secret },
+      });
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || `HTTP ${res.status}`);
+      }
+      const data = await res.json() as { newItems: number; emailsSent: number; emailsFailed: number };
+      setCronResult(data);
+      setTimeout(() => setCronResult(null), 10000);
+    } catch (e) {
+      setCronError(e instanceof Error ? e.message : 'Greška pri pokretanju.');
+      setTimeout(() => setCronError(''), 8000);
+    } finally {
+      setCronRunning(false);
+    }
+  };
 
   const handleExport = async () => {
     setExporting(true);
@@ -239,9 +267,98 @@ export default function PostavkePage() {
           </button>
         </div>
 
+        {/* Obavijesti — automatski email podsjetnici */}
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-5">
+          <div className="flex items-center gap-3 pb-4 border-b border-slate-800">
+            <div className="w-10 h-10 rounded-xl bg-green-500/15 flex items-center justify-center">
+              <Bell className="w-5 h-5 text-green-400" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-bold text-slate-100">Automatski email podsjetnici</p>
+              <p className="text-xs text-slate-500">Dnevni cron skenira bazu i šalje emailove na kontakt adresu kluba</p>
+            </div>
+            <span className="flex items-center gap-1.5 text-xs font-semibold text-green-400 bg-green-900/20 border border-green-800/40 px-2.5 py-1 rounded-full">
+              <Activity className="w-3 h-3" /> AKTIVNO
+            </span>
+          </div>
+
+          {/* Monitoring rules */}
+          <div className="space-y-3">
+            {[
+              {
+                label: 'Liječnički pregledi',
+                desc: 'Email kad pregled istječe za točno 30 dana',
+                days: '30d',
+                color: 'amber',
+              },
+              {
+                label: 'HKF trenerske licence',
+                desc: 'Email kad licenca istječe za točno 90 dana',
+                days: '90d',
+                color: 'blue',
+              },
+            ].map(({ label, desc, days, color }) => (
+              <div key={label} className="flex items-center gap-3 bg-slate-800/60 rounded-xl p-3.5">
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                  color === 'amber' ? 'bg-amber-900/30' : 'bg-blue-900/30'
+                }`}>
+                  <Bell className={`w-4 h-4 ${color === 'amber' ? 'text-amber-400' : 'text-blue-400'}`} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-slate-200">{label}</p>
+                  <p className="text-xs text-slate-500">{desc}</p>
+                </div>
+                <span className={`text-xs font-bold px-2 py-1 rounded-lg flex-shrink-0 ${
+                  color === 'amber'
+                    ? 'bg-amber-900/30 text-amber-300'
+                    : 'bg-blue-900/30 text-blue-300'
+                }`}>
+                  {days}
+                </span>
+                <span className="text-xs text-green-400 font-medium flex-shrink-0">✓ AKTIVNO</span>
+              </div>
+            ))}
+          </div>
+
+          {/* How it works */}
+          <div className="bg-slate-800/40 rounded-xl p-4 space-y-1 text-xs text-slate-500">
+            <p className="font-semibold text-slate-400 mb-2">Kako radi:</p>
+            <p>1. Dnevni cron poziva <span className="font-mono text-slate-400">/api/cron/obavijesti</span></p>
+            <p>2. Skenira bazu za isteke u zadanom roku</p>
+            <p>3. Ubacuje nove stavke u <span className="font-mono text-slate-400">obavijesti_queue</span> (dedup zaštita)</p>
+            <p>4. Šalje email via Resend na <span className="font-mono text-slate-400">kontakt_email</span> kluba</p>
+          </div>
+
+          {/* Cron result */}
+          {cronResult !== null && (
+            <div className="flex items-start gap-2 bg-green-950/30 border border-green-800/40 rounded-xl px-4 py-3 text-sm">
+              <Check className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" />
+              <p className="text-green-300">
+                Scan završen — {cronResult.newItems} novih stavki,{' '}
+                {cronResult.emailsSent} emailova poslano
+                {cronResult.emailsFailed > 0 && `, ${cronResult.emailsFailed} neuspješnih`}
+              </p>
+            </div>
+          )}
+          {cronError && (
+            <div className="flex items-start gap-2 bg-red-950/40 border border-red-800/40 rounded-xl px-4 py-3 text-xs text-red-400">
+              <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+              <span>{cronError}</span>
+            </div>
+          )}
+
+          <button
+            onClick={handleCronTrigger}
+            disabled={cronRunning}
+            className="w-full flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-40 border border-slate-700 text-slate-200 text-sm font-semibold px-4 py-2.5 rounded-xl transition-colors"
+          >
+            <RefreshCw className={`w-4 h-4 ${cronRunning ? 'animate-spin' : ''}`} />
+            {cronRunning ? 'Skeniranje...' : 'Ručno pokreni scan'}
+          </button>
+        </div>
+
         {/* Section cards */}
         {[
-          { icon: Bell, title: 'Obavijesti', desc: 'Konfiguracija automatskih podsjetnika za istekle liječničke preglede, mandate i slično.' },
           { icon: Users, title: 'Korisnici i dozvole', desc: 'Upravljanje korisničkim računima i razinama pristupa za administratore i trenere.' },
           { icon: Shield, title: 'Sigurnost i GDPR', desc: 'Postavke privatnosti, izvoz podataka i upravljanje pristancima sukladno GDPR-u.' },
         ].map(({ icon: Icon, title, desc }) => (

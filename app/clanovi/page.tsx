@@ -17,7 +17,7 @@ import { runAutoRecategorization } from '@/lib/queries/rekategorizacija';
 import type { RecategorizationChange } from '@/lib/queries/rekategorizacija';
 import { HKS_CAT_LABEL } from '@/lib/utils/hksAge';
 import { downloadHksZahtjev } from '@/lib/utils/hksPdfService';
-import { supabase } from '@/lib/supabase';
+import { createClient as createSupabaseBrowserClient } from '@/lib/supabase-browser';
 import { formatDate, isExpired, isExpiringSoon, daysUntil, getAge, cn } from '@/lib/utils';
 import type { Member, BeltColor, MemberStatus, TipClanstva } from '@/lib/types';
 
@@ -620,7 +620,7 @@ function MemberDetailDrawer({
     setPdfLoading(true);
     setPdfError('');
     try {
-      await downloadHksZahtjev(supabase, member);
+      await downloadHksZahtjev(createSupabaseBrowserClient(), member);
     } catch (e) {
       setPdfError(e instanceof Error ? e.message : 'Greška pri generiranju PDF-a.');
       setTimeout(() => setPdfError(''), 6000);

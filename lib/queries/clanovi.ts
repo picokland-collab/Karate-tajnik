@@ -44,6 +44,11 @@ export interface ClanMedInput {
   gdpr: boolean;
   status: MemberStatus;
   medicalExpiry?: string;
+  // HKS registration fields
+  oib?: string;
+  spol?: 'M' | 'Ž';
+  mjestRodjenja?: string;
+  drzavaRodjenja?: string;
 }
 
 export async function fetchClanovi(): Promise<Member[]> {
@@ -79,6 +84,10 @@ export async function fetchClanovi(): Promise<Member[]> {
     guardian: c.roditelji ?? undefined,
     notes: c.bolest ?? undefined,
     category: (VALID_CATEGORIES.includes(c.kategorija as Member['category']) ? c.kategorija : 'senior') as Member['category'],
+    oib:           c.oib          ?? undefined,
+    spol:          (c.spol === 'M' || c.spol === 'Ž') ? c.spol as 'M' | 'Ž' : undefined,
+    mjestRodjenja: c.mjesto_rodjenja ?? undefined,
+    drzavaRodjenja: c.drzava_rodjenja ?? undefined,
   }));
 }
 
@@ -113,9 +122,13 @@ export async function insertClan(input: ClanMedInput): Promise<void> {
     pojas:        BELT_TO_POJAS[input.pojas],
     kategorija:   input.kategorija,
     dat_uclan:    input.dat_uclan || null,
-    roditelji:    input.roditelji?.trim() || null,
-    gdpr:         input.gdpr ? 'da' : 'ne',
-    status:       input.status,
+    roditelji:       input.roditelji?.trim() || null,
+    gdpr:            input.gdpr ? 'da' : 'ne',
+    status:          input.status,
+    oib:             input.oib?.trim()            || null,
+    spol:            input.spol                   || null,
+    mjesto_rodjenja: input.mjestRodjenja?.trim()  || null,
+    drzava_rodjenja: input.drzavaRodjenja?.trim() || null,
   });
   if (error) throw new Error(error.message);
 
@@ -145,10 +158,14 @@ export async function updateClan(id: string, input: ClanMedInput): Promise<void>
     pojas:        BELT_TO_POJAS[input.pojas],
     kategorija:   input.kategorija,
     dat_uclan:    input.dat_uclan || null,
-    roditelji:    input.roditelji?.trim() || null,
-    gdpr:         input.gdpr ? 'da' : 'ne',
-    status:       input.status,
-    updated_at:   new Date().toISOString(),
+    roditelji:       input.roditelji?.trim()       || null,
+    gdpr:            input.gdpr ? 'da' : 'ne',
+    status:          input.status,
+    oib:             input.oib?.trim()             || null,
+    spol:            input.spol                    || null,
+    mjesto_rodjenja: input.mjestRodjenja?.trim()   || null,
+    drzava_rodjenja: input.drzavaRodjenja?.trim()  || null,
+    updated_at:      new Date().toISOString(),
   }).eq('id', numId);
   if (error) throw new Error(error.message);
 
@@ -198,6 +215,29 @@ export async function fetchVotingMemberCount(): Promise<number> {
     if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
     return age >= 18;
   }).length;
+}
+
+export async function deleteClan(id: string): Promise<void> {
+  const supabase = createClient();
+  const numId = Number(id);
+
+  // Fetch uuid_id needed for rezultati_natjecanja FK before deleting
+  const { data: clan } = await supabase
+    .from('clanovi')
+    .select('uuid_id')
+    .eq('id', numId)
+    .single();
+
+  // Remove child records first — lijecnicki and competition results may not
+  // have ON DELETE CASCADE in the original schema, so we clean up manually.
+  await supabase.from('lijecnicki').delete().eq('clan_id', numId);
+
+  if (clan?.uuid_id) {
+    await supabase.from('rezultati_natjecanja').delete().eq('clan_uuid', clan.uuid_id);
+  }
+
+  const { error } = await supabase.from('clanovi').delete().eq('id', numId);
+  if (error) throw new Error(error.message);
 }
 
 export async function fetchMemberCount(): Promise<{ active: number; total: number }> {

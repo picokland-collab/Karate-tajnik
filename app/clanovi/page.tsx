@@ -4,18 +4,20 @@ import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import AppLayout from '@/components/layout/AppLayout';
 import {
-  UserPlus, Search, X, Check,
+  UserPlus, Search, X, Check, Copy,
   AlertTriangle, Shield, Phone, Mail, Calendar,
-  Edit, ArrowLeft, ArrowRight, User, Star, Users,
-  CheckCircle, XCircle, Save, MapPin, Vote, RefreshCw,
+  Edit, Trash2, Loader2, ArrowLeft, ArrowRight, User, Star, Users,
+  CheckCircle, XCircle, Save, MapPin, Vote, RefreshCw, FileDown,
 } from 'lucide-react';
 import { beltLabels } from '@/lib/mock-data';
-import { fetchClanovi, insertClan, updateClan } from '@/lib/queries/clanovi';
+import { fetchClanovi, insertClan, updateClan, deleteClan } from '@/lib/queries/clanovi';
 import type { ClanMedInput } from '@/lib/queries/clanovi';
 import { useRole } from '@/lib/hooks/useRole';
 import { runAutoRecategorization } from '@/lib/queries/rekategorizacija';
 import type { RecategorizationChange } from '@/lib/queries/rekategorizacija';
 import { HKS_CAT_LABEL } from '@/lib/utils/hksAge';
+import { downloadHksZahtjev } from '@/lib/utils/hksPdfService';
+import { supabase } from '@/lib/supabase';
 import { formatDate, isExpired, isExpiringSoon, daysUntil, getAge, cn } from '@/lib/utils';
 import type { Member, BeltColor, MemberStatus, TipClanstva } from '@/lib/types';
 
@@ -72,6 +74,8 @@ function NewMemberModal({ onClose, onSaved }: { onClose: () => void; onSaved: ()
     category: 'kadet' as Member['category'],
     memberSince: new Date().toISOString().slice(0, 10),
     medicalExpiry: '', guardian: '', consentSigned: false,
+    // HKS polja
+    oib: '', spol: '' as 'M' | 'Ž' | '', mjestRodjenja: '', drzavaRodjenja: 'Hrvatska',
   });
 
   const stepIdx = STEPS.findIndex(s => s.key === step);
@@ -101,7 +105,11 @@ function NewMemberModal({ onClose, onSaved }: { onClose: () => void; onSaved: ()
         roditelji:     form.guardian || undefined,
         gdpr:          form.consentSigned,
         status:        'aktivan',
-        medicalExpiry: form.medicalExpiry || undefined,
+        medicalExpiry:  form.medicalExpiry || undefined,
+        oib:            form.oib || undefined,
+        spol:           (form.spol === 'M' || form.spol === 'Ž') ? form.spol : undefined,
+        mjestRodjenja:  form.mjestRodjenja || undefined,
+        drzavaRodjenja: form.drzavaRodjenja || undefined,
       };
       await insertClan(input);
       onSaved();
@@ -180,6 +188,34 @@ function NewMemberModal({ onClose, onSaved }: { onClose: () => void; onSaved: ()
               </div>
               <FormField label="Telefon" value={form.phone} onChange={v => set('phone', v)} placeholder="+385 91 ..." />
               <FormField label="Adresa stanovanja" value={form.adresa} onChange={v => set('adresa', v)} placeholder="Ulica i broj, grad" />
+
+              {/* HKS polja */}
+              <div className="border-t border-slate-800/60 pt-4 space-y-4">
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-violet-500 inline-block" />
+                  Podaci za HKS registraciju
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <FormField label="OIB" value={form.oib} onChange={v => set('oib', v)} placeholder="11-znamenkasti broj" />
+                  <div>
+                    <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1.5">Spol</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {(['M', 'Ž'] as const).map(s => (
+                        <button key={s} type="button" onClick={() => set('spol', s)}
+                          className={cn('py-2.5 rounded-xl border text-sm font-semibold transition-all',
+                            form.spol === s ? 'bg-red-600/20 text-red-300 border-red-600/40' : 'bg-slate-800 text-slate-400 border-slate-700 hover:bg-slate-700')}>
+                          {s === 'M' ? 'Muško' : 'Žensko'}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <FormField label="Mjesto rođenja" value={form.mjestRodjenja} onChange={v => set('mjestRodjenja', v)} placeholder="npr. Đurđevac" />
+                  <FormField label="Država rođenja" value={form.drzavaRodjenja} onChange={v => set('drzavaRodjenja', v)} placeholder="npr. Hrvatska" />
+                </div>
+              </div>
+
               <div>
                 <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-2 md:mb-3">Tip članstva</label>
                 <div className="grid grid-cols-3 gap-2">
@@ -323,6 +359,11 @@ function EditMemberModal({
     guardian:      member.guardian ?? '',
     consentSigned: member.consentSigned,
     status:        member.status,
+    // HKS polja
+    oib:           member.oib            ?? '',
+    spol:          member.spol           ?? '' as 'M' | 'Ž' | '',
+    mjestRodjenja: member.mjestRodjenja  ?? '',
+    drzavaRodjenja: member.drzavaRodjenja ?? '',
   });
 
   const set = (k: string, v: string | boolean) => setForm(f => ({ ...f, [k]: v }));
@@ -336,37 +377,45 @@ function EditMemberModal({
     setError('');
     try {
       await updateClan(member.id, {
-        ime:           form.firstName,
-        prezime:       form.lastName,
-        dat_rod:       form.birthDate || undefined,
-        email:         form.email || undefined,
-        mobitel:       form.phone || undefined,
-        adresa:        form.adresa || undefined,
-        tip_clanstva:  form.tipClanstva,
-        pojas:         form.belt,
-        kategorija:    form.category,
-        dat_uclan:     form.memberSince || undefined,
-        roditelji:     form.guardian || undefined,
-        gdpr:          form.consentSigned,
-        status:        form.status,
-        medicalExpiry: form.medicalExpiry || undefined,
+        ime:            form.firstName,
+        prezime:        form.lastName,
+        dat_rod:        form.birthDate || undefined,
+        email:          form.email || undefined,
+        mobitel:        form.phone || undefined,
+        adresa:         form.adresa || undefined,
+        tip_clanstva:   form.tipClanstva,
+        pojas:          form.belt,
+        kategorija:     form.category,
+        dat_uclan:      form.memberSince || undefined,
+        roditelji:       form.guardian || undefined,
+        gdpr:           form.consentSigned,
+        status:         form.status,
+        medicalExpiry:  form.medicalExpiry || undefined,
+        oib:            form.oib || undefined,
+        spol:           (form.spol === 'M' || form.spol === 'Ž') ? form.spol : undefined,
+        mjestRodjenja:  form.mjestRodjenja || undefined,
+        drzavaRodjenja: form.drzavaRodjenja || undefined,
       });
       onSaved({
         ...member,
-        firstName: form.firstName,
-        lastName:  form.lastName,
-        email:     form.email,
-        phone:     form.phone,
-        birthDate: form.birthDate,
-        adresa:    form.adresa || undefined,
-        tipClanstva: form.tipClanstva,
-        belt:      form.belt,
-        category:  form.category,
-        memberSince: form.memberSince,
-        medicalExpiry: form.medicalExpiry,
-        guardian:  form.guardian || undefined,
-        consentSigned: form.consentSigned,
-        status:    form.status,
+        firstName:      form.firstName,
+        lastName:       form.lastName,
+        email:          form.email,
+        phone:          form.phone,
+        birthDate:      form.birthDate,
+        adresa:         form.adresa || undefined,
+        tipClanstva:    form.tipClanstva,
+        belt:           form.belt,
+        category:       form.category,
+        memberSince:    form.memberSince,
+        medicalExpiry:  form.medicalExpiry,
+        guardian:       form.guardian || undefined,
+        consentSigned:  form.consentSigned,
+        status:         form.status,
+        oib:            form.oib || undefined,
+        spol:           (form.spol === 'M' || form.spol === 'Ž') ? form.spol : undefined,
+        mjestRodjenja:  form.mjestRodjenja || undefined,
+        drzavaRodjenja: form.drzavaRodjenja || undefined,
       });
       onClose();
     } catch (e) {
@@ -421,6 +470,33 @@ function EditMemberModal({
 
             {/* Adresa stanovanja */}
             <FormField label="Adresa stanovanja" value={form.adresa} onChange={v => set('adresa', v)} placeholder="Ulica i broj, grad" />
+
+            {/* HKS polja */}
+            <div className="border-t border-slate-800/60 pt-4 space-y-3">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-violet-500 inline-block" />
+                Podaci za HKS registraciju
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <FormField label="OIB" value={form.oib} onChange={v => set('oib', v)} placeholder="11-znamenkasti broj" />
+                <div>
+                  <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1.5">Spol</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {(['M', 'Ž'] as const).map(s => (
+                      <button key={s} type="button" onClick={() => set('spol', s)}
+                        className={cn('py-2.5 rounded-xl border text-sm font-semibold transition-all',
+                          form.spol === s ? 'bg-red-600/20 text-red-300 border-red-600/40' : 'bg-slate-800 text-slate-400 border-slate-700 hover:bg-slate-700')}>
+                        {s === 'M' ? 'Muško' : 'Žensko'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <FormField label="Mjesto rođenja" value={form.mjestRodjenja} onChange={v => set('mjestRodjenja', v)} placeholder="npr. Đurđevac" />
+                <FormField label="Država rođenja" value={form.drzavaRodjenja} onChange={v => set('drzavaRodjenja', v)} placeholder="npr. Hrvatska" />
+              </div>
+            </div>
 
             {/* Tip članstva */}
             <div>
@@ -522,15 +598,58 @@ function EditMemberModal({
 
 /* ── MEMBER DETAIL DRAWER ─────────────────────────────────── */
 function MemberDetailDrawer({
-  member, onClose, onEdit, canEdit = false,
+  member, onClose, onEdit, onDelete, canEdit = false,
 }: {
   member: Member;
   onClose: () => void;
   onEdit: () => void;
+  onDelete: () => void;
   canEdit?: boolean;
 }) {
   const belt = beltLabels[member.belt];
   const hasVotingRights = getAge(member.birthDate) >= 18 && member.tipClanstva === 'redovni';
+
+  // ── HKS copy ─────────────────────────────────────────────────
+  const [hksCopied, setHksCopied] = useState(false);
+
+  // ── HKS zahtjev PDF ──────────────────────────────────────────
+  const [pdfLoading, setPdfLoading] = useState(false);
+  const [pdfError, setPdfError]     = useState('');
+
+  const handleGenerirajZahtjev = async () => {
+    setPdfLoading(true);
+    setPdfError('');
+    try {
+      await downloadHksZahtjev(supabase, member);
+    } catch (e) {
+      setPdfError(e instanceof Error ? e.message : 'Greška pri generiranju PDF-a.');
+      setTimeout(() => setPdfError(''), 6000);
+    } finally {
+      setPdfLoading(false);
+    }
+  };
+
+  const handleCopyHKS = async () => {
+    // ISO "YYYY-MM-DD" → "DD.MM.YYYY" (HKS format)
+    const fmtDate = (iso: string) => {
+      const p = iso.split('-');
+      return p.length === 3 ? `${p[2]}.${p[1]}.${p[0]}` : iso;
+    };
+    const payload = {
+      ime:     member.firstName,
+      prezime: member.lastName,
+      oib:     member.oib     ?? '',
+      spol:    member.spol    ?? '',
+      rodjen:  fmtDate(member.birthDate),
+      mjesto:  member.mjestRodjenja  ?? '',
+      drzava:  member.drzavaRodjenja ?? 'Hrvatska',
+    };
+    // UTF-8 safe Base64
+    const b64 = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+    await navigator.clipboard.writeText(b64);
+    setHksCopied(true);
+    setTimeout(() => setHksCopied(false), 3000);
+  };
   return (
     <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-md z-40 flex items-end md:items-center md:justify-center md:p-6">
       <div className="bg-slate-900 border-t md:border border-slate-700 rounded-t-3xl md:rounded-3xl w-full md:max-w-2xl shadow-2xl max-h-[92dvh] md:max-h-[85vh] flex flex-col">
@@ -638,22 +757,67 @@ function MemberDetailDrawer({
           </div>
         </div>
 
-        {/* Footer — edit button for admin; close button for trener / preglednik */}
+        {/* Footer */}
         <div
-          className="px-6 pt-4 pb-6 md:px-8 border-t border-slate-800 bg-slate-900 flex-shrink-0"
+          className="px-6 pt-3 pb-6 md:px-8 border-t border-slate-800 bg-slate-900 flex-shrink-0 space-y-2"
           style={{ paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom, 0px))' }}
         >
+          {/* HKS copy — visible to all roles */}
+          <button
+            onClick={handleCopyHKS}
+            className={cn(
+              'w-full flex items-center justify-center gap-2 text-sm font-semibold py-2.5 rounded-xl border transition-all',
+              hksCopied
+                ? 'bg-green-900/30 border-green-700/40 text-green-300'
+                : 'bg-violet-900/20 hover:bg-violet-900/35 border-violet-700/40 text-violet-300'
+            )}
+          >
+            {hksCopied
+              ? <><Check className="w-4 h-4" /> Kopirano! Otvori HKS i aktiviraj bookmarklet.</>
+              : <><Copy className="w-4 h-4" /> Kopiraj za HKS</>
+            }
+          </button>
+
+          {/* HKS zahtjev PDF */}
+          <button
+            onClick={handleGenerirajZahtjev}
+            disabled={pdfLoading}
+            className={cn(
+              'w-full flex items-center justify-center gap-2 text-sm font-semibold py-2.5 rounded-xl border transition-all',
+              pdfError
+                ? 'bg-red-900/20 border-red-700/40 text-red-300'
+                : 'bg-slate-800 hover:bg-slate-700 border-slate-700 text-slate-300 disabled:opacity-50 disabled:cursor-not-allowed'
+            )}
+          >
+            {pdfLoading
+              ? <><Loader2 className="w-4 h-4 animate-spin" /> Generiranje...</>
+              : pdfError
+                ? <><AlertTriangle className="w-4 h-4" /> {pdfError}</>
+                : <><FileDown className="w-4 h-4" /> Generiraj HKS zahtjev</>
+            }
+          </button>
+
+          {/* Admin: edit + delete  |  Others: close */}
           {canEdit ? (
-            <button
-              onClick={onEdit}
-              className="w-full flex items-center justify-center gap-2 bg-red-600 hover:bg-red-500 text-white text-sm font-semibold py-3 md:py-3.5 rounded-xl transition-colors"
-            >
-              <Edit className="w-4 h-4" /> Uredi podatke
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={onDelete}
+                title="Obriši člana"
+                className="flex items-center justify-center gap-1.5 text-xs text-red-400 bg-red-900/20 border border-red-800/40 hover:bg-red-900/30 px-4 py-3 rounded-xl transition-colors"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+              <button
+                onClick={onEdit}
+                className="flex-1 flex items-center justify-center gap-2 bg-red-600 hover:bg-red-500 text-white text-sm font-semibold py-3 rounded-xl transition-colors"
+              >
+                <Edit className="w-4 h-4" /> Uredi podatke
+              </button>
+            </div>
           ) : (
             <button
               onClick={onClose}
-              className="w-full flex items-center justify-center bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-400 text-sm font-semibold py-3 md:py-3.5 rounded-xl transition-colors"
+              className="w-full flex items-center justify-center bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-400 text-sm font-semibold py-3 rounded-xl transition-colors"
             >
               Zatvori
             </button>
@@ -686,6 +850,8 @@ function ClanoviContent() {
   const [syncing, setSyncing]               = useState(false);
   const [syncResult, setSyncResult]         = useState<RecategorizationChange[] | null>(null);
   const [syncError, setSyncError]           = useState('');
+  const [deleteConfirm, setDeleteConfirm]   = useState<Member | null>(null);
+  const [deleting, setDeleting]             = useState(false);
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -717,6 +883,20 @@ function ClanoviContent() {
     setAllMembers(prev => prev.map(m => m.id === updated.id ? updated : m));
     setSelectedMember(updated);
     setEditingMember(null);
+  };
+
+  const handleDelete = async () => {
+    if (!deleteConfirm) return;
+    setDeleting(true);
+    try {
+      await deleteClan(deleteConfirm.id);
+      setAllMembers(prev => prev.filter(m => m.id !== deleteConfirm.id));
+      setDeleteConfirm(null);
+    } catch (e) {
+      console.error('deleteClan:', e);
+    } finally {
+      setDeleting(false);
+    }
   };
 
   const handleSync = async () => {
@@ -764,6 +944,45 @@ function ClanoviContent() {
           onClose={() => setEditingMember(null)}
           onSaved={handleEditSaved}
         />
+      )}
+
+      {deleteConfirm && (
+        <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-md z-50 flex items-center justify-center p-6">
+          <div className="bg-slate-900 border border-slate-700 rounded-2xl p-6 max-w-sm w-full shadow-2xl space-y-4">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-xl bg-red-500/15 flex items-center justify-center flex-shrink-0">
+                <Trash2 className="w-5 h-5 text-red-400" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-slate-100">Obriši člana?</p>
+                <p className="text-sm text-slate-300 mt-0.5">
+                  {deleteConfirm.firstName} {deleteConfirm.lastName}
+                </p>
+                <p className="text-xs text-slate-500 mt-1.5">
+                  Ova radnja je trajna i ne može se poništiti. Obrisat će se i svi liječnički pregledi i natjecateljski rezultati tog člana.
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-3 pt-1">
+              <button
+                onClick={() => setDeleteConfirm(null)}
+                disabled={deleting}
+                className="flex-1 text-sm text-slate-400 bg-slate-800 hover:bg-slate-700 disabled:opacity-40 px-4 py-2.5 rounded-xl transition-colors"
+              >
+                Odustani
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                className="flex-1 flex items-center justify-center gap-2 text-sm text-white bg-red-600 hover:bg-red-500 disabled:bg-slate-700 disabled:text-slate-500 font-semibold px-4 py-2.5 rounded-xl transition-colors"
+              >
+                {deleting
+                  ? <><Loader2 className="w-4 h-4 animate-spin" /> Briše se...</>
+                  : <><Trash2 className="w-4 h-4" /> Obriši</>}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       <div className="max-w-7xl mx-auto space-y-5">
@@ -914,6 +1133,10 @@ function ClanoviContent() {
           member={selectedMember}
           onClose={() => setSelectedMember(null)}
           onEdit={() => setEditingMember(selectedMember)}
+          onDelete={() => {
+            setDeleteConfirm(selectedMember);
+            setSelectedMember(null);
+          }}
           canEdit={canEdit}
         />
       )}

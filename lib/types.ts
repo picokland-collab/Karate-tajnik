@@ -53,6 +53,11 @@ export interface Member {
   notes?: string;
   avatar?: string;
   category: 'kadet' | 'junior' | 'senior' | 'veteran' | 'mali_karatist';
+  // HKS registration fields
+  oib?: string;
+  spol?: 'M' | 'Ž';
+  mjestRodjenja?: string;
+  drzavaRodjenja?: string;
 }
 
 export interface Meeting {

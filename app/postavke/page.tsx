@@ -3,10 +3,10 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import AppLayout from '@/components/layout/AppLayout';
-import { Building2, Save, Bell, Users, Shield, Check, Loader2, Download, FileArchive, AlertCircle, RefreshCw, Activity, ChevronRight } from 'lucide-react';
+import { Building2, Save, Bell, Users, Shield, Check, Loader2, Download, FileArchive, AlertCircle, RefreshCw, Activity, ChevronRight, Globe, Copy } from 'lucide-react';
 import { fetchKlubPodaci, updateKlub } from '@/lib/queries/dashboard';
 import type { KlubPodaci } from '@/lib/queries/dashboard';
-import { formatDate } from '@/lib/utils';
+import { formatDate, cn } from '@/lib/utils';
 
 function Field({
   label, value, onChange, type = 'text', placeholder, hint,
@@ -25,6 +25,99 @@ function Field({
         className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-slate-100 outline-none focus:border-red-500 transition-colors placeholder:text-slate-600"
       />
       {hint && <p className="text-xs text-slate-600 mt-1">{hint}</p>}
+    </div>
+  );
+}
+
+// ── HKS BOOKMARKLET ───────────────────────────────────────────
+
+// Bookmarklet koji se injektira u HKS portal i popunjava formu.
+// Čita Base64 koji je generirao gumb "Kopiraj za HKS" u profilu člana.
+const BOOKMARKLET = `javascript:(function(){var b=prompt('Zalijepite kod člana iz Digitalnog tajnika:');if(!b)return;try{var d=JSON.parse(decodeURIComponent(escape(atob(b.trim()))));function f(n,v){var e=document.querySelector('[name="'+n+'"]');if(!e)return;e.value=v||'';['input','change'].forEach(function(t){e.dispatchEvent(new Event(t,{bubbles:true}));});}function s(n,v){var e=document.querySelector('[name="'+n+'"]');if(!e||e.tagName!=='SELECT')return;for(var i=0;i<e.options.length;i++){if(e.options[i].value===v){e.selectedIndex=i;e.dispatchEvent(new Event('change',{bubbles:true}));return;}}}f('ime',d.ime);f('prezime',d.prezime);f('oib',d.oib);f('rodjen',d.rodjen);f('mjesto',d.mjesto);f('drzava',d.drzava);s('spol',d.spol==='Ž'||d.spol==='Z'?'F':d.spol||'');alert('✓ Podaci popunjeni! Provjerite unos, dodajte fotografiju i uploadajte dokumente.');}catch(e){alert('Greška: Neispravan kod. Kopirajte ponovo iz aplikacije.');}})();`;
+
+function HksBookmarkletCard() {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(BOOKMARKLET);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2500);
+  };
+
+  return (
+    <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-5">
+      {/* Header */}
+      <div className="flex items-center gap-3 pb-4 border-b border-slate-800">
+        <div className="w-10 h-10 rounded-xl bg-violet-500/15 flex items-center justify-center flex-shrink-0">
+          <Globe className="w-5 h-5 text-violet-400" />
+        </div>
+        <div>
+          <p className="text-sm font-bold text-slate-100">HKS Sinkronizacija</p>
+          <p className="text-xs text-slate-500">Automatski popuni formu na karate.hr jednim klikom</p>
+        </div>
+      </div>
+
+      {/* How it works */}
+      <div className="space-y-2 text-xs text-slate-400">
+        <p className="font-semibold text-slate-300">Kako radi:</p>
+        <ol className="space-y-1.5 list-none">
+          {[
+            'Na stranici člana klikni "Kopiraj za HKS" — podaci se kopiraju u međuspremnik.',
+            'Otvori karate.hr i navigiraj na formu za dodavanje člana.',
+            'Klikni bookmarklet u Bookmarks Baru — forma se automatski popunjava.',
+            'Dodaj fotografiju, uploadaj domovnicu i pošalji zahtjev.',
+          ].map((step, i) => (
+            <li key={i} className="flex gap-2">
+              <span className="w-4 h-4 rounded-full bg-violet-900/50 border border-violet-700/40 text-violet-400 font-bold text-xs flex items-center justify-center flex-shrink-0 mt-0.5">
+                {i + 1}
+              </span>
+              <span>{step}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
+
+      {/* Draggable bookmarklet link */}
+      <div className="bg-slate-800/60 rounded-xl p-4 space-y-3">
+        <p className="text-xs font-semibold text-slate-300">
+          Bookmarklet — povucite u Bookmarks Bar
+        </p>
+        <div className="flex items-center gap-3">
+          {/* eslint-disable-next-line */}
+          <a
+            href={BOOKMARKLET}
+            onClick={e => e.preventDefault()}
+            draggable
+            className="flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition-colors cursor-grab active:cursor-grabbing select-none shadow-lg shadow-violet-900/30"
+            title="Povucite ovu vezu u Bookmarks Bar"
+          >
+            <Globe className="w-3.5 h-3.5" /> HKS Unos
+          </a>
+          <p className="text-xs text-slate-500">← Povucite ovaj gumb u Bookmarks Bar</p>
+        </div>
+      </div>
+
+      {/* Manual fallback */}
+      <div className="space-y-2">
+        <p className="text-xs text-slate-500">
+          Ne možete povući? Kopirajte kod ručno →{' '}
+          <span className="text-slate-400">Bookmarks → Upravljanje oznakama → Nova oznaka → zalijepite u polje URL</span>
+        </p>
+        <button
+          onClick={handleCopy}
+          className={cn(
+            'flex items-center gap-2 text-xs font-semibold px-3 py-2 rounded-xl border transition-all',
+            copied
+              ? 'bg-green-900/30 border-green-700/40 text-green-300'
+              : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-slate-200 hover:border-slate-600'
+          )}
+        >
+          {copied
+            ? <><Check className="w-3.5 h-3.5" /> Kopirano!</>
+            : <><Copy className="w-3.5 h-3.5" /> Kopiraj kod bookmarkleta</>
+          }
+        </button>
+      </div>
     </div>
   );
 }
@@ -372,6 +465,9 @@ export default function PostavkePage() {
           </div>
           <ChevronRight className="w-4 h-4 text-slate-600 group-hover:text-slate-400 transition-colors flex-shrink-0" />
         </Link>
+
+        {/* HKS Bookmarklet */}
+        <HksBookmarkletCard />
 
         {/* Sigurnost i GDPR — placeholder */}
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex items-center gap-4 opacity-60">

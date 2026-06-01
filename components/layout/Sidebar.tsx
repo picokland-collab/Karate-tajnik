@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { createClient } from '@/lib/supabase-browser';
+import { useProfile } from '@/lib/context/ProfileContext';
 
 const ULOGA_LABEL: Record<string, string> = {
   admin:       'Administrator',
@@ -50,27 +51,9 @@ const bottomItems = [
 
 export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
-  const [profile, setProfile] = useState<{ puno_ime: string; uloga: string; klubovi: { naziv: string } | null } | null>(null);
+  const { profile } = useProfile();
   const pathname = usePathname();
   const router = useRouter();
-
-  useEffect(() => {
-    const supabase = createClient();
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) return;
-      supabase
-        .from('profili')
-        .select('puno_ime, uloga, klubovi(naziv)')
-        .eq('id', user.id)
-        .single()
-        .then(({ data }) => {
-          if (!data) return;
-          const raw = data as { puno_ime: string; uloga: string; klubovi: { naziv: string }[] | { naziv: string } | null };
-          const klubovi = Array.isArray(raw.klubovi) ? (raw.klubovi[0] ?? null) : raw.klubovi;
-          setProfile({ puno_ime: raw.puno_ime, uloga: raw.uloga, klubovi });
-        });
-    });
-  }, []);
 
   const handleLogout = async () => {
     const supabase = createClient();
@@ -107,7 +90,7 @@ export default function Sidebar() {
         <div className="px-4 py-3 border-b border-slate-800 fade-in">
           <p className="text-xs text-slate-500 uppercase tracking-widest font-medium">Klub</p>
           <p className="text-sm font-semibold text-slate-200 mt-0.5">
-            {profile?.klubovi?.naziv ?? '...'}
+            {profile?.klubNaziv ?? '...'}
           </p>
         </div>
       )}
@@ -172,13 +155,13 @@ export default function Sidebar() {
         >
           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-slate-600 to-slate-700 flex items-center justify-center flex-shrink-0 text-xs font-bold text-slate-200">
             {profile
-              ? profile.puno_ime.split(' ').filter(Boolean).map(n => n[0]).join('').slice(0, 2).toUpperCase()
+              ? profile.punoIme.split(' ').filter(Boolean).map(n => n[0]).join('').slice(0, 2).toUpperCase()
               : '·'}
           </div>
           {!collapsed && (
             <div className="flex-1 min-w-0 fade-in">
               <p className="text-xs font-semibold text-slate-200 truncate">
-                {profile?.puno_ime ?? '...'}
+                {profile?.punoIme ?? '...'}
               </p>
               <p className="text-xs text-slate-500 truncate">
                 {profile ? (ULOGA_LABEL[profile.uloga] ?? profile.uloga) : ''}

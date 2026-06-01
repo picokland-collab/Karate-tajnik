@@ -1,6 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
@@ -9,6 +8,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { createClient } from '@/lib/supabase-browser';
+import { useProfile } from '@/lib/context/ProfileContext';
 
 const ULOGA_LABEL: Record<string, string> = {
   admin:       'Administrator',
@@ -38,25 +38,7 @@ const navItems = [
 export default function MobileDrawer({ open, onClose }: MobileDrawerProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const [profile, setProfile] = useState<{ puno_ime: string; uloga: string; klubovi: { naziv: string } | null } | null>(null);
-
-  useEffect(() => {
-    const supabase = createClient();
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) return;
-      supabase
-        .from('profili')
-        .select('puno_ime, uloga, klubovi(naziv)')
-        .eq('id', user.id)
-        .single()
-        .then(({ data }) => {
-          if (!data) return;
-          const raw = data as { puno_ime: string; uloga: string; klubovi: { naziv: string }[] | { naziv: string } | null };
-          const klubovi = Array.isArray(raw.klubovi) ? (raw.klubovi[0] ?? null) : raw.klubovi;
-          setProfile({ puno_ime: raw.puno_ime, uloga: raw.uloga, klubovi });
-        });
-    });
-  }, []);
+  const { profile } = useProfile();
 
   const handleLogout = async () => {
     const supabase = createClient();
@@ -67,7 +49,7 @@ export default function MobileDrawer({ open, onClose }: MobileDrawerProps) {
   };
 
   const initials = profile
-    ? profile.puno_ime.split(' ').filter(Boolean).map(n => n[0]).join('').slice(0, 2).toUpperCase()
+    ? profile.punoIme.split(' ').filter(Boolean).map(n => n[0]).join('').slice(0, 2).toUpperCase()
     : '·';
 
   return (
@@ -103,7 +85,7 @@ export default function MobileDrawer({ open, onClose }: MobileDrawerProps) {
           </div>
           <div className="flex-1">
             <p className="text-sm font-bold text-slate-50 leading-tight">Digitalni tajnik</p>
-            <p className="text-xs text-red-400 font-semibold">{profile?.klubovi?.naziv ?? '...'}</p>
+            <p className="text-xs text-red-400 font-semibold">{profile?.klubNaziv ?? '...'}</p>
           </div>
           <button
             onClick={onClose}
@@ -147,7 +129,7 @@ export default function MobileDrawer({ open, onClose }: MobileDrawerProps) {
               {initials}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-slate-200 truncate">{profile?.puno_ime ?? '...'}</p>
+              <p className="text-sm font-semibold text-slate-200 truncate">{profile?.punoIme ?? '...'}</p>
               <p className="text-xs text-slate-500">{profile ? (ULOGA_LABEL[profile.uloga] ?? profile.uloga) : ''}</p>
             </div>
             <LogOut className="w-4 h-4 text-slate-600 group-hover:text-slate-400 transition-colors" />

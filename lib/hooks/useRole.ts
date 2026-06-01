@@ -1,10 +1,9 @@
-import { useState, useEffect } from 'react';
-import { createClient } from '@/lib/supabase-browser';
+import { useProfile } from '@/lib/context/ProfileContext';
 
 export interface UseRoleResult {
   /** Raw DB value from profili.uloga, null while loading or if unauthenticated. */
   uloga: string | null;
-  /** True once the async fetch has settled (success or failure). */
+  /** True once the profile fetch has settled (success or failure). */
   roleLoaded: boolean;
   /** Strict allowlist: only the 'admin' uloga value. */
   isAdmin: boolean;
@@ -13,40 +12,17 @@ export interface UseRoleResult {
 }
 
 /**
- * Fetches the current user's uloga from profili once on mount.
- * Uses a mounted-flag cleanup so state is never set on an unmounted component.
+ * Derives role flags from the shared ProfileContext.
+ * Zero DB calls — reads data that was already fetched once by ProfileProvider.
  */
 export function useRole(): UseRoleResult {
-  const [uloga, setUloga]           = useState<string | null>(null);
-  const [roleLoaded, setRoleLoaded] = useState(false);
-
-  useEffect(() => {
-    let mounted = true;
-    const supabase = createClient();
-
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
-      if (!mounted) return;
-      if (!user) {
-        setRoleLoaded(true);
-        return;
-      }
-      const { data: profil } = await supabase
-        .from('profili')
-        .select('uloga')
-        .eq('id', user.id)
-        .single();
-      if (!mounted) return;
-      setUloga(profil?.uloga ?? null);
-      setRoleLoaded(true);
-    });
-
-    return () => { mounted = false; };
-  }, []);
+  const { profile, profileLoaded } = useProfile();
+  const uloga = profile?.uloga ?? null;
 
   return {
     uloga,
-    roleLoaded,
-    isAdmin: uloga === 'admin',
-    canAdd:  uloga === 'admin' || uloga === 'trener',
+    roleLoaded: profileLoaded,
+    isAdmin:    uloga === 'admin',
+    canAdd:     uloga === 'admin' || uloga === 'trener',
   };
 }

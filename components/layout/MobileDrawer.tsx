@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   X, Shield, LayoutDashboard, Users, Stethoscope, FileText,
-  Calendar, Trophy, Sparkles, BarChart3, Settings, LogOut,
+  Calendar, Trophy, Sparkles, BarChart3, Settings, LogOut, ClipboardList,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { createClient } from '@/lib/supabase-browser';
@@ -25,8 +25,9 @@ interface MobileDrawerProps {
 
 const navItems = [
   { href: '/dashboard',  icon: LayoutDashboard, label: 'Nadzorna ploča' },
-  { href: '/clanovi',    icon: Users,            label: 'Članovi' },
-  { href: '/lijecnicki', icon: Stethoscope,      label: 'Liječnički' },
+  { href: '/clanovi',           icon: Users,         label: 'Članovi'   },
+  { href: '/trener/prisustvo',  icon: ClipboardList, label: 'Prisustvo' },
+  { href: '/lijecnicki',        icon: Stethoscope,   label: 'Liječnički' },
   { href: '/dokumenti',  icon: FileText,         label: 'Dokumenti' },
   { href: '/skupstine',  icon: Calendar,         label: 'Skupštine' },
   { href: '/natjecanja', icon: Trophy,           label: 'Natjecanja' },

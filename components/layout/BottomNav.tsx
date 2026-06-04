@@ -2,14 +2,15 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Users, Calendar, Sparkles } from 'lucide-react';
+import { LayoutDashboard, Users, Calendar, Sparkles, ClipboardList } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const items = [
-  { href: '/dashboard',  icon: LayoutDashboard, label: 'Ploča' },
-  { href: '/clanovi',    icon: Users,            label: 'Članovi' },
-  { href: '/skupstine',  icon: Calendar,         label: 'Skupštine' },
-  { href: '/ai-tajnik',  icon: Sparkles,         label: 'AI Tajnik' },
+  { href: '/dashboard',         icon: LayoutDashboard, label: 'Ploča'     },
+  { href: '/clanovi',           icon: Users,            label: 'Članovi'   },
+  { href: '/trener/prisustvo',  icon: ClipboardList,    label: 'Prisustvo' },
+  { href: '/skupstine',         icon: Calendar,         label: 'Skupštine' },
+  { href: '/ai-tajnik',         icon: Sparkles,         label: 'AI Tajnik' },
 ];
 
 export default function BottomNav() {

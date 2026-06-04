@@ -19,6 +19,7 @@ import {
   ChevronRight,
   Shield,
   LogOut,
+  ClipboardList,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { createClient } from '@/lib/supabase-browser';
@@ -36,8 +37,9 @@ const navItems = [
   { href: '/dashboard',  icon: LayoutDashboard, label: 'Nadzorna ploča' },
   { href: '/clanovi',    icon: Users,            label: 'Članovi' },
   { href: '/lijecnicki', icon: Stethoscope,      label: 'Liječnički' },
-  { href: '/treneri',    icon: GraduationCap,    label: 'Treneri' },
-  { href: '/dokumenti',  icon: FileText,         label: 'Dokumenti' },
+  { href: '/treneri',          icon: GraduationCap, label: 'Treneri' },
+  { href: '/trener/prisustvo', icon: ClipboardList, label: 'Prisustvo' },
+  { href: '/dokumenti',        icon: FileText,      label: 'Dokumenti' },
   { href: '/skupstine',  icon: Calendar,         label: 'Skupštine' },
   { href: '/natjecanja', icon: Trophy,           label: 'Natjecanja' },
   { href: '/financije',  icon: Euro,             label: 'Financije'  },

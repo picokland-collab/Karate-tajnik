@@ -1,3 +1,4 @@
+import { createHash } from 'crypto';
 import { NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { Hub3aParams, buildHub3aText, assemblePdf } from '@/lib/utils/hub3aService';
@@ -6,11 +7,24 @@ import { Hub3aParams, buildHub3aText, assemblePdf } from '@/lib/utils/hub3aServi
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const bwipjs = require('bwip-js/node') as typeof import('bwip-js/node');
 
-// In-memory PDF cache keyed by serialised params. Deterministic params → deterministic PDF.
-const cache = new Map<string, Uint8Array>();
-const CACHE_MAX = 200;
+const BUCKET = 'billing-cache';
+
+/**
+ * Deterministic SHA-256 cache key over the fields that make a payment slip unique:
+ * member ID, amount, target IBAN, and description (which carries month/year).
+ * Truncated to 32 hex chars (128 bits) — collision probability negligible.
+ */
+function cacheHash(p: Hub3aParams): string {
+  return createHash('sha256')
+    .update(
+      `${p.memberId}|${p.amountEur.toFixed(2)}|${p.recipientIban.replace(/\s/g, '')}|${p.description}`,
+    )
+    .digest('hex')
+    .slice(0, 32);
+}
 
 export async function POST(req: NextRequest) {
+  // ── AUTH ────────────────────────────────────────────────────────
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -19,12 +33,13 @@ export async function POST(req: NextRequest) {
         getAll() { return req.cookies.getAll(); },
         setAll() {},
       },
-    }
+    },
   );
 
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return new Response('Unauthorized', { status: 401 });
 
+  // ── PARSE & VALIDATE ─────────────────────────────────────────────
   let params: Hub3aParams;
   try {
     params = await req.json() as Hub3aParams;
@@ -40,17 +55,38 @@ export async function POST(req: NextRequest) {
     return new Response('Missing required fields', { status: 400 });
   }
 
-  const key = JSON.stringify(params);
+  // ── CLUB SECURITY GATE ───────────────────────────────────────────
+  // For linked members (memberId > 0) verify the member belongs to the
+  // caller's club.  The clanovi RLS already scopes to the caller's klub_id
+  // via dohvati_moj_klub_id(), so a missing row means cross-club attempt.
+  if (params.memberId > 0) {
+    const { data: member } = await supabase
+      .from('clanovi')
+      .select('id')
+      .eq('id', params.memberId)
+      .maybeSingle();
 
-  const cached = cache.get(key);
-  if (cached) {
-    return pdfResponse(cached, params.memberId, 'HIT');
+    if (!member) return new Response('Forbidden', { status: 403 });
   }
 
+  // ── STORAGE CACHE CHECK ──────────────────────────────────────────
+  const hash        = cacheHash(params);
+  const storagePath = `hub3a_cache/${hash}.pdf`;
+
+  const { data: cachedBlob } = await supabase.storage
+    .from(BUCKET)
+    .download(storagePath);
+
+  if (cachedBlob) {
+    const bytes = new Uint8Array(await cachedBlob.arrayBuffer());
+    return pdfResponse(bytes, params.memberId, 'HIT');
+  }
+
+  // ── GENERATE ─────────────────────────────────────────────────────
   try {
     const text = buildHub3aText(params);
 
-    // Cast to `any` because `columns` is a valid PDF417 option not reflected in the RenderOptions type
+    // `columns` is a valid PDF417 option absent from the RenderOptions type definition
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const pngBuffer: Buffer = await (bwipjs.toBuffer as (o: any) => Promise<Buffer>)({
       bcid:        'pdf417',
@@ -64,11 +100,17 @@ export async function POST(req: NextRequest) {
 
     const pdfBytes = await assemblePdf(params, pngBuffer);
 
-    if (cache.size >= CACHE_MAX) {
-      // Evict oldest (Map preserves insertion order)
-      cache.delete(cache.keys().next().value!);
+    // ── CACHE WRITE ───────────────────────────────────────────────
+    const { error: uploadError } = await supabase.storage
+      .from(BUCKET)
+      .upload(storagePath, pdfBytes, {
+        contentType: 'application/pdf',
+        upsert:      false,   // first writer wins; ignore duplicate-key races
+      });
+
+    if (uploadError && !uploadError.message.includes('already exists')) {
+      console.warn('[hub3a/barcode] cache upload failed:', uploadError.message);
     }
-    cache.set(key, pdfBytes);
 
     return pdfResponse(pdfBytes, params.memberId, 'MISS');
   } catch (err) {

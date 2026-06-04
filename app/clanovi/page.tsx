@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import AppLayout from '@/components/layout/AppLayout';
 import {
@@ -10,7 +10,7 @@ import {
   CheckCircle, XCircle, Save, MapPin, Vote, RefreshCw, FileDown,
 } from 'lucide-react';
 import { beltLabels } from '@/lib/mock-data';
-import { fetchClanovi, insertClan, updateClan, deleteClan } from '@/lib/queries/clanovi';
+import { fetchClanoviPaginated, fetchMemberCount, insertClan, updateClan, deleteClan } from '@/lib/queries/clanovi';
 import type { ClanMedInput } from '@/lib/queries/clanovi';
 import { useRole } from '@/lib/hooks/useRole';
 import { runAutoRecategorization } from '@/lib/queries/rekategorizacija';
@@ -857,39 +857,43 @@ function MemberDetailDrawer({
 
 /* ── MAIN PAGE ────────────────────────────────────────────── */
 type FilterStatus = 'svi' | 'aktivni' | 'neaktivni';
-type FilterBelt = 'svi' | BeltColor;
+type FilterBelt   = 'svi' | BeltColor;
+
+const PAGE_SIZE = 30;
 
 function ClanoviContent() {
-  // ── ROLE GATE ─────────────────────────────────────────────────
-  // admin + trener can add members; only admin can edit existing ones
   const { isAdmin, canAdd, roleLoaded } = useRole();
   const canEdit = isAdmin;
 
-  // ── DATA STATE ────────────────────────────────────────────────
-  const [showModal, setShowModal]           = useState(false);
-  const [editingMember, setEditingMember]   = useState<Member | null>(null);
+  // ── UI STATE ──────────────────────────────────────────────────────
+  const [showModal,      setShowModal]      = useState(false);
+  const [editingMember,  setEditingMember]  = useState<Member | null>(null);
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
-  const [search, setSearch]                 = useState('');
-  const [filterStatus, setFilterStatus]     = useState<FilterStatus>('svi');
-  const [filterBelt, setFilterBelt]         = useState<FilterBelt>('svi');
-  const [allMembers, setAllMembers]         = useState<Member[]>([]);
-  const [loading, setLoading]               = useState(true);
-  const [syncing, setSyncing]               = useState(false);
-  const [syncResult, setSyncResult]         = useState<RecategorizationChange[] | null>(null);
-  const [syncError, setSyncError]           = useState('');
-  const [deleteConfirm, setDeleteConfirm]   = useState<Member | null>(null);
-  const [deleting, setDeleting]             = useState(false);
+  const [deleteConfirm,  setDeleteConfirm]  = useState<Member | null>(null);
+  const [deleting,       setDeleting]       = useState(false);
+  const [syncing,        setSyncing]        = useState(false);
+  const [syncResult,     setSyncResult]     = useState<RecategorizationChange[] | null>(null);
+  const [syncError,      setSyncError]      = useState('');
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  const reload = () => {
-    setLoading(true);
-    fetchClanovi()
-      .then(data => setAllMembers(data))
-      .catch(err => console.error('Greška pri učitavanju članova:', err))
-      .finally(() => setLoading(false));
-  };
+  // ── FILTER STATE ──────────────────────────────────────────────────
+  const [searchInput,  setSearchInput]  = useState('');
+  const [search,       setSearch]       = useState('');
+  const [filterStatus, setFilterStatus] = useState<FilterStatus>('svi');
+  const [filterBelt,   setFilterBelt]   = useState<FilterBelt>('svi');
 
+  // ── PAGINATION STATE ──────────────────────────────────────────────
+  const [members,     setMembers]     = useState<Member[]>([]);
+  const [page,        setPage]        = useState(0);
+  const [hasMore,     setHasMore]     = useState(true);
+  const [totalCount,  setTotalCount]  = useState(0);
+  const [counts,      setCounts]      = useState({ active: 0, total: 0 });
+  const [loading,     setLoading]     = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  // Open new-member modal when navigated with ?action=new
   useEffect(() => {
     if (searchParams.get('action') === 'new') {
       setShowModal(true);
@@ -897,17 +901,81 @@ function ClanoviContent() {
     }
   }, [searchParams, router]);
 
-  useEffect(() => { reload(); }, []);
+  // Debounce raw search input 300ms before triggering a server query
+  useEffect(() => {
+    const t = setTimeout(() => setSearch(searchInput), 300);
+    return () => clearTimeout(t);
+  }, [searchInput]);
 
-  const filtered = allMembers.filter(m => {
-    const matchSearch = `${m.firstName} ${m.lastName} ${m.email}`.toLowerCase().includes(search.toLowerCase());
-    const matchStatus = filterStatus === 'svi' || m.status === (filterStatus === 'aktivni' ? 'aktivan' : 'neaktivan');
-    const matchBelt = filterBelt === 'svi' || m.belt === filterBelt;
-    return matchSearch && matchStatus && matchBelt;
-  });
+  // Reset to page 0 and fetch fresh whenever filters / search change
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setPage(0);
+    setMembers([]);
+    fetchClanoviPaginated({ page: 0, limit: PAGE_SIZE, search, filterStatus, filterBelt })
+      .then(result => {
+        if (cancelled) return;
+        setMembers(result.members);
+        setHasMore(result.hasMore);
+        setTotalCount(result.totalCount);
+      })
+      .catch(err => console.error('Greška pri učitavanju:', err))
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [search, filterStatus, filterBelt]);
+
+  // Fetch active/total counts for subtitle (independent of filter)
+  const refreshCounts = useCallback(() => {
+    fetchMemberCount().then(setCounts).catch(console.error);
+  }, []);
+  useEffect(() => { refreshCounts(); }, [refreshCounts]);
+
+  // Append next page to members array
+  const loadMore = useCallback(() => {
+    if (loadingMore || !hasMore || loading) return;
+    const nextPage = page + 1;
+    setLoadingMore(true);
+    fetchClanoviPaginated({ page: nextPage, limit: PAGE_SIZE, search, filterStatus, filterBelt })
+      .then(result => {
+        setMembers(prev => [...prev, ...result.members]);
+        setHasMore(result.hasMore);
+        setTotalCount(result.totalCount);
+        setPage(nextPage);
+      })
+      .catch(err => console.error('Greška pri učitavanju:', err))
+      .finally(() => setLoadingMore(false));
+  }, [page, hasMore, loadingMore, loading, search, filterStatus, filterBelt]);
+
+  // Infinite scroll sentinel
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel || !hasMore || loading) return;
+    const observer = new IntersectionObserver(
+      entries => { if (entries[0].isIntersecting) loadMore(); },
+      { rootMargin: '150px' },
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [hasMore, loading, loadMore]);
+
+  // Hard reload: reset pagination and refetch page 0
+  const reload = useCallback(() => {
+    setLoading(true);
+    setPage(0);
+    setMembers([]);
+    fetchClanoviPaginated({ page: 0, limit: PAGE_SIZE, search, filterStatus, filterBelt })
+      .then(result => {
+        setMembers(result.members);
+        setHasMore(result.hasMore);
+        setTotalCount(result.totalCount);
+      })
+      .catch(err => console.error('Greška pri reload:', err))
+      .finally(() => { setLoading(false); refreshCounts(); });
+  }, [search, filterStatus, filterBelt, refreshCounts]);
 
   const handleEditSaved = (updated: Member) => {
-    setAllMembers(prev => prev.map(m => m.id === updated.id ? updated : m));
+    setMembers(prev => prev.map(m => m.id === updated.id ? updated : m));
     setSelectedMember(updated);
     setEditingMember(null);
   };
@@ -917,8 +985,10 @@ function ClanoviContent() {
     setDeleting(true);
     try {
       await deleteClan(deleteConfirm.id);
-      setAllMembers(prev => prev.filter(m => m.id !== deleteConfirm.id));
+      setMembers(prev => prev.filter(m => m.id !== deleteConfirm.id));
+      setTotalCount(prev => Math.max(0, prev - 1));
       setDeleteConfirm(null);
+      refreshCounts();
     } catch (e) {
       console.error('deleteClan:', e);
     } finally {
@@ -943,10 +1013,17 @@ function ClanoviContent() {
     }
   };
 
+  const isFiltered = !!(search || filterStatus !== 'svi' || filterBelt !== 'svi');
+  const subtitle = loading
+    ? 'Učitavanje...'
+    : isFiltered
+      ? `${totalCount} pronađeno`
+      : `${counts.active} aktivnih · ${counts.total} ukupno`;
+
   return (
     <AppLayout
       title="Registar članova"
-      subtitle={loading ? 'Učitavanje...' : `${allMembers.filter(m => m.status === 'aktivan').length} aktivnih · ${allMembers.length} ukupno`}
+      subtitle={subtitle}
       actions={
         roleLoaded && canAdd ? (
           <button
@@ -1017,9 +1094,13 @@ function ClanoviContent() {
         <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
           <div className="flex items-center gap-2 bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 flex-1 min-w-0 sm:min-w-[200px] sm:max-w-xs">
             <Search className="w-4 h-4 text-slate-500 flex-shrink-0" />
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Pretraži po imenu..."
+            <input value={searchInput} onChange={e => setSearchInput(e.target.value)} placeholder="Pretraži po imenu..."
               className="bg-transparent text-sm text-slate-300 placeholder:text-slate-600 outline-none w-full" />
-            {search && <button onClick={() => setSearch('')}><X className="w-3.5 h-3.5 text-slate-500" /></button>}
+            {searchInput && (
+              <button onClick={() => { setSearchInput(''); setSearch(''); }}>
+                <X className="w-3.5 h-3.5 text-slate-500" />
+              </button>
+            )}
           </div>
 
           <div className="flex items-center gap-2 overflow-x-auto min-w-0 w-full">
@@ -1037,7 +1118,7 @@ function ClanoviContent() {
                 <option key={b} value={b}>{beltLabels[b].label}</option>
               ))}
             </select>
-            <span className="text-xs text-slate-600 flex-shrink-0 ml-1">{filtered.length} rezultata</span>
+            <span className="text-xs text-slate-600 flex-shrink-0 ml-1">{totalCount} rezultata</span>
 
             <button
               onClick={handleSync}
@@ -1103,7 +1184,7 @@ function ClanoviContent() {
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {filtered.map(member => {
+          {members.map(member => {
             const belt = beltLabels[member.belt];
             const expired = isExpired(member.medicalExpiry);
             const expiringSoon = isExpiringSoon(member.medicalExpiry, 60);
@@ -1147,7 +1228,28 @@ function ClanoviContent() {
           })}
         </div>
 
-        {!loading && filtered.length === 0 && (
+        {/* Infinite scroll sentinel — IntersectionObserver fires loadMore when visible */}
+        <div ref={sentinelRef} />
+
+        {/* Loading spinner for subsequent pages */}
+        {loadingMore && (
+          <div className="flex items-center justify-center py-8 text-slate-500">
+            <Loader2 className="w-5 h-5 animate-spin mr-2" />
+            Učitavanje...
+          </div>
+        )}
+
+        {/* Explicit "Load More" button — fallback / accessibility */}
+        {!loading && !loadingMore && hasMore && (
+          <div className="flex justify-center py-4">
+            <button onClick={loadMore}
+              className="text-sm text-slate-400 bg-slate-900 border border-slate-800 hover:border-slate-600 hover:text-slate-200 px-6 py-2.5 rounded-xl transition-all">
+              Učitaj više ({totalCount - members.length} preostalo)
+            </button>
+          </div>
+        )}
+
+        {!loading && members.length === 0 && (
           <div className="text-center py-20 text-slate-600">
             <Users className="w-12 h-12 mx-auto mb-3 opacity-30" />
             <p className="text-sm">Nema pronađenih članova</p>

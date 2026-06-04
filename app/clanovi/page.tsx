@@ -20,6 +20,7 @@ import { downloadHksZahtjev } from '@/lib/utils/hksPdfService';
 import { createClient as createSupabaseBrowserClient } from '@/lib/supabase-browser';
 import { formatDate, isExpired, isExpiringSoon, daysUntil, getAge, cn } from '@/lib/utils';
 import type { Member, BeltColor, MemberStatus, TipClanstva } from '@/lib/types';
+import DateInput from '@/components/ui/DateInput';
 
 /* ── helpers ─────────────────────────────────────────────── */
 function FormField({
@@ -31,14 +32,14 @@ function FormField({
   return (
     <div>
       <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1.5">{label}</label>
-      <input
-        type={type}
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        placeholder={placeholder}
-        required={required}
-        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-red-500 transition-colors"
-      />
+      {type === 'date' ? (
+        <DateInput value={value} onChange={onChange} required={required}
+          className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-red-500 transition-colors" />
+      ) : (
+        <input type={type} value={value} onChange={e => onChange(e.target.value)}
+          placeholder={placeholder} required={required}
+          className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-red-500 transition-colors" />
+      )}
       {hint && <p className="text-xs text-slate-600 mt-1">{hint}</p>}
     </div>
   );

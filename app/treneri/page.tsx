@@ -15,6 +15,7 @@ import { fetchKlubInfo } from '@/lib/queries/dashboard';
 import type { Trener, TrenerInput, TrenerStatus } from '@/lib/queries/treneri';
 import { formatDate, isExpired, isExpiringSoon, daysUntil, cn } from '@/lib/utils';
 import { useRole } from '@/lib/hooks/useRole';
+import DateInput from '@/components/ui/DateInput';
 
 // ── HELPERS ───────────────────────────────────────────────────
 
@@ -35,9 +36,14 @@ function FormField({ label, value, onChange, type = 'text', placeholder, hint }:
   return (
     <div>
       <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1.5">{label}</label>
-      <input type={type} value={value} onChange={e => onChange(e.target.value)}
-        placeholder={placeholder}
-        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-red-500 transition-colors" />
+      {type === 'date' ? (
+        <DateInput value={value} onChange={onChange}
+          className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-red-500 transition-colors" />
+      ) : (
+        <input type={type} value={value} onChange={e => onChange(e.target.value)}
+          placeholder={placeholder}
+          className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-red-500 transition-colors" />
+      )}
       {hint && <p className="text-xs text-slate-600 mt-1">{hint}</p>}
     </div>
   );
@@ -62,7 +68,7 @@ function SelectField({ label, value, onChange, options, placeholder }: {
 // ── RENEWAL GENERATOR ─────────────────────────────────────────
 
 function generateZahtjev(t: Trener, klubNaziv: string, predsjednikIme: string): string {
-  const danas = new Date().toLocaleDateString('hr-HR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  const danas = formatDate(new Date().toISOString());
   const licLabel = t.licenca ? (LICENCA_LABEL[t.licenca] ?? t.licenca) : '[vrsta licence]';
   const ulogaLabel = t.uloga ? (ULOGA_LABEL[t.uloga] ?? t.uloga) : '[uloga]';
 

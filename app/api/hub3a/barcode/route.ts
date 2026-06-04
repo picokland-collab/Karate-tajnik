@@ -3,10 +3,6 @@ import { NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { Hub3aParams, buildHub3aText, assemblePdf } from '@/lib/utils/hub3aService';
 
-// bwip-js/node resolves to the Node.js build (toBuffer) via the package exports map
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const bwipjs = require('bwip-js/node') as typeof import('bwip-js/node');
-
 const BUCKET = 'billing-cache';
 
 /**
@@ -86,9 +82,13 @@ export async function POST(req: NextRequest) {
   try {
     const text = buildHub3aText(params);
 
-    // `columns` is a valid PDF417 option absent from the RenderOptions type definition
+    // Dynamic import keeps bwip-js out of the static bundle (serverExternalPackages
+    // in next.config.ts handles Vercel; this import resolves to bwip-js-node.mjs
+    // which exports toBuffer as a named export).
+    // `columns` is a valid PDF417 option absent from the RenderOptions types.
+    const { toBuffer } = await import('bwip-js/node');
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const pngBuffer: Buffer = await (bwipjs.toBuffer as (o: any) => Promise<Buffer>)({
+    const pngBuffer: Buffer = await (toBuffer as (o: any) => Promise<Buffer>)({
       bcid:        'pdf417',
       text,
       scale:        2,

@@ -54,6 +54,61 @@ body {
 }
 .spin-slow { animation: spin-slow 3s linear infinite; }
 
+/* ── react-datepicker dark theme ───────────────────────────────────── */
+.react-datepicker-wrapper { width: 100%; }
+.react-datepicker-popper  { z-index: 9999; }
+
+.react-datepicker {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 13px;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.6);
+  overflow: hidden;
+}
+.react-datepicker__triangle { display: none; }
+
+.react-datepicker__header {
+  background: #0f172a;
+  border-bottom: 1px solid #334155;
+  border-radius: 0;
+  padding: 10px 0 6px;
+}
+.react-datepicker__current-month { color: #f1f5f9; font-weight: 600; font-size: 13px; margin-bottom: 6px; }
+.react-datepicker__day-name       { color: #64748b; font-size: 11px; width: 30px; line-height: 28px; }
+.react-datepicker__day            { color: #f1f5f9; width: 30px; line-height: 28px; border-radius: 6px; margin: 1px; }
+.react-datepicker__day:hover                    { background: #334155; }
+.react-datepicker__day--selected,
+.react-datepicker__day--keyboard-selected       { background: #C8102E !important; color: #fff !important; }
+.react-datepicker__day--selected:hover          { background: #9A0C22 !important; }
+.react-datepicker__day--today                   { color: #fca5a5; font-weight: 700; }
+.react-datepicker__day--outside-month           { color: #475569; }
+.react-datepicker__day--disabled                { color: #475569; cursor: not-allowed; }
+
+.react-datepicker__navigation-icon::before {
+  border-color: #64748b;
+  border-width: 2px 2px 0 0;
+  width: 8px; height: 8px;
+}
+.react-datepicker__navigation:hover .react-datepicker__navigation-icon::before { border-color: #f1f5f9; }
+.react-datepicker__navigation { top: 10px; }
+
+.react-datepicker__month-dropdown-container,
+.react-datepicker__year-dropdown-container { margin: 0 4px; }
+.react-datepicker__month-select,
+.react-datepicker__year-select {
+  background: #1e293b;
+  color: #f1f5f9;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  padding: 2px 6px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.react-datepicker__month-select:focus,
+.react-datepicker__year-select:focus  { outline: none; border-color: #C8102E; }
+
 /* Mobile: clear the fixed BottomNav (h-16 = 4rem) plus safe-area + 0.5rem breathing room */
 @media (max-width: 767px) {
   .mobile-pb {

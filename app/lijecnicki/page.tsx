@@ -4,14 +4,14 @@ import { useState, useEffect, useMemo } from 'react';
 import AppLayout from '@/components/layout/AppLayout';
 import {
   Stethoscope, Search, X, Loader2,
-  CheckCircle, XCircle, Clock, ChevronRight,
+  CheckCircle, XCircle, Clock, ChevronRight, Save,
 } from 'lucide-react';
-import Link from 'next/link';
-import { fetchClanovi } from '@/lib/queries/clanovi';
+import { fetchClanovi, updateMedicalExpiry } from '@/lib/queries/clanovi';
 import { useRole } from '@/lib/hooks/useRole';
 import { beltLabels } from '@/lib/mock-data';
 import { formatDate, daysUntil, cn } from '@/lib/utils';
 import type { Member } from '@/lib/types';
+import DateInput from '@/components/ui/DateInput';
 
 // ── STATUS LOGIC ──────────────────────────────────────────────
 
@@ -129,12 +129,50 @@ export default function LijecnickiPage() {
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchClanovi()
+  function loadMembers() {
+    return fetchClanovi()
       .then(data => setMembers(sortMembers(data)))
       .catch(err => console.error('fetchClanovi:', err))
       .finally(() => setLoading(false));
-  }, []);
+  }
+
+  useEffect(() => { loadMembers(); }, []);
+
+  // ── EDIT MODAL STATE ─────────────────────────────────────────
+  const [editMember, setEditMember]   = useState<Member | null>(null);
+  const [editExpiry, setEditExpiry]   = useState('');
+  const [saving,     setSaving]       = useState(false);
+  const [saveError,  setSaveError]    = useState('');
+
+  function openEdit(m: Member) {
+    setEditMember(m);
+    setEditExpiry(m.medicalExpiry ?? '');
+    setSaveError('');
+  }
+
+  function closeEdit() {
+    setEditMember(null);
+    setEditExpiry('');
+    setSaveError('');
+  }
+
+  async function handleSave() {
+    if (!editMember || !editExpiry) return;
+    setSaving(true);
+    setSaveError('');
+    try {
+      await updateMedicalExpiry(editMember.id, editExpiry);
+      // Update local state immediately so table reflects change
+      setMembers(prev => sortMembers(prev.map(m =>
+        m.id === editMember.id ? { ...m, medicalExpiry: editExpiry } : m
+      )));
+      closeEdit();
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Greška pri spremanju.');
+    } finally {
+      setSaving(false);
+    }
+  }
 
   // ── FILTERS ─────────────────────────────────────────────────
   const [activeTab, setActiveTab] = useState<FilterTab>('svi');
@@ -165,10 +203,10 @@ export default function LijecnickiPage() {
 
         {/* ── Stats row ─────────────────────────────────────── */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <StatCard label="Svi članovi" count={members.length}          color="slate" icon={Stethoscope} />
-          <StatCard label="Istekli / Neispravni" count={counts.neispravan}     color="red"   icon={XCircle}     />
-          <StatCard label="Istječu uskoro (≤15d)" count={counts.istjece_uskoro} color="amber" icon={Clock}       />
-          <StatCard label="Važeći pregledi" count={counts.vazeci}        color="green" icon={CheckCircle} />
+          <StatCard label="Svi članovi"          count={members.length}          color="slate" icon={Stethoscope} />
+          <StatCard label="Istekli / Neispravni" count={counts.neispravan}       color="red"   icon={XCircle}     />
+          <StatCard label="Istječu uskoro (≤15d)" count={counts.istjece_uskoro}  color="amber" icon={Clock}       />
+          <StatCard label="Važeći pregledi"       count={counts.vazeci}          color="green" icon={CheckCircle} />
         </div>
 
         {/* ── Filter bar ────────────────────────────────────── */}
@@ -178,9 +216,9 @@ export default function LijecnickiPage() {
           <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 rounded-xl p-1 flex-wrap">
             {FILTER_TABS.map(tab => {
               const tabCount =
-                tab.key === 'svi'           ? members.length        :
-                tab.key === 'neispravan'    ? counts.neispravan     :
-                tab.key === 'istjece_uskoro'? counts.istjece_uskoro :
+                tab.key === 'svi'            ? members.length        :
+                tab.key === 'neispravan'     ? counts.neispravan     :
+                tab.key === 'istjece_uskoro' ? counts.istjece_uskoro :
                 counts.vazeci;
 
               return (
@@ -266,7 +304,7 @@ export default function LijecnickiPage() {
                           status === 'istjece_uskoro' && 'bg-amber-950/[0.05]',
                         )}
                       >
-                        {/* Name + status chip */}
+                        {/* Name */}
                         <td className="px-5 py-3.5">
                           <div className="flex items-center gap-3">
                             <div className="w-8 h-8 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-xs font-bold text-slate-400 flex-shrink-0">
@@ -307,20 +345,20 @@ export default function LijecnickiPage() {
                           }
                         </td>
 
-                        {/* Traffic-light badge */}
+                        {/* Status badge */}
                         <td className="px-5 py-3.5">
                           <StatusBadge medicalExpiry={m.medicalExpiry} />
                         </td>
 
-                        {/* Admin action — navigates to members page */}
+                        {/* Edit action — opens inline modal */}
                         {canEdit && (
                           <td className="px-5 py-3.5">
-                            <Link
-                              href="/clanovi"
+                            <button
+                              onClick={() => openEdit(m)}
                               className="flex items-center gap-1 text-xs text-slate-500 hover:text-slate-200 hover:bg-slate-700 border border-transparent hover:border-slate-600 px-2.5 py-1.5 rounded-lg transition-all whitespace-nowrap"
                             >
                               Uredi <ChevronRight className="w-3 h-3" />
-                            </Link>
+                            </button>
                           </td>
                         )}
                       </tr>
@@ -328,7 +366,7 @@ export default function LijecnickiPage() {
                   })}
                 </tbody>
 
-                {/* Footer: counts of visible rows by status */}
+                {/* Footer */}
                 <tfoot>
                   <tr className="border-t-2 border-slate-700 bg-slate-900/80">
                     <td colSpan={canEdit ? 6 : 5} className="px-5 py-3">
@@ -395,9 +433,17 @@ export default function LijecnickiPage() {
                       </div>
                     </div>
 
-                    {/* Traffic-light badge */}
-                    <div className="flex-shrink-0">
+                    {/* Badge + edit */}
+                    <div className="flex flex-col items-end gap-2 flex-shrink-0">
                       <StatusBadge medicalExpiry={m.medicalExpiry} />
+                      {canEdit && (
+                        <button
+                          onClick={() => openEdit(m)}
+                          className="text-xs text-slate-500 hover:text-slate-300 underline underline-offset-2"
+                        >
+                          Uredi
+                        </button>
+                      )}
                     </div>
                   </div>
                 );
@@ -414,6 +460,71 @@ export default function LijecnickiPage() {
         )}
 
       </div>
+
+      {/* ── Edit modal ────────────────────────────────────────── */}
+      {editMember && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          onClick={e => { if (e.target === e.currentTarget) closeEdit(); }}
+        >
+          <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-sm shadow-2xl">
+
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800">
+              <div>
+                <p className="text-sm font-bold text-slate-100">Uredi liječnički pregled</p>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  {editMember.firstName} {editMember.lastName}
+                </p>
+              </div>
+              <button onClick={closeEdit} className="text-slate-500 hover:text-slate-300 transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="px-5 py-5 space-y-4">
+              <div>
+                <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1.5">
+                  Istek liječničkog pregleda
+                </label>
+                <DateInput
+                  value={editExpiry}
+                  onChange={setEditExpiry}
+                  className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-red-500 transition-colors"
+                />
+                <p className="text-xs text-slate-600 mt-1">Format: dd.mm.gggg.</p>
+              </div>
+
+              {saveError && (
+                <p className="text-xs text-red-400 bg-red-950/40 border border-red-800/40 rounded-lg px-3 py-2">
+                  {saveError}
+                </p>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-slate-800">
+              <button
+                onClick={closeEdit}
+                disabled={saving}
+                className="px-4 py-2 text-sm text-slate-400 hover:text-slate-200 transition-colors rounded-lg"
+              >
+                Odustani
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={saving || !editExpiry}
+                className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold bg-red-600 hover:bg-red-500 disabled:bg-slate-700 disabled:text-slate-500 text-white rounded-xl transition-colors"
+              >
+                {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                Spremi
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </AppLayout>
   );
 }

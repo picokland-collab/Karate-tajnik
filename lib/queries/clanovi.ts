@@ -84,10 +84,11 @@ export async function fetchClanovi(): Promise<Member[]> {
     guardian: c.roditelji ?? undefined,
     notes: c.bolest ?? undefined,
     category: (VALID_CATEGORIES.includes(c.kategorija as Member['category']) ? c.kategorija : 'senior') as Member['category'],
-    oib:           c.oib          ?? undefined,
-    spol:          (c.spol === 'M' || c.spol === 'Ž') ? c.spol as 'M' | 'Ž' : undefined,
-    mjestRodjenja: c.mjesto_rodjenja ?? undefined,
-    drzavaRodjenja: c.drzava_rodjenja ?? undefined,
+    oib:                c.oib           ?? undefined,
+    spol:               (c.spol === 'M' || c.spol === 'Ž') ? c.spol as 'M' | 'Ž' : undefined,
+    mjestRodjenja:      c.mjesto_rodjenja  ?? undefined,
+    drzavaRodjenja:     c.drzava_rodjenja  ?? undefined,
+    oslobodjenClanarina: c.oslobodjen_clanarina ?? false,
   }));
 }
 
@@ -194,6 +195,52 @@ export async function updateClan(id: string, input: ClanMedInput): Promise<void>
         vrijedi: input.medicalExpiry,
       });
     }
+  }
+}
+
+/** Toggles the UO exemption flag for a member. */
+export async function toggleOslobodjenClanarina(
+  memberId: string,
+  oslobodjen: boolean,
+): Promise<void> {
+  const supabase = createClient();
+  const { error } = await supabase
+    .from('clanovi')
+    .update({ oslobodjen_clanarina: oslobodjen })
+    .eq('id', Number(memberId));
+  if (error) throw new Error(error.message);
+}
+
+/** Upserts the latest medical-exam expiry date for a member. */
+export async function updateMedicalExpiry(memberId: string, expiry: string): Promise<void> {
+  const supabase = createClient();
+  const numId = Number(memberId);
+
+  const { data: existing } = await supabase
+    .from('lijecnicki')
+    .select('id')
+    .eq('clan_id', numId)
+    .order('vrijedi', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (existing) {
+    const { error } = await supabase.from('lijecnicki')
+      .update({ vrijedi: expiry })
+      .eq('id', existing.id);
+    if (error) throw new Error(error.message);
+  } else {
+    const { data: { user } } = await supabase.auth.getUser();
+    const { data: profil } = user
+      ? await supabase.from('profili').select('klub_id').eq('id', user.id).single()
+      : { data: null };
+    const { error } = await supabase.from('lijecnicki').insert({
+      id:      crypto.randomUUID(),
+      klub_id: profil?.klub_id ?? null,
+      clan_id: numId,
+      vrijedi: expiry,
+    });
+    if (error) throw new Error(error.message);
   }
 }
 

@@ -6,7 +6,7 @@ import {
   FileText, Download, Eye, Clock, CheckCircle, AlertCircle,
   Plus, X, FileDown, Printer, Trash2, ChevronDown,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, formatDate } from '@/lib/utils';
 import {
   fetchDokumenti, insertDokument, updateDokumentStatus, deleteDokument,
   VRSTA_LABEL, STATUS_LABEL,
@@ -62,7 +62,7 @@ function DokumentModal({
           <div className="flex-1 min-w-0">
             <p className="text-sm font-bold text-slate-100 leading-snug">{doc.naziv}</p>
             <p className="text-xs text-slate-500 mt-0.5">
-              {VRSTA_LABEL[doc.vrsta]} · {new Date(doc.created_at).toLocaleDateString('hr-HR')}
+              {VRSTA_LABEL[doc.vrsta]} · {formatDate(doc.created_at)}
             </p>
           </div>
           <button onClick={onClose} className="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center flex-shrink-0 transition-colors">
@@ -330,7 +330,7 @@ export default function DokumentiPage() {
                     </span>
                   </div>
                   <p className="text-xs text-slate-500 mt-0.5 truncate">
-                    {VRSTA_LABEL[doc.vrsta]} · {new Date(doc.created_at).toLocaleDateString('hr-HR')}
+                    {VRSTA_LABEL[doc.vrsta]} · {formatDate(doc.created_at)}
                   </p>
                 </div>
 

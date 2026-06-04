@@ -58,6 +58,8 @@ export interface Member {
   spol?: 'M' | 'Ž';
   mjestRodjenja?: string;
   drzavaRodjenja?: string;
+  // Billing
+  oslobodjenClanarina?: boolean;  // UO odluka o izuzeću od plaćanja
 }
 
 export interface Meeting {

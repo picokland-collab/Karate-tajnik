@@ -13,6 +13,7 @@ import { fetchKlubInfo } from '@/lib/queries/dashboard';
 import { fetchVotingMemberCount } from '@/lib/queries/clanovi';
 import type { Sjednica } from '@/lib/queries/sjednice';
 import { formatDate, cn } from '@/lib/utils';
+import DateInput from '@/components/ui/DateInput';
 import { useRole } from '@/lib/hooks/useRole';
 
 /* ── HELPERS ───────────────────────────────────────────────── */
@@ -434,8 +435,8 @@ function NewMeetingPanel({
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1.5">Datum *</label>
-            <input type="date" value={form.date} onChange={e => set('date', e.target.value)}
-              className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-slate-100 outline-none focus:border-red-500 transition-colors" />
+            <DateInput value={form.date} onChange={iso => set('date', iso)}
+              className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-slate-100 outline-none focus:border-red-500 transition-colors placeholder:text-slate-600" />
           </div>
           <div>
             <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1.5">Vrijeme</label>

@@ -7,6 +7,8 @@ import {
   Wallet, TrendingUp, TrendingDown, Euro, Search, X,
   CheckCircle, Clock, XCircle, Check, Ban, Plus,
   AlertTriangle, Loader2, ChevronDown, Edit, Save, User, Lock,
+  Upload, FileText, Receipt, ThumbsUp, HelpCircle,
+  Settings, Zap, ShieldOff, Users,
 } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
@@ -18,6 +20,7 @@ import {
   updateUplataStatus,
   insertUplata,
   updateUplata,
+  bookImportedPayments,
   KATEGORIJA_LABEL,
   VRSTA_LABEL,
   STATUS_LABEL,
@@ -32,9 +35,21 @@ import type {
   FinancijeKategorija,
   FinancijaInput,
 } from '@/lib/queries/financije';
+import { parseCamt053, matchTransactions } from '@/lib/utils/bankStatementParser';
+import type { MatchResult, MatchableMember } from '@/lib/utils/bankStatementParser';
+import { downloadHub3aSlip } from '@/lib/utils/hub3aService';
+import type { Hub3aParams } from '@/lib/utils/hub3aService';
+import {
+  previewBulkGen,
+  bulkGenerateMembershipFees,
+  CIJENA_1, CIJENA_2, CIJENA_3, IBAN_KLUB, NAZIV_KLUB,
+} from '@/lib/queries/financije';
+import type { BulkGenMember } from '@/lib/queries/financije';
+import { toggleOslobodjenClanarina } from '@/lib/queries/clanovi';
 import { createClient } from '@/lib/supabase-browser';
 import { useRole } from '@/lib/hooks/useRole';
 import { formatDate, cn } from '@/lib/utils';
+import DateInput from '@/components/ui/DateInput';
 
 // ── HELPERS ───────────────────────────────────────────────────
 
@@ -399,12 +414,8 @@ function ZapisModal({
               <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1.5">
                 Datum *
               </label>
-              <input
-                type="date"
-                value={form.datum}
-                onChange={e => set('datum', e.target.value)}
-                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-red-500 transition-colors"
-              />
+              <DateInput value={form.datum} onChange={iso => set('datum', iso)}
+                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-red-500 transition-colors" />
             </div>
           </div>
 
@@ -505,6 +516,672 @@ function ZapisModal({
 
 type VrstaTabs = 'sve' | FinancijeVrsta;
 
+// ── HUB 3A UPLATNICA MODAL ────────────────────────────────────────
+
+const IBAN_KEY = 'hub3a_iban';
+const CLUB_KEY = 'hub3a_club';
+
+function UplatnicaModal({
+  record,
+  onClose,
+}: {
+  record: FinancijaZapis;
+  onClose: () => void;
+}) {
+  const [iban,      setIban]      = useState(() => localStorage.getItem(IBAN_KEY) || IBAN_KLUB);
+  const [clubName,  setClubName]  = useState(() => localStorage.getItem(CLUB_KEY) || NAZIV_KLUB);
+  const [loading,   setLoading]   = useState(false);
+  const [error,     setError]     = useState('');
+
+  async function handleGenerate() {
+    if (!iban.trim())     { setError('Unesite IBAN kluba.'); return; }
+    if (!clubName.trim()) { setError('Unesite naziv kluba.'); return; }
+    setLoading(true);
+    setError('');
+    try {
+      localStorage.setItem(IBAN_KEY, iban.trim());
+      localStorage.setItem(CLUB_KEY, clubName.trim());
+      const params: Hub3aParams = {
+        payerName:     record.clanIme ?? 'Član kluba',
+        recipientName: clubName.trim().slice(0, 25),
+        recipientIban: iban.trim().replace(/\s/g, ''),
+        amountEur:     record.iznos,
+        description:   record.opis.slice(0, 35),
+        memberId:      record.clanId ?? 0,
+        purposeCode:   'NTRN',
+      };
+      await downloadHub3aSlip(params, `uplatnica_${record.clanId ?? 'unknown'}.pdf`);
+      onClose();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Greška pri generiranju uplatnice.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+         onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-md shadow-2xl">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800">
+          <div>
+            <p className="text-sm font-bold text-slate-100 flex items-center gap-2">
+              <Receipt className="w-4 h-4 text-green-400" /> Generiraj HUB 3A uplatnicu
+            </p>
+            <p className="text-xs text-slate-500 mt-0.5">{record.clanIme} · EUR {record.iznos.toFixed(2)}</p>
+          </div>
+          <button onClick={onClose} className="text-slate-500 hover:text-slate-300"><X className="w-5 h-5" /></button>
+        </div>
+        <div className="px-5 py-5 space-y-3">
+          <div>
+            <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1.5">IBAN kluba (primatelj)</label>
+            <input value={iban} onChange={e => setIban(e.target.value)} placeholder="HR12 1234 5678 9012 3456 7"
+              className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-red-500 transition-colors font-mono" />
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1.5">Naziv kluba (primatelj)</label>
+            <input value={clubName} onChange={e => setClubName(e.target.value)} placeholder="KK Đurđevac"
+              className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-red-500 transition-colors" />
+          </div>
+          <div className="bg-slate-800/60 rounded-xl px-4 py-3 text-xs text-slate-400 space-y-1">
+            <p><span className="text-slate-500">Poziv na broj:</span> HR67{String(record.clanId ?? 0).padStart(6, '0')}</p>
+            <p><span className="text-slate-500">Opis (max 35):</span> {record.opis.slice(0, 35)}</p>
+            <p><span className="text-slate-500">Iznos:</span> EUR {record.iznos.toFixed(2)}</p>
+          </div>
+          {error && <p className="text-xs text-red-400 bg-red-950/40 border border-red-800/40 rounded-lg px-3 py-2">{error}</p>}
+        </div>
+        <div className="flex justify-end gap-2 px-5 py-4 border-t border-slate-800">
+          <button onClick={onClose} className="px-4 py-2 text-sm text-slate-400 hover:text-slate-200 transition-colors rounded-lg">Odustani</button>
+          <button onClick={handleGenerate} disabled={loading}
+            className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold bg-green-700 hover:bg-green-600 disabled:bg-slate-700 disabled:text-slate-500 text-white rounded-xl transition-colors">
+            {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileText className="w-3.5 h-3.5" />}
+            Preuzmi PDF
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── CJENOVNIK CONSTANTS (UI) ──────────────────────────────────────
+
+const MONTHS_HR_LONG = [
+  'Siječanj','Veljača','Ožujak','Travanj','Svibanj','Lipanj',
+  'Srpanj','Kolovoz','Rujan','Listopad','Studeni','Prosinac',
+];
+
+// ── POSTAVKE ČLANARINA MODAL ──────────────────────────────────────
+
+function CjenovnikModal({ onClose }: { onClose: () => void }) {
+  const [members,  setMembers]  = useState<BulkGenMember[]>([]);
+  const [loadingM, setLoadingM] = useState(true);
+  const [toggling, setToggling] = useState<number | null>(null);
+
+  useEffect(() => {
+    previewBulkGen({ month: new Date().getMonth() + 1, year: new Date().getFullYear() })
+      .then(setMembers)
+      .catch(console.error)
+      .finally(() => setLoadingM(false));
+  }, []);
+
+  async function handleToggle(m: BulkGenMember) {
+    setToggling(m.id);
+    try {
+      await toggleOslobodjenClanarina(String(m.id), !m.oslobodjen);
+      setMembers(prev => prev.map(x => x.id === m.id ? { ...x, oslobodjen: !x.oslobodjen } : x));
+    } catch (e) { console.error(e); }
+    finally { setToggling(null); }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+         onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-xl max-h-[90vh] flex flex-col shadow-2xl">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800 flex-shrink-0">
+          <p className="text-sm font-bold text-slate-100 flex items-center gap-2">
+            <Settings className="w-4 h-4 text-slate-400" /> Postavke članarina
+          </p>
+          <button onClick={onClose}><X className="w-5 h-5 text-slate-500 hover:text-slate-300" /></button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+          {/* Fixed pricing rules — read-only info */}
+          <div className="bg-slate-800/60 border border-slate-700 rounded-xl px-4 py-3 space-y-2">
+            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Cjenik KK Đurđevac (fiksno)</p>
+            <div className="grid grid-cols-3 gap-2 text-center">
+              {[
+                { label: '1. dijete', price: CIJENA_1, color: 'text-green-400' },
+                { label: '2. dijete', price: CIJENA_2, color: 'text-amber-400' },
+                { label: '3.+ dijete', price: CIJENA_3, color: 'text-slate-400' },
+              ].map(row => (
+                <div key={row.label} className="bg-slate-900/60 rounded-lg py-2.5 px-1">
+                  <p className={`text-base font-bold ${row.color}`}>{row.price.toFixed(2)} €</p>
+                  <p className="text-xs text-slate-500 mt-0.5">{row.label}</p>
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-slate-600 pt-1">
+              Novi član (1. mjesec): <span className="text-slate-400">0.00 € — gratis</span> ·
+              IBAN: <span className="text-slate-400 font-mono text-[10px]">{IBAN_KLUB}</span>
+            </p>
+          </div>
+
+          {/* Member exemption list */}
+          <div>
+            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+              <ShieldOff className="w-3.5 h-3.5" /> Izuzeci od plaćanja (Odluka UO)
+            </p>
+            {loadingM ? (
+              <div className="flex items-center gap-2 text-xs text-slate-600 py-4">
+                <Loader2 className="w-3.5 h-3.5 animate-spin" /> Učitavanje članova...
+              </div>
+            ) : (
+              <div className="space-y-1.5 max-h-64 overflow-y-auto pr-1">
+                {members.map(m => (
+                  <div key={m.id} className={cn(
+                    'flex items-center justify-between px-3 py-2 rounded-xl border transition-all',
+                    m.oslobodjen
+                      ? 'bg-amber-950/20 border-amber-800/40'
+                      : 'bg-slate-800/40 border-slate-700/50',
+                  )}>
+                    <div className="min-w-0">
+                      <span className="text-sm text-slate-200">{m.label}</span>
+                      {m.guardian && (
+                        <span className="text-xs text-slate-600 ml-2 truncate hidden sm:inline">{m.guardian}</span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <span className={cn(
+                        'text-xs font-mono font-semibold',
+                        m.cijena === 0 ? 'text-slate-500' : m.siblingOrder === 0 ? 'text-green-400' : 'text-amber-400',
+                      )}>
+                        {m.cijena.toFixed(2)} €
+                      </span>
+                      <button
+                        onClick={() => handleToggle(m)}
+                        disabled={toggling === m.id}
+                        title={m.oslobodjen ? 'Ukini izuzeće' : 'Oslobodi od plaćanja (Odluka UO)'}
+                        className={cn(
+                          'text-xs px-2.5 py-1 rounded-lg border font-semibold transition-all flex items-center gap-1',
+                          m.oslobodjen
+                            ? 'bg-amber-700 border-amber-600 text-white hover:bg-amber-600'
+                            : 'bg-slate-700 border-slate-600 text-slate-400 hover:border-amber-600 hover:text-amber-400',
+                        )}
+                      >
+                        {toggling === m.id
+                          ? <Loader2 className="w-3 h-3 animate-spin" />
+                          : <ShieldOff className="w-3 h-3" />}
+                        {m.oslobodjen ? 'Oslobođen' : 'Oslobodi'}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="flex justify-end px-5 py-4 border-t border-slate-800 flex-shrink-0">
+          <button onClick={onClose}
+            className="px-4 py-2 text-sm font-semibold bg-slate-700 hover:bg-slate-600 text-slate-100 rounded-xl transition-colors">
+            Zatvori
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── BULK GENERATION MODAL ─────────────────────────────────────────
+
+function BulkGeneracijaModal({
+  onClose,
+  onGenerated,
+}: {
+  onClose:     () => void;
+  onGenerated: () => void;
+}) {
+  const now          = new Date();
+  const [month,      setMonth]      = useState(now.getMonth() + 1);
+  const [year,       setYear]       = useState(now.getFullYear());
+  const [members,    setMembers]    = useState<BulkGenMember[] | null>(null);
+  const [loading,    setLoading]    = useState(false);
+  const [generating, setGenerating] = useState(false);
+  const [result,     setResult]     = useState<{ generated: number; skipped: number; duplicates: number; errors: number } | null>(null);
+  const [loadErr,    setLoadErr]    = useState('');
+
+  async function loadPreview() {
+    setLoading(true);
+    setMembers(null);
+    setLoadErr('');
+    try {
+      const m = await previewBulkGen({ month, year });
+      setMembers(m);
+    } catch (e) {
+      console.error('previewBulkGen error:', e);
+      setLoadErr(e instanceof Error ? e.message : 'Greška pri dohvatu članova.');
+    } finally { setLoading(false); }
+  }
+
+  useEffect(() => { loadPreview(); }, [month, year]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function handleGenerate() {
+    if (!members) return;
+    setGenerating(true);
+    try {
+      const res = await bulkGenerateMembershipFees({ month, year }, members);
+      setResult(res);
+      if (res.generated > 0) onGenerated();
+    } catch (e) { console.error(e); }
+    finally { setGenerating(false); }
+  }
+
+  const toGenerate = (members ?? []).filter(m => !m.oslobodjen && !m.alreadyExists);
+  const exempted   = (members ?? []).filter(m => m.oslobodjen);
+  const duplicates = (members ?? []).filter(m => !m.oslobodjen && m.alreadyExists);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+         onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-xl max-h-[90vh] flex flex-col shadow-2xl">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800 flex-shrink-0">
+          <p className="text-sm font-bold text-slate-100 flex items-center gap-2">
+            <Zap className="w-4 h-4 text-yellow-400" /> Generiraj mjesečne članarine
+          </p>
+          <button onClick={onClose}><X className="w-5 h-5 text-slate-500 hover:text-slate-300" /></button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+          {/* Month/Year picker */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1.5">Mjesec</label>
+              <select value={month} onChange={e => setMonth(Number(e.target.value))}
+                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-red-500 transition-colors">
+                {MONTHS_HR_LONG.map((m, i) => (
+                  <option key={i} value={i + 1}>{m}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1.5">Godina</label>
+              <select value={year} onChange={e => setYear(Number(e.target.value))}
+                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-red-500 transition-colors">
+                {[now.getFullYear() - 1, now.getFullYear(), now.getFullYear() + 1].map(y => (
+                  <option key={y} value={y}>{y}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="bg-slate-800/50 rounded-xl px-4 py-2.5 text-xs text-slate-400 flex items-center gap-4 flex-wrap">
+            <span>1. dijete: <span className="text-green-400 font-semibold">{CIJENA_1.toFixed(2)} €</span></span>
+            <span>2. dijete: <span className="text-amber-400 font-semibold">{CIJENA_2.toFixed(2)} €</span></span>
+            <span>3.+ dijete: <span className="text-slate-400 font-semibold">{CIJENA_3.toFixed(2)} €</span></span>
+            <span>Novi član: <span className="text-slate-400 font-semibold">0.00 € gratis</span></span>
+          </div>
+
+          {/* Preview */}
+          {loading && (
+            <div className="flex items-center gap-2 text-sm text-slate-500 py-4">
+              <Loader2 className="w-4 h-4 animate-spin" /> Učitavanje pregleda...
+            </div>
+          )}
+          {loadErr && (
+            <div className="bg-red-950/40 border border-red-800/40 rounded-xl px-4 py-3 text-sm text-red-300">
+              {loadErr}
+            </div>
+          )}
+
+          {members && !loading && (
+            <>
+              <div className="grid grid-cols-3 gap-2 text-center">
+                <div className="bg-green-950/30 border border-green-800/30 rounded-xl py-2">
+                  <p className="text-lg font-bold text-green-400">{toGenerate.length}</p>
+                  <p className="text-xs text-slate-500">Za generiranje</p>
+                </div>
+                <div className="bg-amber-950/20 border border-amber-800/30 rounded-xl py-2">
+                  <p className="text-lg font-bold text-amber-400">{exempted.length}</p>
+                  <p className="text-xs text-slate-500">Oslobođenih</p>
+                </div>
+                <div className="bg-slate-800/40 border border-slate-700 rounded-xl py-2">
+                  <p className="text-lg font-bold text-slate-400">{duplicates.length}</p>
+                  <p className="text-xs text-slate-500">Već postoji</p>
+                </div>
+              </div>
+
+              <div className="max-h-52 overflow-y-auto space-y-1 pr-1">
+                {toGenerate.map(m => (
+                  <div key={m.id} className="flex items-center justify-between bg-slate-800/30 px-3 py-2 rounded-lg gap-2">
+                    <div className="min-w-0">
+                      <span className="text-sm text-slate-200">{m.label}</span>
+                      {m.isNewMember && (
+                        <span className="ml-2 text-[10px] bg-blue-900/40 text-blue-300 border border-blue-800/40 px-1.5 py-0.5 rounded-full">novi</span>
+                      )}
+                      {!m.isNewMember && m.siblingOrder === 1 && (
+                        <span className="ml-2 text-[10px] bg-amber-900/30 text-amber-400 border border-amber-800/30 px-1.5 py-0.5 rounded-full">2. dijete</span>
+                      )}
+                      {!m.isNewMember && m.siblingOrder >= 2 && (
+                        <span className="ml-2 text-[10px] bg-slate-700 text-slate-400 border border-slate-600 px-1.5 py-0.5 rounded-full">gratis</span>
+                      )}
+                    </div>
+                    <span className={cn(
+                      'text-sm font-semibold flex-shrink-0',
+                      m.cijena === 0 ? 'text-slate-500' : m.siblingOrder === 0 ? 'text-green-400' : 'text-amber-400',
+                    )}>
+                      {m.cijena.toFixed(2)} €
+                    </span>
+                  </div>
+                ))}
+                {exempted.map(m => (
+                  <div key={m.id} className="flex items-center justify-between bg-amber-950/10 px-3 py-2 rounded-lg opacity-50">
+                    <span className="text-sm text-amber-300 line-through">{m.label}</span>
+                    <span className="text-xs text-amber-500">Oslobođen</span>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
+          {result && (
+            <div className="bg-green-950/40 border border-green-800/40 rounded-xl px-4 py-4 text-center">
+              <CheckCircle className="w-7 h-7 text-green-400 mx-auto mb-2" />
+              <p className="font-bold text-green-300 text-sm">
+                Generirano {result.generated} zaduženja — {MONTHS_HR_LONG[month - 1]} {year}
+              </p>
+              <p className="text-xs text-slate-500 mt-1">
+                {result.skipped > 0 && `${result.skipped} oslobođenih preskočeno · `}
+                {result.duplicates > 0 && `${result.duplicates} već postoji · `}
+                {result.errors > 0 && <span className="text-red-400">{result.errors} grešaka</span>}
+              </p>
+            </div>
+          )}
+        </div>
+
+        <div className="flex justify-end gap-2 px-5 py-4 border-t border-slate-800 flex-shrink-0">
+          <button onClick={onClose} className="px-4 py-2 text-sm text-slate-400 hover:text-slate-200 rounded-lg transition-colors">
+            {result ? 'Zatvori' : 'Odustani'}
+          </button>
+          {!result && (
+            <button
+              onClick={handleGenerate}
+              disabled={generating || loading || toGenerate.length === 0}
+              className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold bg-yellow-600 hover:bg-yellow-500 disabled:bg-slate-700 disabled:text-slate-500 text-white rounded-xl transition-colors"
+            >
+              {generating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />}
+              Generiraj {toGenerate.length > 0 ? toGenerate.length : ''} zaduženja
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── BANK IMPORT MODAL ────────────────────────────────────────────
+
+type ImportTab = 'auto' | 'review' | 'unmatched';
+
+function BankImportModal({
+  memberOptions,
+  onClose,
+  onBooked,
+}: {
+  memberOptions: MemberOption[];
+  onClose:  () => void;
+  onBooked: () => void;
+}) {
+  const [results,    setResults]    = useState<MatchResult[] | null>(null);
+  const [tab,        setTab]        = useState<ImportTab>('auto');
+  const [booking,    setBooking]    = useState(false);
+  const [bookResult, setBookResult] = useState<{ booked: number; errors: number } | null>(null);
+  const [parseErr,   setParseErr]   = useState('');
+  const [dragging,   setDragging]   = useState(false);
+  // Track which tier-2 items have been confirmed
+  const [confirmed,  setConfirmed]  = useState<Set<number>>(new Set());
+
+  const matchable: MatchableMember[] = memberOptions.map(m => ({ id: m.id, label: m.label }));
+
+  function processFile(file: File) {
+    setParseErr('');
+    setResults(null);
+    setBookResult(null);
+    setConfirmed(new Set());
+    const reader = new FileReader();
+    reader.onload = e => {
+      const xml = e.target?.result as string;
+      try {
+        const txns = parseCamt053(xml);
+        if (txns.length === 0) { setParseErr('Datoteka ne sadrži kreditne transakcije (CRDT entries).'); return; }
+        setResults(matchTransactions(txns, matchable));
+        setTab('auto');
+      } catch (err) {
+        setParseErr(err instanceof Error ? err.message : 'Neuspješno parsiranje XML datoteke.');
+      }
+    };
+    reader.readAsText(file, 'UTF-8');
+  }
+
+  function onDrop(e: React.DragEvent) {
+    e.preventDefault(); setDragging(false);
+    const file = e.dataTransfer.files[0];
+    if (file) processFile(file);
+  }
+
+  async function handleBook() {
+    if (!results) return;
+    setBooking(true);
+    try {
+      const toBook = results.filter(r =>
+        r.tier === 1 || (r.tier === 2 && confirmed.has(results.indexOf(r)))
+      );
+      const payments = toBook.map(r => ({
+        memberId:    r.memberId!,
+        amount:      r.transaction.amount,
+        date:        r.transaction.date,
+        description: r.transaction.description || 'Uvezena uplata',
+        rawRef:      r.transaction.rawRef,
+      }));
+      const res = await bookImportedPayments(payments);
+      setBookResult(res);
+      if (res.booked > 0) onBooked();
+    } catch (e) {
+      setParseErr(e instanceof Error ? e.message : 'Greška pri proknjižavanju.');
+    } finally {
+      setBooking(false);
+    }
+  }
+
+  const tier1 = results?.filter(r => r.tier === 1) ?? [];
+  const tier2 = results?.filter(r => r.tier === 2) ?? [];
+  const tier3 = results?.filter(r => r.tier === 3) ?? [];
+  const confirmedCount = confirmed.size;
+  const readyToBook    = tier1.length + confirmedCount;
+
+  const tabCls = (t: ImportTab) => cn(
+    'px-4 py-2 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5',
+    tab === t ? 'bg-slate-700 text-slate-100' : 'text-slate-500 hover:text-slate-300',
+  );
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+         onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl">
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800 flex-shrink-0">
+          <div>
+            <p className="text-sm font-bold text-slate-100 flex items-center gap-2">
+              <Upload className="w-4 h-4 text-blue-400" /> Uvezi izvod banke (CAMT.053)
+            </p>
+            <p className="text-xs text-slate-500 mt-0.5">Podržani format: SEPA CAMT.053 XML</p>
+          </div>
+          <button onClick={onClose} className="text-slate-500 hover:text-slate-300"><X className="w-5 h-5" /></button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+
+          {/* Drop zone */}
+          {!results && !bookResult && (
+            <div
+              onDragOver={e => { e.preventDefault(); setDragging(true); }}
+              onDragLeave={() => setDragging(false)}
+              onDrop={onDrop}
+              className={cn(
+                'border-2 border-dashed rounded-2xl p-10 text-center transition-colors cursor-pointer',
+                dragging ? 'border-blue-500 bg-blue-900/10' : 'border-slate-700 hover:border-slate-500',
+              )}
+            >
+              <Upload className="w-8 h-8 mx-auto mb-3 text-slate-600" />
+              <p className="text-sm text-slate-400 font-medium mb-1">Povuci CAMT.053 XML datoteku ovdje</p>
+              <p className="text-xs text-slate-600 mb-3">ili klikni za odabir</p>
+              <label className="cursor-pointer">
+                <span className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-semibold rounded-xl transition-colors">
+                  Odaberi datoteku
+                </span>
+                <input type="file" accept=".xml,.txt" className="sr-only"
+                  onChange={e => { const f = e.target.files?.[0]; if (f) processFile(f); }} />
+              </label>
+            </div>
+          )}
+
+          {parseErr && (
+            <div className="bg-red-950/40 border border-red-800/40 rounded-xl px-4 py-3 text-sm text-red-300">
+              {parseErr}
+            </div>
+          )}
+
+          {/* Booking success */}
+          {bookResult && (
+            <div className="bg-green-950/40 border border-green-800/40 rounded-xl px-4 py-4 text-center">
+              <CheckCircle className="w-8 h-8 text-green-400 mx-auto mb-2" />
+              <p className="font-bold text-green-300 text-sm">Proknjižavanje završeno</p>
+              <p className="text-xs text-slate-400 mt-1">
+                Uspješno proknjiženo <span className="text-green-400 font-semibold">{bookResult.booked}</span> uplata
+                {bookResult.errors > 0 && <>, <span className="text-red-400 font-semibold">{bookResult.errors}</span> grešaka</>}
+              </p>
+              <button onClick={onClose} className="mt-3 px-4 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-semibold rounded-xl transition-colors">Zatvori</button>
+            </div>
+          )}
+
+          {/* Results tabs */}
+          {results && !bookResult && (
+            <>
+              <div className="flex items-center gap-1 bg-slate-800 rounded-xl p-1">
+                <button className={tabCls('auto')} onClick={() => setTab('auto')}>
+                  <CheckCircle className="w-3.5 h-3.5 text-green-400" />
+                  Automatski upareno
+                  <span className="font-bold text-green-400">{tier1.length}</span>
+                </button>
+                <button className={tabCls('review')} onClick={() => setTab('review')}>
+                  <HelpCircle className="w-3.5 h-3.5 text-amber-400" />
+                  Predloženo za pregled
+                  <span className="font-bold text-amber-400">{tier2.length}</span>
+                </button>
+                <button className={tabCls('unmatched')} onClick={() => setTab('unmatched')}>
+                  <XCircle className="w-3.5 h-3.5 text-slate-500" />
+                  Neprepoznato
+                  <span className="font-bold text-slate-500">{tier3.length}</span>
+                </button>
+              </div>
+
+              <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+                {tab === 'auto' && tier1.map((r, i) => (
+                  <div key={i} className="bg-green-950/20 border border-green-800/30 rounded-xl px-4 py-3 flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-slate-100 truncate">{r.memberLabel}</p>
+                      <p className="text-xs text-slate-500 truncate">{r.transaction.description} · {r.transaction.reference}</p>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <span className="text-sm font-bold text-green-400">EUR {r.transaction.amount.toFixed(2)}</span>
+                      <CheckCircle className="w-4 h-4 text-green-500" />
+                    </div>
+                  </div>
+                ))}
+
+                {tab === 'review' && tier2.map((r, idx) => {
+                  const isConfirmed = confirmed.has(results.indexOf(r));
+                  return (
+                    <div key={idx} className={cn(
+                      'border rounded-xl px-4 py-3 flex items-center justify-between gap-3 transition-all',
+                      isConfirmed
+                        ? 'bg-green-950/20 border-green-800/30'
+                        : 'bg-amber-950/10 border-amber-800/30',
+                    )}>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-slate-100 truncate">{r.memberLabel}</p>
+                        <p className="text-xs text-slate-500 truncate">
+                          {r.transaction.debtorName && <span>Platitelj: {r.transaction.debtorName} · </span>}
+                          {r.transaction.description}
+                        </p>
+                        <p className="text-xs text-amber-500/70 mt-0.5">Podudaranje {Math.round(r.confidence * 100)}%</p>
+                      </div>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <span className="text-sm font-bold text-amber-400">EUR {r.transaction.amount.toFixed(2)}</span>
+                        <button
+                          onClick={() => setConfirmed(prev => {
+                            const next = new Set(prev);
+                            const globalIdx = results.indexOf(r);
+                            if (next.has(globalIdx)) next.delete(globalIdx); else next.add(globalIdx);
+                            return next;
+                          })}
+                          className={cn(
+                            'p-1.5 rounded-lg border transition-all text-xs font-semibold',
+                            isConfirmed
+                              ? 'bg-green-700 border-green-600 text-white'
+                              : 'bg-slate-700 border-slate-600 text-slate-300 hover:border-amber-500',
+                          )}
+                        >
+                          {isConfirmed ? <CheckCircle className="w-3.5 h-3.5" /> : <ThumbsUp className="w-3.5 h-3.5" />}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {tab === 'unmatched' && tier3.map((r, i) => (
+                  <div key={i} className="bg-slate-800/40 border border-slate-700 rounded-xl px-4 py-3 flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-sm text-slate-400 truncate">{r.transaction.debtorName ?? '(nepoznat platitelj)'}</p>
+                      <p className="text-xs text-slate-600 truncate">{r.transaction.description || r.transaction.reference}</p>
+                    </div>
+                    <span className="text-sm font-bold text-slate-400 flex-shrink-0">EUR {r.transaction.amount.toFixed(2)}</span>
+                  </div>
+                ))}
+
+                {tab === 'auto'      && tier1.length === 0 && <p className="text-center text-slate-600 py-6 text-sm">Nema automatski uparenih transakcija.</p>}
+                {tab === 'review'    && tier2.length === 0 && <p className="text-center text-slate-600 py-6 text-sm">Nema transakcija za ručni pregled.</p>}
+                {tab === 'unmatched' && tier3.length === 0 && <p className="text-center text-slate-600 py-6 text-sm">Sve transakcije su uparene.</p>}
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Footer */}
+        {results && !bookResult && (
+          <div className="px-5 py-4 border-t border-slate-800 flex items-center justify-between flex-shrink-0">
+            <p className="text-xs text-slate-500">
+              {readyToBook} uplata spremno za knjiženje
+              {confirmedCount > 0 && ` (${tier1.length} auto + ${confirmedCount} ručno)`}
+            </p>
+            <div className="flex gap-2">
+              <button onClick={onClose} className="px-4 py-2 text-sm text-slate-400 hover:text-slate-200 transition-colors rounded-lg">Odustani</button>
+              <button
+                onClick={handleBook}
+                disabled={booking || readyToBook === 0}
+                className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold bg-blue-700 hover:bg-blue-600 disabled:bg-slate-700 disabled:text-slate-500 text-white rounded-xl transition-colors"
+              >
+                {booking ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                Proknjiži {readyToBook > 0 ? readyToBook : ''} uplata
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function FinancijeContent() {
   // ── ROLE GATE ─────────────────────────────────────────────────
   const { isAdmin, roleLoaded: roleChecked } = useRole();
@@ -522,6 +1199,10 @@ function FinancijeContent() {
   const [showModal, setShowModal]           = useState(false);
   const [editingRecord, setEditingRecord]   = useState<FinancijaZapis | null>(null);
   const [memberOptions, setMemberOptions]   = useState<MemberOption[]>([]);
+  const [uplatnicaRecord, setUplatnicaRecord] = useState<FinancijaZapis | null>(null);
+  const [showImport,      setShowImport]      = useState(false);
+  const [showCjenovnik,   setShowCjenovnik]   = useState(false);
+  const [showBulkGen,     setShowBulkGen]     = useState(false);
 
   const searchParams = useSearchParams();
 
@@ -648,12 +1329,29 @@ function FinancijeContent() {
         ? 'Učitavanje...'
         : `${records.length} zapisa · ${formatEUR(sažetak?.saldo ?? 0)} saldo`}
       actions={
-        <button
-          onClick={() => { setEditingRecord(null); setShowModal(true); }}
-          className="flex items-center gap-2 bg-red-600 hover:bg-red-500 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors shadow-lg shadow-red-900/30"
-        >
-          <Plus className="w-4 h-4" /> Novi zapis
-        </button>
+        <div className="flex items-center gap-2 flex-wrap justify-end">
+          <button onClick={() => setShowCjenovnik(true)}
+            className="flex items-center gap-1.5 bg-slate-700 hover:bg-slate-600 text-slate-300 text-sm font-semibold px-3 py-2 rounded-xl transition-colors border border-slate-600"
+            title="Postavke članarina i izuzeci">
+            <Settings className="w-4 h-4" />
+            <span className="hidden sm:inline">Cjenik</span>
+          </button>
+          <button onClick={() => setShowBulkGen(true)}
+            className="flex items-center gap-1.5 bg-yellow-700 hover:bg-yellow-600 text-yellow-100 text-sm font-semibold px-3 py-2 rounded-xl transition-colors">
+            <Zap className="w-4 h-4" />
+            <span className="hidden sm:inline">Generiraj</span>
+          </button>
+          <button onClick={() => setShowImport(true)}
+            className="flex items-center gap-1.5 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm font-semibold px-3 py-2 rounded-xl transition-colors border border-slate-600">
+            <Upload className="w-4 h-4" />
+            <span className="hidden sm:inline">Uvezi izvod</span>
+          </button>
+          <button onClick={() => { setEditingRecord(null); setShowModal(true); }}
+            className="flex items-center gap-1.5 bg-red-600 hover:bg-red-500 text-white text-sm font-semibold px-3 py-2 rounded-xl transition-colors shadow-lg shadow-red-900/30">
+            <Plus className="w-4 h-4" />
+            <span className="hidden sm:inline">Novi zapis</span>
+          </button>
+        </div>
       }
     >
       {showModal && (
@@ -662,6 +1360,25 @@ function FinancijeContent() {
           memberOptions={memberOptions}
           onClose={() => { setShowModal(false); setEditingRecord(null); }}
           onSaved={() => { reload(); setShowModal(false); setEditingRecord(null); }}
+        />
+      )}
+      {uplatnicaRecord && (
+        <UplatnicaModal record={uplatnicaRecord} onClose={() => setUplatnicaRecord(null)} />
+      )}
+      {showImport && (
+        <BankImportModal
+          memberOptions={memberOptions}
+          onClose={() => setShowImport(false)}
+          onBooked={() => { reload(); setShowImport(false); }}
+        />
+      )}
+      {showCjenovnik && (
+        <CjenovnikModal onClose={() => setShowCjenovnik(false)} />
+      )}
+      {showBulkGen && (
+        <BulkGeneracijaModal
+          onClose={() => setShowBulkGen(false)}
+          onGenerated={() => { reload(); }}
         />
       )}
 
@@ -959,6 +1676,16 @@ function FinancijeContent() {
                             <Edit className="w-3.5 h-3.5" />
                             <span className="hidden sm:inline">Uredi</span>
                           </button>
+                          {r.kategorija === 'clanarina' && r.vrsta === 'prihod' && r.clanId && (
+                            <button
+                              onClick={() => setUplatnicaRecord(r)}
+                              title="Generiraj HUB 3A uplatnicu"
+                              className="flex items-center gap-1 text-xs text-green-500 hover:text-green-300 hover:bg-green-900/20 border border-transparent hover:border-green-700 px-2.5 py-1.5 rounded-lg transition-all"
+                            >
+                              <Receipt className="w-3.5 h-3.5" />
+                              <span className="hidden sm:inline">Uplatnica</span>
+                            </button>
+                          )}
                           {r.status === 'ceka' && (
                             <ActionBtn
                               onClick={() => handleStatusChange(r.id, 'placeno')}

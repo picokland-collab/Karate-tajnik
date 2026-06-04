@@ -7,6 +7,7 @@ import { Building2, Save, Bell, Users, Shield, Check, Loader2, Download, FileArc
 import { fetchKlubPodaci, updateKlub } from '@/lib/queries/dashboard';
 import type { KlubPodaci } from '@/lib/queries/dashboard';
 import { formatDate, cn } from '@/lib/utils';
+import DateInput from '@/components/ui/DateInput';
 
 function Field({
   label, value, onChange, type = 'text', placeholder, hint,
@@ -17,13 +18,14 @@ function Field({
   return (
     <div>
       <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-1.5">{label}</label>
-      <input
-        type={type}
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        placeholder={placeholder}
-        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-slate-100 outline-none focus:border-red-500 transition-colors placeholder:text-slate-600"
-      />
+      {type === 'date' ? (
+        <DateInput value={value} onChange={onChange}
+          className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-slate-100 outline-none focus:border-red-500 transition-colors placeholder:text-slate-600" />
+      ) : (
+        <input type={type} value={value} onChange={e => onChange(e.target.value)}
+          placeholder={placeholder}
+          className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-slate-100 outline-none focus:border-red-500 transition-colors placeholder:text-slate-600" />
+      )}
       {hint && <p className="text-xs text-slate-600 mt-1">{hint}</p>}
     </div>
   );

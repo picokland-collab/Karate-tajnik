@@ -92,7 +92,7 @@ export async function fetchClanovi(): Promise<Member[]> {
   }));
 }
 
-export async function insertClan(input: ClanMedInput): Promise<void> {
+export async function insertClan(input: ClanMedInput): Promise<number> {
   const supabase = createClient();
 
   const { data: { user } } = await supabase.auth.getUser();
@@ -142,6 +142,8 @@ export async function insertClan(input: ClanMedInput): Promise<void> {
     });
     if (lErr) throw new Error(`Član je spremenjen, ali liječnički pregled nije upisan: ${lErr.message}`);
   }
+
+  return newId;
 }
 
 export async function updateClan(id: string, input: ClanMedInput): Promise<void> {

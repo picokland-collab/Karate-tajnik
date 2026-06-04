@@ -21,6 +21,8 @@ import { createClient as createSupabaseBrowserClient } from '@/lib/supabase-brow
 import { formatDate, isExpired, isExpiringSoon, daysUntil, getAge, cn } from '@/lib/utils';
 import type { Member, BeltColor, MemberStatus, TipClanstva } from '@/lib/types';
 import DateInput from '@/components/ui/DateInput';
+import FamilyGroupCombobox from '@/components/ui/FamilyGroupCombobox';
+import { linkMemberToFamily } from '@/lib/queries/familyGroups';
 
 /* ── helpers ─────────────────────────────────────────────── */
 function FormField({
@@ -74,7 +76,7 @@ function NewMemberModal({ onClose, onSaved }: { onClose: () => void; onSaved: ()
     belt: 'bijeli' as BeltColor,
     category: 'kadet' as Member['category'],
     memberSince: new Date().toISOString().slice(0, 10),
-    medicalExpiry: '', guardian: '', consentSigned: false,
+    medicalExpiry: '', guardian: '', familyGroupId: '', consentSigned: false,
     // HKS polja
     oib: '', spol: '' as 'M' | 'Ž' | '', mjestRodjenja: '', drzavaRodjenja: 'Hrvatska',
   });
@@ -112,7 +114,10 @@ function NewMemberModal({ onClose, onSaved }: { onClose: () => void; onSaved: ()
         mjestRodjenja:  form.mjestRodjenja || undefined,
         drzavaRodjenja: form.drzavaRodjenja || undefined,
       };
-      await insertClan(input);
+      const newMemberId = await insertClan(input);
+      if (form.familyGroupId) {
+        await linkMemberToFamily(newMemberId, form.familyGroupId, 'child');
+      }
       onSaved();
       onClose();
     } catch (e) {
@@ -280,7 +285,11 @@ function NewMemberModal({ onClose, onSaved }: { onClose: () => void; onSaved: ()
               {/* Medical expiry + guardian — stacked mobile, side-by-side desktop */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                 <FormField label="Istek liječničkog pregleda" value={form.medicalExpiry} onChange={v => set('medicalExpiry', v)} type="date" hint="dd.mm.gggg." />
-                <FormField label="Skrbnik (za maloljetne)" value={form.guardian} onChange={v => set('guardian', v)} placeholder="Ime i prezime roditelja" />
+                <FamilyGroupCombobox
+                  value={form.guardian}
+                  familyGroupId={form.familyGroupId}
+                  onChange={(name, id) => setForm(f => ({ ...f, guardian: name, familyGroupId: id }))}
+                />
               </div>
               <div onClick={() => set('consentSigned', !form.consentSigned)}
                 className={cn(
@@ -358,6 +367,7 @@ function EditMemberModal({
     memberSince:   member.memberSince,
     medicalExpiry: member.medicalExpiry,
     guardian:      member.guardian ?? '',
+    familyGroupId: '',
     consentSigned: member.consentSigned,
     status:        member.status,
     // HKS polja
@@ -369,6 +379,15 @@ function EditMemberModal({
 
   const set = (k: string, v: string | boolean) => setForm(f => ({ ...f, [k]: v }));
 
+  // Pre-load the existing family group link for this member
+  useEffect(() => {
+    import('@/lib/queries/familyGroups').then(({ fetchMemberFamilyGroup }) => {
+      fetchMemberFamilyGroup(Number(member.id)).then(fg => {
+        if (fg) setForm(f => ({ ...f, familyGroupId: fg.id, guardian: fg.family_name }));
+      }).catch(console.error);
+    });
+  }, [member.id]);
+
   const handleSave = async () => {
     if (!form.firstName.trim() || !form.lastName.trim()) {
       setError('Ime i prezime su obavezni.');
@@ -377,6 +396,9 @@ function EditMemberModal({
     setSaving(true);
     setError('');
     try {
+      if (form.familyGroupId) {
+        await linkMemberToFamily(Number(member.id), form.familyGroupId, 'child');
+      }
       await updateClan(member.id, {
         ime:            form.firstName,
         prezime:        form.lastName,
@@ -463,10 +485,14 @@ function EditMemberModal({
               <FormField label="Datum učlanjenja" value={form.memberSince} onChange={v => set('memberSince', v)} type="date" hint="dd.mm.gggg." />
             </div>
 
-            {/* Istek liječničkog + Skrbnik */}
+            {/* Istek liječničkog + Obitelj/Skrbnik */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
               <FormField label="Istek liječničkog pregleda" value={form.medicalExpiry} onChange={v => set('medicalExpiry', v)} type="date" hint="dd.mm.gggg." />
-              <FormField label="Skrbnik (za maloljetne)" value={form.guardian} onChange={v => set('guardian', v)} />
+              <FamilyGroupCombobox
+                value={form.guardian}
+                familyGroupId={form.familyGroupId}
+                onChange={(name, id) => setForm(f => ({ ...f, guardian: name, familyGroupId: id }))}
+              />
             </div>
 
             {/* Adresa stanovanja */}
